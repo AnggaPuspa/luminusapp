@@ -10,8 +10,10 @@ interface CertificateDownloaderProps {
     courseId: string;
     userId: string;
     triggerButtonText?: string;
-    variant?: "primary" | "secondary" | "icon";
+    variant?: "primary" | "secondary" | "icon" | "custom";
     disabled?: boolean;
+    className?: string;
+    children?: React.ReactNode;
 }
 
 function generateCertificatePdf(studentName: string, courseTitle: string, completionDate: string, certificateId: string): jsPDF {
@@ -110,9 +112,16 @@ function generateCertificatePdf(studentName: string, courseTitle: string, comple
     pdf.setFont("helvetica", "bold");
     pdf.text(completionDate || "-", 55, footerY + 16, { align: "center" });
 
-    // Footer - Trophy
-    pdf.setFontSize(24);
-    pdf.text("🏆", w / 2, footerY + 12, { align: "center" });
+    // Footer - Seal / Badge
+    pdf.setFillColor(37, 99, 235); // blue-600
+    pdf.circle(w / 2, footerY + 11, 7, 'F');
+    pdf.setDrawColor(255, 255, 255);
+    pdf.setLineWidth(0.5);
+    pdf.circle(w / 2, footerY + 11, 5, 'S');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(8);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("LE", w / 2, footerY + 13.5, { align: "center" });
     pdf.setTextColor(30, 58, 138);
     pdf.setFontSize(10);
     pdf.setFont("helvetica", "bold");
@@ -140,7 +149,9 @@ export default function CertificateDownloader({
     userId,
     triggerButtonText = "Download Sertifikat",
     variant = "primary",
-    disabled = false
+    disabled = false,
+    className = "",
+    children
 }: CertificateDownloaderProps) {
     const [isGenerating, setIsGenerating] = useState(false);
 
@@ -200,24 +211,34 @@ export default function CertificateDownloader({
     };
 
     const buttonStyles = {
-        primary: "flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 transition shadow-sm",
-        secondary: "flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-green-50 text-green-700 rounded-lg font-bold hover:bg-green-100 transition",
-        icon: "p-2 rounded-full bg-white border text-blue-600 hover:bg-blue-50 transition"
+        primary: "flex items-center justify-center gap-2 w-full px-4 py-3 bg-gradient-to-r from-[#696EFF] to-indigo-600 text-white rounded-2xl font-bold text-sm hover:from-blue-700 hover:to-indigo-700 transition shadow-sm",
+        secondary: "flex items-center justify-center gap-2 w-full px-4 py-3 bg-green-50 text-green-600 rounded-2xl font-bold text-sm hover:bg-green-100 transition",
+        icon: "p-2 rounded-full bg-white border text-[#696EFF] hover:bg-blue-50 transition",
+        custom: ""
     };
 
     return (
         <button
             onClick={handleDownload}
             disabled={isGenerating || disabled}
-            className={`${buttonStyles[variant]} ${isGenerating || disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+            className={variant === "custom"
+                ? `${className} ${isGenerating || disabled ? "opacity-50 cursor-not-allowed" : ""}`
+                : `${buttonStyles[variant]} ${isGenerating || disabled ? "opacity-50 cursor-not-allowed" : ""} ${className}`}
             title={triggerButtonText}
         >
             {isGenerating ? (
-                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                <>
+                    <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                    {variant !== "icon" && <span>Memproses...</span>}
+                </>
+            ) : children ? (
+                children
             ) : (
-                <Download className="w-4 h-4" />
+                <>
+                    <Download className="w-4 h-4" />
+                    {variant !== "icon" && <span>{triggerButtonText}</span>}
+                </>
             )}
-            {variant !== "icon" && <span>{isGenerating ? "Memproses..." : triggerButtonText}</span>}
         </button>
     );
 }

@@ -55,9 +55,9 @@ export async function GET(
                 }
             });
 
-            if (!enrollment || enrollment.status !== "ACTIVE") {
+            if (!enrollment || !["ACTIVE", "COMPLETED"].includes(enrollment.status)) {
                 return NextResponse.json(
-                    { message: "Access Denied: You must enroll in this course to access the classroom." },
+                    { message: "Access Denied: You must be enrolled in this course to access the classroom." },
                     { status: 403 }
                 );
             }
