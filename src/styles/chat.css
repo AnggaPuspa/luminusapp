@@ -1,0 +1,126 @@
+/* Chat Page Styles */
+
+/* Chat container responsive */
+@media (max-width: 768px) {
+  .chat-container {
+    height: 100vh;
+    width: 100%;
+  }
+}
+
+/* Message animations */
+.chat-message-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.chat-message-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+/* Quiz option hover effects */
+.quiz-option {
+  transition: all 0.2s ease;
+}
+
+.quiz-option:hover {
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(105, 110, 255, 0.2);
+}
+
+/* Topic button hover effects */
+.topic-button {
+  transition: all 0.2s ease;
+}
+
+.topic-button:hover {
+  transform: scale(1.05);
+}
+
+/* Course card styles */
+.course-card {
+  transition: all 0.3s ease;
+}
+
+.course-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Pulse animation for loading */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.pulse-animation {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Message bubble styles */
+.message-bubble-bot {
+  background: linear-gradient(135deg, #696EFF 0%, #8b5cf6 100%);
+  border-radius: 18px 18px 18px 4px;
+}
+
+.message-bubble-user {
+  background: #f3f4f6;
+  border-radius: 18px 18px 4px 18px;
+}
+
+/* Mobile menu animation */
+.mobile-menu-enter {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.mobile-menu-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 200ms, transform 200ms;
+}
+
+/* Question counter progress bar */
+.question-progress {
+  height: 4px;
+  background: #e5e7eb;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.question-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #696EFF, #F8ACFF);
+  transition: width 0.3s ease;
+}
+
+/* Selection buttons grid */
+.selection-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+/* Chat scrollbar */
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}

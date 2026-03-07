@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+/* CSS Variables */
+:root {
+  --titleText: 38px;
+  --descText: 20px;
+  --black: #101010;
+  --whiteBg: #F1F5FC;
+  --whiteContent: #fff;
+  --green: #ADECDA;
+  --blue: #696EFF;
+  --white: #f1f2f6;
+  --full: 100%;
+  --container: 80%;
+  --radius: 15px;
+  --screen: 100vh;
+}
+
+@theme inline {
+  --color-blue-primary: #032038;
+  --color-blue-second: #052742;
+  --color-blue-button: #0a3a5e;
+  --color-gradient-1: #696EFF;
+  --color-gradient-2: #F8ACFF;
+  --color-text-base: #101010;
+  --color-text-red: #E63946;
+}
+
+/* Base Styles */
+body {
+  background-color: #f1f2f6;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Scrollbar - Global */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #fff;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #696EFF;
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #696EFF;
+  opacity: 0.7;
+}
+
+/* Utility Classes */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
