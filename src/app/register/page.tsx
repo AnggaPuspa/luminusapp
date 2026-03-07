@@ -28,36 +28,27 @@ export default function RegisterPage() {
     }
 
     try {
-      const response = await fetch('http://localhost:8000/api/register', {
+      const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
         },
         body: JSON.stringify({
           name,
           email,
-          gender,
           password,
-          password_confirmation: passwordConfirmation,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Registrasi gagal');
+        throw new Error(data.message || 'Registrasi gagal.');
       }
 
-      // Save token to localStorage
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-
-      // Redirect to home
-      window.location.href = '/';
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Terjadi kesalahan';
-      setError(errorMessage);
+      window.location.href = '/admin';
+    } catch (err: any) {
+      setError(err.message || 'Terjadi kesalahan saat registrasi.');
     } finally {
       setLoading(false);
     }

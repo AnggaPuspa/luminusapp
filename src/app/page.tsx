@@ -17,14 +17,27 @@ import {
 import '@/styles/home.css';
 import '@/styles/common.css';
 
-export default function Home() {
+import prisma from "@/lib/prisma";
+
+export const dynamic = 'force-dynamic';
+
+export default async function Home() {
+  const publishedCourses = await prisma.course.findMany({
+    where: {
+      status: "PUBLISHED",
+      deletedAt: null
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 6, // Show latest 6 on home
+  });
+
   return (
     <>
       <ScrollButton />
       <Navbar />
       <Hero />
       <About />
-      <Courses />
+      <Courses courses={publishedCourses} />
       <RoadMap />
       <Testimonials />
       <Pricing />

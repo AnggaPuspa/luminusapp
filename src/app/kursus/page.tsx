@@ -1,49 +1,11 @@
 import { Navbar, Footer, ScrollButton } from '@/components';
 import Link from 'next/link';
 import Image from 'next/image';
+import prisma from "@/lib/prisma";
+import CheckoutButton from '@/components/common/CheckoutButton';
 
 import '@/styles/home.css';
 import '@/styles/common.css';
-
-// Data Kursus 
-const courses = [
-    {
-        id: 1,
-        title: "Full-Stack JavaScript : Website LMS",
-        image_url: "/images/lmsjs.png",
-        duration: 12,
-        video_count: 6,
-        original_price: 550000,
-        discounted_price: 299000,
-    },
-    {
-        id: 2,
-        title: "Full-Stack JavaScript : Website LMS",
-        image_url: "/images/lmsjs.png",
-        duration: 12,
-        video_count: 6,
-        original_price: 550000,
-        discounted_price: 299000,
-    },
-    {
-        id: 3,
-        title: "Full-Stack JavaScript : Website LMS",
-        image_url: "/images/lmsjs.png",
-        duration: 12,
-        video_count: 6,
-        original_price: 550000,
-        discounted_price: 299000,
-    },
-    {
-        id: 4,
-        title: "Full-Stack JavaScript : Website LMS",
-        image_url: "/images/lmsjs.png",
-        duration: 12,
-        video_count: 6,
-        original_price: 550000,
-        discounted_price: 299000,
-    }
-];
 
 function formatPrice(price: number) {
     return new Intl.NumberFormat('en-US', {
@@ -51,7 +13,18 @@ function formatPrice(price: number) {
     }).format(price);
 }
 
-export default function KursusPage() {
+export const dynamic = 'force-dynamic';
+
+export default async function KursusPage() {
+    // Fetch published courses from database
+    const courses = await prisma.course.findMany({
+        where: {
+            status: "PUBLISHED",
+            deletedAt: null
+        },
+        orderBy: { createdAt: 'desc' }
+    });
+
     return (
         <main className="min-h-screen bg-[#f1f2f6]">
             <ScrollButton />
@@ -110,7 +83,7 @@ export default function KursusPage() {
                         {courses.map((course) => (
                             <div key={course.id} className="blog-card bg-white hover:-translate-y-2 transition-transform duration-300 h-fit">
                                 <Image
-                                    src={course.image_url}
+                                    src={course.thumbnailUrl || "/images/lmsjs.png"}
                                     alt={course.title}
                                     width={400}
                                     height={200}
@@ -126,36 +99,31 @@ export default function KursusPage() {
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <i className="fa-solid fa-book-open text-gradient-1"></i>
-                                            <span>{course.video_count} modul</span>
+                                            <span>Materi</span>
                                         </div>
                                     </div>
 
                                     <p className="text-lg font-medium mt-4 text-black">{course.title}</p>
 
                                     <div className="mt-4">
-                                        {course.discounted_price ? (
+                                        {course.discountedPrice ? (
                                             <>
                                                 <span className="line-through text-[#E63946]">
-                                                    Rp. {formatPrice(course.original_price)}
+                                                    Rp. {formatPrice(course.originalPrice)}
                                                 </span>
                                                 <span className="font-semibold text-lg ml-2 text-black">
-                                                    Rp. {formatPrice(course.discounted_price)}
+                                                    Rp. {formatPrice(course.discountedPrice)}
                                                 </span>
                                             </>
                                         ) : (
                                             <span className="font-semibold text-lg ml-2 text-black">
-                                                Rp. {formatPrice(course.original_price)}
+                                                Rp. {formatPrice(course.originalPrice)}
                                             </span>
                                         )}
                                     </div>
 
                                     <div className="mt-8">
-                                        <Link
-                                            href={`/payment/${course.id}`}
-                                            className="px-6 py-3 font-medium rounded-lg bg-[#696EFF] text-white inline-block"
-                                        >
-                                            Beli Kursus
-                                        </Link>
+                                        <CheckoutButton courseId={course.id} className="px-6 py-3 font-medium rounded-lg bg-[#696EFF] text-white inline-block" />
                                     </div>
                                 </div>
                             </div>
