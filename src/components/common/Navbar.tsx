@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const pathname = usePathname();
 
   // Static user untuk demo (ganti dengan auth state nanti)
   const isLoggedIn = false;
@@ -24,9 +26,8 @@ export default function Navbar() {
     <>
       <div className="w-full h-fit flex justify-center items-center fixed z-50 transition-all duration-500 ease-in-out">
         <div
-          className={`w-full flex items-center justify-center transition-all duration-200 ease-in-out h-fit py-6 ${
-            scrolled ? 'bg-white shadow-[0px_8px_17px_0px_rgba(0,_0,_0,_0.1)]' : 'bg-[#032038]'
-          }`}
+          className={`w-full flex items-center justify-center transition-all duration-200 ease-in-out h-fit py-6 ${scrolled ? 'bg-white shadow-[0px_8px_17px_0px_rgba(0,_0,_0,_0.1)]' : 'bg-[#032038]'
+            }`}
         >
           <div className="w-[80%] h-full flex justify-between items-center transition-all duration-200 ease-in-out">
             {/* Logo */}
@@ -39,13 +40,13 @@ export default function Navbar() {
             {/* Navigation */}
             <div className="nav hidden justify-center items-center md:flex">
               <ul className={`flex justify-between items-center gap-2 ${scrolled ? 'text-gray-500' : 'text-gray-400'}`}>
-                <li className={`mx-2 font-medium ${scrolled ? 'text-black' : 'text-white'}`}>
+                <li className={`mx-2 font-medium ${pathname === '/' ? (scrolled ? 'text-black' : 'text-white') : 'nav-links'}`}>
                   <Link href="/">Beranda</Link>
                 </li>
-                <li className="mx-2 nav-links font-medium">
+                <li className={`mx-2 font-medium ${pathname === '/kursus' ? (scrolled ? 'text-black' : 'text-white') : 'nav-links'}`}>
                   <Link href="/kursus">Kursus</Link>
                 </li>
-                <li className="mx-2 nav-links font-medium">
+                <li className={`mx-2 font-medium ${pathname === '/forum' ? (scrolled ? 'text-black' : 'text-white') : 'nav-links'}`}>
                   <Link href="/forum">Forum</Link>
                 </li>
               </ul>
@@ -56,9 +57,8 @@ export default function Navbar() {
               {!isLoggedIn ? (
                 <Link
                   href="/login"
-                  className={`flex items-center justify-center px-8 py-2 bg-gradient-to-r from-gradient-1 to-gradient-2 text-white font-semibold rounded-md text-lg ${
-                    scrolled ? 'hover-button' : 'header-hover-button'
-                  }`}
+                  className={`flex items-center justify-center px-8 py-2 bg-gradient-to-r from-gradient-1 to-gradient-2 text-white font-semibold rounded-md text-lg ${scrolled ? 'hover-button' : 'header-hover-button'
+                    }`}
                 >
                   Masuk
                 </Link>
@@ -123,16 +123,16 @@ export default function Navbar() {
           )}
 
           <ul className="flex flex-col w-full items-center gap-6">
-            <li className="text-lg font-semibold flex items-center w-full justify-between text-black">
+            <li className={`text-lg font-semibold flex items-center w-full justify-between ${pathname === '/' ? 'text-[#696EFF]' : 'text-black'}`}>
               <span><Link href="/">Beranda</Link></span>
               <i className="fa-solid fa-info w-6 text-center text-xs text-gray-400 aspect-square"></i>
             </li>
-            <li className="text-lg font-semibold flex items-center w-full justify-between text-black">
+            <li className={`text-lg font-semibold flex items-center w-full justify-between ${pathname === '/kursus' ? 'text-[#696EFF]' : 'text-black'}`}>
               <span><Link href="/kursus">Kursus</Link></span>
               <i className="fa-solid fa-info w-6 text-center text-xs text-gray-400 aspect-square"></i>
             </li>
-            <li className="text-lg font-semibold flex items-center w-full justify-between text-black">
-              <span className="underline"><Link href="/forum">Forum</Link></span>
+            <li className={`text-lg font-semibold flex items-center w-full justify-between ${pathname === '/forum' ? 'text-[#696EFF]' : 'text-black'}`}>
+              <span><Link href="/forum">Forum</Link></span>
               <i className="fa-solid fa-link w-6 text-center aspect-square text-xs text-gray-400"></i>
             </li>
           </ul>
