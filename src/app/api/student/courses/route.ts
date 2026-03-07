@@ -20,26 +20,32 @@ export async function GET(request: Request) {
                     deletedAt: null
                 }
             },
-            include: {
+            select: {
+                enrolledAt: true,
                 course: {
-                    include: {
+                    select: {
+                        id: true,
+                        title: true,
+                        slug: true,
+                        thumbnailUrl: true,
+                        originalPrice: true,
+                        discountedPrice: true,
+                        duration: true,
                         modules: {
-                            orderBy: { sortOrder: "asc" },
-                            include: {
+                            select: {
                                 lessons: {
-                                    orderBy: { sortOrder: "asc" },
                                     select: {
                                         id: true,
                                         progress: {
                                             where: { userId },
-                                            select: { completed: true },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
+                                            select: { completed: true }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             },
             orderBy: { enrolledAt: "desc" },
         });

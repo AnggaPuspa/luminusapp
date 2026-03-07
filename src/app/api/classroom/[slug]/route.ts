@@ -15,9 +15,25 @@ export async function GET(
         const userId = session.user.id;
         const { slug } = await params;
 
-        // 1. Find Course
+        // 1. Find Course with all necessary relations in a single query
         const course = await prisma.course.findUnique({
-            where: { slug }
+            where: { slug },
+            include: {
+                modules: {
+                    orderBy: { sortOrder: "asc" },
+                    include: {
+                        lessons: {
+                            orderBy: { sortOrder: "asc" },
+                            include: {
+                                progress: {
+                                    where: { userId },
+                                    select: { completed: true, completedAt: true }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         });
 
         if (!course) {
@@ -44,28 +60,7 @@ export async function GET(
             }
         }
 
-        // 3. Fetch full course data with user's lesson progress
-        const fullCourse = await prisma.course.findUnique({
-            where: { id: course.id },
-            include: {
-                modules: {
-                    orderBy: { sortOrder: "asc" },
-                    include: {
-                        lessons: {
-                            orderBy: { sortOrder: "asc" },
-                            include: {
-                                progress: {
-                                    where: { userId },
-                                    select: { completed: true, completedAt: true }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        return NextResponse.json(fullCourse, { status: 200 });
+        return NextResponse.json(course, { status: 200 });
 
     } catch (error: any) {
         console.error("Failed to fetch classroom data:", error);

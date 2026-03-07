@@ -13,14 +13,23 @@ function formatPrice(price: number) {
     }).format(price);
 }
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60; // ISR cache for 60 seconds
 
 export default async function KursusPage() {
-    // Fetch published courses from database
+    // Fetch published courses from database (only fields needed for the cards)
     const courses = await prisma.course.findMany({
         where: {
             status: "PUBLISHED",
             deletedAt: null
+        },
+        select: {
+            id: true,
+            title: true,
+            slug: true,
+            thumbnailUrl: true,
+            originalPrice: true,
+            discountedPrice: true,
+            duration: true,
         },
         orderBy: { createdAt: 'desc' }
     });

@@ -63,6 +63,7 @@ model Course {
   enrollments     Enrollment[]
   transactions    Transaction[]
 
+  @@index([status, deletedAt])
   @@map("courses")
 }
 
@@ -75,6 +76,8 @@ model Module {
   course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   lessons   Lesson[]
 
+  @@index([courseId])
+  @@index([courseId, sortOrder])
   @@map("modules")
 }
 
@@ -90,6 +93,8 @@ model Lesson {
   module     Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   progress   LessonProgress[]
 
+  @@index([moduleId])
+  @@index([moduleId, sortOrder])
   @@map("lessons")
 }
 
@@ -103,6 +108,8 @@ model Enrollment {
   course     Course           @relation(fields: [courseId], references: [id])
 
   @@unique([userId, courseId])
+  @@index([userId, status])
+  @@index([courseId])
   @@map("enrollments")
 }
 
@@ -124,6 +131,10 @@ model Transaction {
   course          Course            @relation(fields: [courseId], references: [id])
   webhookLogs     WebhookLog[]
 
+  @@index([userId])
+  @@index([userId, status])
+  @@index([status])
+  @@index([createdAt])
   @@map("transactions")
 }
 
@@ -136,6 +147,8 @@ model WebhookLog {
   receivedAt    DateTime    @default(now())
   transaction   Transaction? @relation(fields: [transactionId], references: [id])
 
+  @@index([transactionId])
+  @@index([receivedAt])
   @@map("webhook_logs")
 }
 
@@ -150,5 +163,7 @@ model LessonProgress {
   lesson      Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
   @@unique([userId, lessonId])
+  @@index([userId, completed])
+  @@index([lessonId])
   @@map("lesson_progress")
 }
