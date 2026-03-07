@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { verifySession } from "@/lib/auth";
+import { revalidatePath } from "next/cache";
 
 export async function GET() {
     try {
@@ -61,6 +62,10 @@ export async function POST(request: Request) {
                 thumbnailUrl,
             },
         });
+
+        // Invalidate ISR cache so new course appears immediately
+        revalidatePath('/');
+        revalidatePath('/kursus');
 
         return NextResponse.json(newCourse, { status: 201 });
     } catch (error: any) {

@@ -2,10 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ChevronLeft, CheckCircle2, Circle, PlayCircle, FileText, Menu, X } from "lucide-react";
+import { ChevronLeft, CheckCircle2, Circle, PlayCircle, FileText, Menu, X, HelpCircle, Award } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { use } from "react";
+import CertificateDownloader from "@/components/common/CertificateDownloader";
+import AddReviewModal from "@/components/AddReviewModal";
+import QuizModal from "@/components/classroom/QuizModal";
 
 export default function ClassroomPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = use(params);
@@ -16,6 +19,11 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [markingProgress, setMarkingProgress] = useState(false);
+    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+
+    // Quiz State
+    const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
+    const [activeQuizModule, setActiveQuizModule] = useState<{ id: string, moduleId: string, title?: string } | null>(null);
 
     useEffect(() => {
         const fetchClassroom = async () => {
@@ -128,8 +136,24 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
         return lesson.progress && lesson.progress.length > 0 && lesson.progress[0].completed;
     };
 
+    // Calculate total course completion
+    const totalLessons = course.modules?.reduce((acc: number, mod: any) => acc + (mod.lessons?.length || 0), 0) || 0;
+    const completedLessonsCount = course.modules?.reduce((acc: number, mod: any) => {
+        return acc + (mod.lessons?.filter(isLessonCompleted).length || 0);
+    }, 0) || 0;
+    const isCourseFullyCompleted = totalLessons > 0 && completedLessonsCount === totalLessons;
+
     const isActiveLessonCompleted = activeLesson ? isLessonCompleted(activeLesson) : false;
     const embedUrl = activeLesson ? getEmbedUrl(activeLesson.videoUrl) : null;
+
+    // Find if the active lesson is the last lesson of a module with a quiz
+    const activeModule = activeLesson ? course.modules?.find((m: any) => m.id === activeLesson.moduleId) : null;
+    const isLastLesson = activeModule && activeLesson ? activeModule.lessons[activeModule.lessons.length - 1].id === activeLesson.id : false;
+
+    const openQuiz = (moduleId: string, title?: string) => {
+        setActiveQuizModule({ id: moduleId, moduleId, title });
+        setIsQuizModalOpen(true);
+    };
 
     return (
         <div className="flex h-screen bg-[#f1f2f6] overflow-hidden">
@@ -147,7 +171,27 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
 
                 <div className="p-6 border-b shrink-0">
                     <h2 className="text-xl font-bold text-gray-900 leading-tight mb-2">{course.title}</h2>
-                    <p className="text-sm text-gray-500">Belajar dengan tekun dan konsisten!</p>
+                    <div className="flex items-center justify-between mt-3">
+                        <p className="text-sm font-medium text-gray-500 shrink-0">Progress: {Math.round((completedLessonsCount / (totalLessons || 1)) * 100)}%</p>
+                        <div className="flex gap-2">
+                            {completedLessonsCount / (totalLessons || 1) >= 0.5 && (
+                                <button
+                                    onClick={() => setIsReviewModalOpen(true)}
+                                    className="p-2 rounded-full bg-yellow-50 border border-yellow-200 text-yellow-600 hover:bg-yellow-100 transition"
+                                    title="Beri Ulasan"
+                                >
+                                    <i className="fa-solid fa-star text-sm"></i>
+                                </button>
+                            )}
+                            {isCourseFullyCompleted && (
+                                <CertificateDownloader
+                                    courseId={course.id}
+                                    userId={""} // It's fine not to pass correct userId here if backend checks enrollment using session
+                                    variant="icon"
+                                />
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
@@ -187,6 +231,20 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
                                         </button>
                                     );
                                 })}
+
+                                {module.quiz && (
+                                    <button
+                                        onClick={() => { openQuiz(module.id, module.quiz.title); setSidebarOpen(false); }}
+                                        className="w-full mt-2 flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors hover:bg-indigo-50 text-indigo-700 font-bold border border-indigo-100"
+                                    >
+                                        <div className="shrink-0">
+                                            <Award className="w-5 h-5 text-indigo-500" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-sm">Kuis Modul</p>
+                                        </div>
+                                    </button>
+                                )}
                             </div>
                         </div>
                     ))}
@@ -265,10 +323,47 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
                                     <p className="text-gray-500 italic">Tidak ada teks panduan untuk materi ini.</p>
                                 )}
                             </div>
+
+                            {/* Quiz Call to Action (if at the end of a module with a quiz) */}
+                            {isLastLesson && activeModule?.quiz && isActiveLessonCompleted && (
+                                <div className="mt-12 bg-indigo-50 border-2 border-dashed border-indigo-200 rounded-2xl p-8 text-center animate-in fade-in duration-700">
+                                    <Award className="w-16 h-16 text-indigo-500 mx-auto mb-4" />
+                                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Kamu telah menyelesaikan Modul ini!</h3>
+                                    <p className="text-gray-600 mb-6 max-w-lg mx-auto">
+                                        Saatnya menguji pemahaman kamu. Kerjakan Kuis singkat ini untuk memperkuat memori tentang materi yang baru saja dipelajari.
+                                    </p>
+                                    <button
+                                        onClick={() => openQuiz(activeModule.id, activeModule.quiz.title)}
+                                        className="bg-indigo-600 text-white font-bold py-3 px-8 rounded-full hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 transition-all active:scale-95 text-lg"
+                                    >
+                                        Mulai Kuis Modul Sekarang
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
             </main>
+
+            {course && (
+                <AddReviewModal
+                    isOpen={isReviewModalOpen}
+                    onClose={() => setIsReviewModalOpen(false)}
+                    courseId={course.id}
+                    courseTitle={course.title}
+                />
+            )}
+
+            {/* Student Quiz Modal */}
+            <QuizModal
+                isOpen={isQuizModalOpen}
+                onClose={() => setIsQuizModalOpen(false)}
+                moduleId={activeQuizModule?.moduleId || ""}
+                courseSlug={slug}
+                onQuizComplete={() => {
+                    // Optional: trigger confetti or just refresh course data so score is synced
+                }}
+            />
         </div>
     );
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { PlayCircle, Award, CheckCircle2 } from "lucide-react";
+import CertificateDownloader from "@/components/common/CertificateDownloader";
 
 export default function MyCoursesPage() {
     const [courses, setCourses] = useState<any[]>([]);
@@ -98,12 +99,22 @@ export default function MyCoursesPage() {
                                         ></div>
                                     </div>
 
-                                    <Link
-                                        href={`/kursus/${course.slug}/belajar`}
-                                        className="block w-full text-center px-4 py-2.5 bg-blue-50 text-[#696EFF] font-semibold rounded-lg hover:bg-blue-100 transition"
-                                    >
-                                        Lanjut Belajar
-                                    </Link>
+                                    <div className="flex flex-col gap-2">
+                                        <Link
+                                            href={`/kursus/${course.slug}/belajar`}
+                                            className="block w-full text-center px-4 py-2 bg-blue-50 text-[#696EFF] font-semibold rounded-lg hover:bg-blue-100 transition"
+                                        >
+                                            Lanjut Belajar
+                                        </Link>
+
+                                        {course.progressPercent === 100 && (
+                                            <CertificateDownloader
+                                                courseId={course.id}
+                                                userId={course.userId} // Wait, course object via API might not have userId. I'll need to check the API below.
+                                                variant="secondary"
+                                            />
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>

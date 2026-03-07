@@ -8,7 +8,8 @@ import {
     Users,
     ShoppingCart,
     Activity,
-    LogOut
+    LogOut,
+    Ticket
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -29,6 +30,7 @@ export default function Sidebar() {
         { label: "Courses", href: "/admin/courses", icon: BookOpen },
         { label: "Users", href: "/admin/users", icon: Users },
         { label: "Orders", href: "/admin/orders", icon: ShoppingCart },
+        { label: "Coupons", href: "/admin/coupons", icon: Ticket },
         { label: "Webhooks", href: "/admin/webhooks", icon: Activity },
     ];
 

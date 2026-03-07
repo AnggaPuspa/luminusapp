@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { createSession } from "@/lib/auth";
+import { sendWelcomeEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
     try {
@@ -43,6 +44,9 @@ export async function POST(request: Request) {
             name: newUser.name,
             role: newUser.role,
         });
+
+        // Fire welcome email asynchronously
+        sendWelcomeEmail(newUser.name, newUser.email).catch(err => console.error("Welcome email error:", err));
 
         return NextResponse.json({ message: "Registration successful" }, { status: 201 });
     } catch (error: any) {
