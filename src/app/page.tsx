@@ -19,7 +19,7 @@ import '@/styles/common.css';
 
 import prisma from "@/lib/prisma";
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60; // ISR: cache 60 detik
 
 export default async function Home() {
   const publishedCourses = await prisma.course.findMany({
@@ -27,9 +27,19 @@ export default async function Home() {
       status: "PUBLISHED",
       deletedAt: null
     },
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      thumbnailUrl: true,
+      originalPrice: true,
+      discountedPrice: true,
+      duration: true,
+      reviews: { select: { rating: true } }
+    },
     orderBy: { createdAt: 'desc' },
     take: 6, // Show latest 6 on home
-  });
+  }) as any;
 
   return (
     <>

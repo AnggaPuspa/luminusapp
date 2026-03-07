@@ -6,6 +6,7 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
+  output   = "./generated/client"
 }
 
 enum Role {
@@ -42,6 +43,8 @@ model User {
   enrollments    Enrollment[]
   transactions   Transaction[]
   lessonProgress LessonProgress[]
+  reviews        CourseReview[]
+  quizAttempts   QuizAttempt[] @relation("UserQuizAttempts")
 
   @@map("users")
 }
@@ -62,6 +65,7 @@ model Course {
   modules         Module[]
   enrollments     Enrollment[]
   transactions    Transaction[]
+  reviews         CourseReview[]
 
   @@index([status, deletedAt])
   @@map("courses")
@@ -75,6 +79,7 @@ model Module {
   createdAt DateTime @default(now())
   course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   lessons   Lesson[]
+  quiz      Quiz?
 
   @@index([courseId])
   @@index([courseId, sortOrder])
@@ -102,8 +107,9 @@ model Enrollment {
   id         String           @id @default(cuid())
   userId     String
   courseId    String
-  enrolledAt DateTime         @default(now())
-  status     EnrollmentStatus @default(ACTIVE)
+  enrolledAt    DateTime         @default(now())
+  status        EnrollmentStatus @default(ACTIVE)
+  certificateUrl String?
   user       User             @relation(fields: [userId], references: [id])
   course     Course           @relation(fields: [courseId], references: [id])
 
@@ -123,12 +129,15 @@ model Transaction {
   paymentChannel  String?
   mayarInvoiceId  String?           @unique
   mayarInvoiceUrl String?
+  couponId        String?
+  discountAmount  Int?
   paidAt          DateTime?
   expiredAt       DateTime?
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   user            User              @relation(fields: [userId], references: [id])
   course          Course            @relation(fields: [courseId], references: [id])
+  coupon          Coupon?           @relation(fields: [couponId], references: [id])
   webhookLogs     WebhookLog[]
 
   @@index([userId])
@@ -166,4 +175,77 @@ model LessonProgress {
   @@index([userId, completed])
   @@index([lessonId])
   @@map("lesson_progress")
+}
+
+model CourseReview {
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+  rating    Int      // 1 to 5 stars
+  comment   String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId]) // One review per user per course
+  @@index([courseId])
+  @@map("course_reviews")
+}
+
+model Coupon {
+  id             String    @id @default(cuid())
+  code           String    @unique
+  discountType   String
+  discountValue  Int
+  maxUses        Int?
+  usedCount      Int       @default(0)
+  minPurchase    Int?
+  validFrom      DateTime  @default(now())
+  validUntil     DateTime?
+  isActive       Boolean   @default(true)
+  courseId       String?
+  createdAt      DateTime  @default(now())
+  transactions   Transaction[]
+
+  @@index([code])
+  @@map("coupons")
+}
+
+model Quiz {
+  id        String     @id @default(cuid())
+  moduleId  String     @unique
+  title     String
+  module    Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  questions Question[]
+
+  @@index([moduleId])
+  @@map("quizzes")
+}
+
+model Question {
+  id            String   @id @default(cuid())
+  quizId        String
+  questionText  String   @db.Text
+  options       Json
+  correctIndex  Int
+  sortOrder     Int      @default(0)
+  quiz          Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([quizId])
+  @@map("questions")
+}
+
+model QuizAttempt {
+  id         String   @id @default(cuid())
+  userId     String
+  quizId     String
+  score      Int
+  totalQ     Int
+  answers    Json
+  createdAt  DateTime @default(now())
+  user       User     @relation("UserQuizAttempts", fields: [userId], references: [id])
+
+  @@index([userId, quizId])
+  @@map("quiz_attempts")
 }

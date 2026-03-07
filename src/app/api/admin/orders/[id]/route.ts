@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { verifySession } from "@/lib/auth";
+import { sendPaymentSuccessEmail } from "@/lib/email";
 
 export async function GET(
     request: Request,
@@ -113,10 +114,28 @@ export async function PUT(
                         status: "ACTIVE"
                     }
                 });
+
+                // Increment coupon usage if a coupon was applied
+                if (transaction.couponId) {
+                    await (tx as any).coupon.update({
+                        where: { id: transaction.couponId },
+                        data: { usedCount: { increment: 1 } }
+                    });
+                }
             }
 
             return updatedTx;
         });
+
+        // Trigger email outside of the transaction block
+        if (status === "PAID" && transaction.status !== "PAID" && updatedOrder.user && updatedOrder.course) {
+            sendPaymentSuccessEmail(
+                updatedOrder.user.name || "Student",
+                updatedOrder.user.email,
+                updatedOrder.course.title,
+                transaction.amount
+            ).catch(err => console.error("Admin order email error:", err));
+        }
 
         return NextResponse.json(updatedOrder);
     } catch (error) {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { verifyMayarWebhook } from "@/lib/mayar";
+import { sendPaymentSuccessEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
     try {
@@ -26,21 +27,22 @@ export async function POST(request: Request) {
             // depends on Mayar's exact JSON structure for payment.received. 
             // We'll search our DB by mayarInvoiceId first.
 
-            let transaction = await prisma.transaction.findFirst({
-                where: { mayarInvoiceId: transactionStr }
+            let transaction = await (prisma as any).transaction.findFirst({
+                where: { mayarInvoiceId: transactionStr },
+                include: { user: true, course: true }
             });
 
             // If we don't find it by mayarInvoiceId, let's try the referenceId if Mayar returns it
             if (!transaction && eventData?.referenceId) {
-                transaction = await prisma.transaction.findUnique({
-                    where: { id: eventData.referenceId }
+                transaction = await (prisma as any).transaction.findUnique({
+                    where: { id: eventData.referenceId },
+                    include: { user: true, course: true }
                 });
             }
 
             if (transaction && transaction.status === "PENDING") {
-                // 3. Update Transaction and Create Enrollment securely in a transaction
-                await prisma.$transaction([
-                    prisma.transaction.update({
+                const dbOps: any[] = [
+                    (prisma as any).transaction.update({
                         where: { id: transaction.id },
                         data: {
                             status: "PAID",
@@ -63,11 +65,32 @@ export async function POST(request: Request) {
                             status: "ACTIVE"
                         }
                     })
-                ]);
+                ];
+
+                // If a coupon was used, increment its usage count
+                if (transaction.couponId) {
+                    dbOps.push(
+                        (prisma as any).coupon.update({
+                            where: { id: transaction.couponId },
+                            data: { usedCount: { increment: 1 } }
+                        })
+                    );
+                }
+
+                // 3. Execute all updates atomically
+                await prisma.$transaction(dbOps);
+
+                // 4. Send Payment Success Email
+                sendPaymentSuccessEmail(
+                    transaction.user.name,
+                    transaction.user.email,
+                    transaction.course.title,
+                    transaction.amount
+                ).catch(err => console.error("Payment Success email error:", err));
             }
         }
 
-        // 4. Always log the webhook
+        // 5. Always log the webhook
         await prisma.webhookLog.create({
             data: {
                 event: eventName,

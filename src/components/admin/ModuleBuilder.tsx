@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, Edit2, ChevronDown, ChevronRight, Video, FileText } from "lucide-react";
+import { Plus, Trash2, Edit2, ChevronDown, ChevronRight, Video, FileText, HelpCircle } from "lucide-react";
 import LessonFormModal from "./LessonFormModal";
+import QuizEditorModal from "./QuizEditorModal";
 import { toast } from "sonner";
 
 interface Lesson {
@@ -35,6 +36,10 @@ export default function ModuleBuilder({ courseId, initialModules, onRefresh }: {
     const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
     const [editingLessonData, setEditingLessonData] = useState<any>(null);
 
+    // Quiz Modal State
+    const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
+    const [activeQuizModuleId, setActiveQuizModuleId] = useState<string | null>(null);
+
     const toggleModule = (moduleId: string) => {
         setExpandedModules(prev => ({ ...prev, [moduleId]: !prev[moduleId] }));
     };
@@ -44,10 +49,10 @@ export default function ModuleBuilder({ courseId, initialModules, onRefresh }: {
         setLoading(true);
 
         try {
-            const res = await fetch(`/api/admin/courses/${courseId}/modules`, {
+            const res = await fetch(`/api/admin/modules`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ title: newModuleTitle }),
+                body: JSON.stringify({ title: newModuleTitle, courseId }),
             });
 
             if (res.ok) {
@@ -176,10 +181,13 @@ export default function ModuleBuilder({ courseId, initialModules, onRefresh }: {
                                 )}
                             </div>
                             <div className="flex items-center gap-2">
-                                <button onClick={() => setEditingModuleId(mod.id)} className="p-1.5 text-gray-400 hover:text-blue-600 rounded transition-colors" title="Edit Module Name">
+                                <button onClick={(e) => { e.stopPropagation(); setActiveQuizModuleId(mod.id); setIsQuizModalOpen(true); }} className="p-1.5 text-gray-400 hover:text-indigo-600 rounded transition-colors" title="Manage Quiz">
+                                    <HelpCircle className="w-4 h-4" />
+                                </button>
+                                <button onClick={(e) => { e.stopPropagation(); setEditingModuleId(mod.id); }} className="p-1.5 text-gray-400 hover:text-blue-600 rounded transition-colors" title="Edit Module Name">
                                     <Edit2 className="w-4 h-4" />
                                 </button>
-                                <button onClick={() => handleDeleteModule(mod.id)} className="p-1.5 text-gray-400 hover:text-red-600 rounded transition-colors" title="Delete Module">
+                                <button onClick={(e) => { e.stopPropagation(); handleDeleteModule(mod.id); }} className="p-1.5 text-gray-400 hover:text-red-600 rounded transition-colors" title="Delete Module">
                                     <Trash2 className="w-4 h-4" />
                                 </button>
                             </div>
@@ -260,6 +268,14 @@ export default function ModuleBuilder({ courseId, initialModules, onRefresh }: {
                 moduleId={activeModuleId!}
                 initialData={editingLessonData}
                 onSubmit={handleSaveLesson}
+            />
+
+            {/* Quiz Modal */}
+            <QuizEditorModal
+                isOpen={isQuizModalOpen}
+                onClose={() => setIsQuizModalOpen(false)}
+                moduleId={activeQuizModuleId!}
+                onSaved={onRefresh}
             />
         </div>
     );

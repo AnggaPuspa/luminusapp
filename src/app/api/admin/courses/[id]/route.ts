@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { verifySession } from "@/lib/auth";
+import { revalidatePath } from "next/cache";
 
 export async function GET(
     request: Request,
@@ -62,6 +63,10 @@ export async function PUT(
             },
         });
 
+        // Invalidate ISR cache for pages that display courses
+        revalidatePath('/');
+        revalidatePath('/kursus');
+
         return NextResponse.json(updatedCourse);
     } catch (error: any) {
         return NextResponse.json(
@@ -87,6 +92,10 @@ export async function DELETE(
             where: { id },
             data: { deletedAt: new Date() },
         });
+
+        // Invalidate ISR cache for pages that display courses
+        revalidatePath('/');
+        revalidatePath('/kursus');
 
         return NextResponse.json({ success: true, message: "Course deleted successfully" });
     } catch (error: any) {

@@ -22,6 +22,9 @@ export async function GET(
                 modules: {
                     orderBy: { sortOrder: "asc" },
                     include: {
+                        quiz: {
+                            select: { id: true, title: true }
+                        },
                         lessons: {
                             orderBy: { sortOrder: "asc" },
                             include: {

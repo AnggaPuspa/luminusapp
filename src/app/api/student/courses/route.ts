@@ -62,6 +62,7 @@ export async function GET(request: Request) {
 
             return {
                 ...courseData,
+                userId: e.userId || userId,
                 enrolledAt: e.enrolledAt,
                 totalLessons: allLessons.length,
                 completedLessons: completedLessons.length,

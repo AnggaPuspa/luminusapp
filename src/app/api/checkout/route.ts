@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { verifySession } from "@/lib/auth";
 import { createMayarInvoice } from "@/lib/mayar";
+import { sendPaymentSuccessEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
     try {
@@ -11,7 +12,7 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json();
-        const { courseId } = body;
+        const { courseId, couponCode } = body;
 
         if (!courseId) {
             return NextResponse.json({ message: "Course ID is required" }, { status: 400 });
@@ -26,7 +27,36 @@ export async function POST(request: Request) {
             return NextResponse.json({ message: "Course not found or unavailable" }, { status: 404 });
         }
 
-        const finalPrice = course.discountedPrice !== null ? course.discountedPrice : course.originalPrice;
+        let finalPrice = course.discountedPrice !== null ? course.discountedPrice : course.originalPrice;
+        let appliedCouponId: string | null = null;
+        let discountAmount: number = 0;
+
+        // 1.5 Handle Coupon if provided
+        if (couponCode) {
+            const coupon = await (prisma as any).coupon.findUnique({
+                where: { code: couponCode.toUpperCase() }
+            });
+
+            if (coupon && coupon.isActive) {
+                // Check valid details
+                const isValidDate = !coupon.validUntil || new Date() <= coupon.validUntil;
+                const isValidLimit = !coupon.maxUses || coupon.usedCount < coupon.maxUses;
+                const isValidCourse = !coupon.courseId || coupon.courseId === courseId;
+                const isValidMinPurchase = !coupon.minPurchase || finalPrice >= coupon.minPurchase;
+
+                if (isValidDate && isValidLimit && isValidCourse && isValidMinPurchase) {
+                    if (coupon.discountType === "PERCENTAGE") {
+                        discountAmount = Math.floor(finalPrice * (coupon.discountValue / 100));
+                    } else if (coupon.discountType === "FIXED") {
+                        discountAmount = coupon.discountValue;
+                    }
+
+                    discountAmount = Math.min(discountAmount, finalPrice); // Prevent negative price
+                    finalPrice = finalPrice - discountAmount;
+                    appliedCouponId = coupon.id;
+                }
+            }
+        }
 
         if (finalPrice > 0 && finalPrice < 500) {
             return NextResponse.json({ message: "Harga kursus terlalu rendah. Minimum transaksi Mayar adalah Rp 500." }, { status: 400 });
@@ -47,18 +77,20 @@ export async function POST(request: Request) {
         }
 
         // 3. Create a PENDING transaction
-        const transaction = await prisma.transaction.create({
+        const transaction = await (prisma as any).transaction.create({
             data: {
                 userId: session.user.id,
                 courseId: course.id,
                 amount: finalPrice,
                 status: "PENDING",
+                couponId: appliedCouponId,
+                discountAmount: discountAmount > 0 ? discountAmount : null
             }
         });
 
         // If price is 0 (Free Course), we just auto-enroll them without hitting Mayar
         if (finalPrice === 0) {
-            await prisma.$transaction([
+            const txns: any[] = [
                 prisma.transaction.update({
                     where: { id: transaction.id },
                     data: { status: "PAID", paidAt: new Date() }
@@ -69,7 +101,26 @@ export async function POST(request: Request) {
                         courseId: course.id,
                     }
                 })
-            ]);
+            ];
+
+            if (appliedCouponId) {
+                txns.push(
+                    (prisma as any).coupon.update({
+                        where: { id: appliedCouponId },
+                        data: { usedCount: { increment: 1 } }
+                    })
+                );
+            }
+
+            await prisma.$transaction(txns);
+
+            sendPaymentSuccessEmail(
+                session.user.name || "Student",
+                session.user.email,
+                course.title,
+                0
+            ).catch(err => console.error("Free Checkkout email error:", err));
+
             return NextResponse.json({
                 message: "Course is free. Successfully enrolled.",
                 isFree: true,
