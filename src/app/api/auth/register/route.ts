@@ -1,0 +1,55 @@
+import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import bcrypt from "bcryptjs";
+import { createSession } from "@/lib/auth";
+
+export async function POST(request: Request) {
+    try {
+        const { name, email, password } = await request.json();
+
+        if (!name || !email || !password) {
+            return NextResponse.json(
+                { message: "Name, email, and password are required" },
+                { status: 400 }
+            );
+        }
+
+        const existingUser = await prisma.user.findUnique({
+            where: { email },
+        });
+
+        if (existingUser) {
+            return NextResponse.json(
+                { message: "Email is already registered" },
+                { status: 400 }
+            );
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const newUser = await prisma.user.create({
+            data: {
+                name,
+                email,
+                password: hashedPassword,
+                // Role defaults to STUDENT per Prisma schema
+            },
+        });
+
+        // Automatically log the user in after registration
+        await createSession({
+            id: newUser.id,
+            email: newUser.email,
+            name: newUser.name,
+            role: newUser.role,
+        });
+
+        return NextResponse.json({ message: "Registration successful" }, { status: 201 });
+    } catch (error: any) {
+        console.error("Register error:", error);
+        return NextResponse.json(
+            { message: "Failed to register new user" },
+            { status: 500 }
+        );
+    }
+}

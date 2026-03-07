@@ -13,6 +13,10 @@ export const metadata: Metadata = {
   description: "Belajar coding dari nol hingga mahir bersama kami! Akses kursus online interaktif kapan saja, di mana saja",
 };
 
+import { Toaster } from "sonner";
+
+// ... [rest of imports]
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -25,6 +29,7 @@ export default function RootLayout({
       </head>
       <body className={`${poppins.variable} font-sans antialiased`}>
         {children}
+        <Toaster richColors position="top-right" />
       </body>
     </html>
   );

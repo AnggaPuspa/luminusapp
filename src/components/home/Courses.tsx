@@ -6,55 +6,7 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-
-// Static courses data
-const courses = [
-  {
-    id: 1,
-    title: "Introduction to HTML, CSS dan JavaScript",
-    image_url: "/images/lmsjs.png",
-    duration: 12,
-    video_count: 6,
-    original_price: 399000,
-    discounted_price: 99000,
-  },
-  {
-    id: 2,
-    title: "Front-End Website Development",
-    image_url: "/images/fe.png",
-    duration: 15,
-    video_count: 8,
-    original_price: 550000,
-    discounted_price: 299000,
-  },
-  {
-    id: 3,
-    title: "Backend Development with Node.js",
-    image_url: "/images/be.png",
-    duration: 20,
-    video_count: 10,
-    original_price: 650000,
-    discounted_price: 399000,
-  },
-  {
-    id: 4,
-    title: "Cyber Security Fundamentals",
-    image_url: "/images/cs.png",
-    duration: 18,
-    video_count: 9,
-    original_price: 599000,
-    discounted_price: 349000,
-  },
-  {
-    id: 5,
-    title: "Full-Stack JavaScript Mastery",
-    image_url: "/images/lmsjs.png",
-    duration: 25,
-    video_count: 12,
-    original_price: 799000,
-    discounted_price: 499000,
-  },
-];
+import CheckoutButton from '@/components/common/CheckoutButton';
 
 function formatPrice(price: number) {
   return new Intl.NumberFormat('id-ID', {
@@ -62,7 +14,7 @@ function formatPrice(price: number) {
   }).format(price);
 }
 
-export default function Courses() {
+export default function Courses({ courses }: { courses: any[] }) {
   return (
     <section className="blog-section" id="kursus-section">
       <div className="blog-container">
@@ -105,11 +57,11 @@ export default function Courses() {
               <SwiperSlide key={course.id}>
                 <div className="blog-card">
                   <Image
-                    src={course.image_url}
+                    src={course.thumbnailUrl || "/images/lmsjs.png"}
                     alt={course.title}
                     width={400}
                     height={200}
-                    className="w-[90%] mx-auto h-auto object-cover rounded-xl"
+                    className="w-[90%] mx-auto h-auto object-cover rounded-xl mt-4"
                   />
                   <div className="blog-content">
                     <div className="flex gap-4 mt-4 text-gray-500">
@@ -119,36 +71,31 @@ export default function Courses() {
                       </div>
                       <div className="flex items-center gap-2">
                         <i className="fa-solid fa-video text-gradient-1"></i>
-                        <span>{course.video_count} Modul</span>
+                        <span>Materi</span>
                       </div>
                     </div>
 
                     <p className="text-lg font-medium mt-4 text-black">{course.title}</p>
 
                     <div className="mt-4">
-                      {course.discounted_price ? (
+                      {course.discountedPrice ? (
                         <>
                           <span className="line-through text-[#E63946]">
-                            Rp. {formatPrice(course.original_price)}
+                            Rp. {formatPrice(course.originalPrice)}
                           </span>
                           <span className="font-semibold text-lg ml-2">
-                            Rp. {formatPrice(course.discounted_price)}
+                            Rp. {formatPrice(course.discountedPrice)}
                           </span>
                         </>
                       ) : (
                         <span className="font-semibold text-lg ml-2">
-                          Rp. {formatPrice(course.original_price)}
+                          Rp. {formatPrice(course.originalPrice)}
                         </span>
                       )}
                     </div>
 
                     <div className="mt-8">
-                      <Link
-                        href={`/payment/${course.id}`}
-                        className="px-6 py-3 font-medium rounded-lg bg-[#696EFF] text-white inline-block"
-                      >
-                        Beli Kursus
-                      </Link>
+                      <CheckoutButton courseId={course.id} className="px-6 py-3 font-medium rounded-lg bg-[#696EFF] text-white inline-block" />
                     </div>
                   </div>
                 </div>

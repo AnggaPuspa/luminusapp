@@ -19,11 +19,10 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8000/api/login', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
         },
         body: JSON.stringify({ email, password }),
       });
@@ -34,15 +33,9 @@ export default function LoginPage() {
         throw new Error(data.message || 'Login gagal');
       }
 
-      // Save token to localStorage
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-
-      // Redirect to home
-      window.location.href = '/';
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Terjadi kesalahan';
-      setError(errorMessage);
+      window.location.href = '/admin';
+    } catch (err: any) {
+      setError(err.message || 'Terjadi kesalahan saat login.');
     } finally {
       setLoading(false);
     }
