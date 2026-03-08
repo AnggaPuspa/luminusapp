@@ -163,7 +163,7 @@ export default function QuizModal({
                 <div className="flex-1 overflow-y-auto p-6">
                     {loading ? (
                         <div className="flex flex-col items-center justify-center h-48 space-y-4">
-                            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                            <div className="w-8 h-8 border-4 border-[#8B7AFF] border-t-transparent rounded-full animate-spin"></div>
                             <p className="text-gray-500 font-medium animate-pulse">Memuat kuis...</p>
                         </div>
                     ) : result ? (
@@ -223,31 +223,33 @@ export default function QuizModal({
                         <div className="space-y-8 pb-4">
                             {quiz?.questions.map((q, idx) => (
                                 <div key={q.id} className="bg-white">
-                                    <h3 className="font-semibold text-gray-900 text-lg leading-snug mb-4">
-                                        <span className="text-blue-600 mr-2">{idx + 1}.</span> {q.questionText}
+                                    <h3 className="font-bold text-gray-900 text-lg leading-snug mb-5 flex items-start gap-2">
+                                        <span className="text-[#8B7AFF] mt-0.5">{idx + 1}.</span>
+                                        <span>{q.questionText}</span>
                                     </h3>
                                     <div className="space-y-3">
                                         {q.options.map((opt, oIdx) => {
                                             const isSelected = answers[q.id] === oIdx;
                                             return (
-                                                <label
+                                                <div
                                                     key={oIdx}
+                                                    onClick={() => handleOptionSelect(q.id, oIdx)}
                                                     className={`
-                                                        flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all duration-200
+                                                        flex items-center p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300
                                                         ${isSelected
-                                                            ? 'border-blue-600 bg-blue-50 text-blue-900'
-                                                            : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50 text-gray-700'
+                                                            ? 'border-[#8B7AFF] bg-[#F3F0FF] text-[#8B7AFF] shadow-sm'
+                                                            : 'border-gray-100 hover:border-[#D0C7FF] hover:bg-gray-50 text-gray-700'
                                                         }
                                                     `}
                                                 >
                                                     <div className={`
-                                                        w-6 h-6 rounded-full border-2 flex flex-shrink-0 items-center justify-center mr-4
-                                                        ${isSelected ? 'border-blue-600 bg-blue-600' : 'border-gray-300'}
+                                                        w-6 h-6 rounded-full border-2 flex flex-shrink-0 items-center justify-center mr-4 transition-colors duration-300
+                                                        ${isSelected ? 'border-[#8B7AFF] bg-[#8B7AFF]' : 'border-gray-300 bg-white'}
                                                     `}>
-                                                        {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-white" />}
+                                                        {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-white animate-in zoom-in duration-200" />}
                                                     </div>
-                                                    <span className="font-medium">{opt}</span>
-                                                </label>
+                                                    <span className={`font-semibold text-[15px] ${isSelected ? 'text-[#8B7AFF]' : 'text-gray-700'}`}>{opt}</span>
+                                                </div>
                                             );
                                         })}
                                     </div>
@@ -258,13 +260,13 @@ export default function QuizModal({
                 </div>
 
                 {/* Footer */}
-                <div className="p-5 border-t bg-gray-50">
+                <div className="p-5 border-t border-gray-100 bg-gray-50/50">
                     {result ? (
-                        <div className="flex gap-3">
-                            <button onClick={handleRetry} className="flex-1 bg-white border-2 border-gray-200 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-50 hover:border-gray-300 transition-colors">
+                        <div className="flex gap-4">
+                            <button onClick={handleRetry} className="flex-1 bg-white border-2 border-gray-200 text-gray-700 py-3.5 rounded-xl font-bold hover:bg-gray-50 hover:border-gray-300 transition-colors">
                                 Ulangi Kuis
                             </button>
-                            <button onClick={onClose} className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200">
+                            <button onClick={onClose} className="flex-1 bg-[#8B7AFF] text-white py-3.5 rounded-xl font-bold hover:bg-[#7E6CE0] transition-colors shadow-lg shadow-[#8B7AFF]/30">
                                 Lanjut Belajar
                             </button>
                         </div>
@@ -272,7 +274,7 @@ export default function QuizModal({
                         <button
                             onClick={handleSubmit}
                             disabled={!quiz || loading || submitting}
-                            className="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 disabled:opacity-50 disabled:shadow-none flex items-center justify-center"
+                            className="w-full bg-[#8B7AFF] text-white py-4 rounded-2xl font-bold text-[15px] hover:bg-[#7E6CE0] transition-all shadow-lg shadow-[#8B7AFF]/30 disabled:opacity-50 disabled:shadow-none flex items-center justify-center"
                         >
                             {submitting ? "Mengirim Jawaban..." : "Selesai & Kumpulkan Jawaban"}
                         </button>

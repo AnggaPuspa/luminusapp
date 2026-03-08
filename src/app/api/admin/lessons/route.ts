@@ -25,7 +25,22 @@ export async function POST(request: Request) {
                 duration: duration ? parseInt(duration) : 0,
                 sortOrder: sortOrder || 0,
             },
+            include: { module: true }
         });
+
+        // 💡 MAGIC FIX: Jika admin nambah materi baru ke course yang udah "selesai"(COMPLETED) oleh student,
+        // status student tersebut otomatis dikembalikan jadi "ACTIVE" karena progress mereka gak 100% lagi.
+        if (newLesson.module?.courseId) {
+            await prisma.enrollment.updateMany({
+                where: {
+                    courseId: newLesson.module.courseId,
+                    status: "COMPLETED",
+                },
+                data: {
+                    status: "ACTIVE",
+                },
+            });
+        }
 
         return NextResponse.json(newLesson, { status: 201 });
     } catch (error: any) {

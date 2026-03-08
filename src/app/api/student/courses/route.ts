@@ -14,7 +14,7 @@ export async function GET(request: Request) {
         const enrollments = await prisma.enrollment.findMany({
             where: {
                 userId,
-                status: "ACTIVE",
+                status: { in: ["ACTIVE", "COMPLETED"] },
                 course: {
                     status: "PUBLISHED",
                     deletedAt: null
@@ -27,6 +27,7 @@ export async function GET(request: Request) {
                         id: true,
                         title: true,
                         slug: true,
+                        description: true,
                         thumbnailUrl: true,
                         originalPrice: true,
                         discountedPrice: true,

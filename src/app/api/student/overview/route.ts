@@ -14,7 +14,7 @@ export async function GET(request: Request) {
         // Fetch counts + recent courses for the student overview
         const [activeCourses, completedLessons, totalTransactions, pendingTransactions, recentEnrollments] = await Promise.all([
             prisma.enrollment.count({
-                where: { userId, status: "ACTIVE" },
+                where: { userId, status: { in: ["ACTIVE", "COMPLETED"] } },
             }),
             prisma.lessonProgress.count({
                 where: { userId, completed: true },
@@ -26,28 +26,65 @@ export async function GET(request: Request) {
                 where: { userId, status: "PENDING" },
             }),
             prisma.enrollment.findMany({
-                where: { userId, status: "ACTIVE" },
+                where: { userId, status: { in: ["ACTIVE", "COMPLETED"] } },
                 orderBy: { enrolledAt: "desc" },
                 take: 3,
                 include: {
                     course: {
-                        select: { id: true, title: true, slug: true, thumbnailUrl: true }
+                        select: {
+                            id: true, title: true, slug: true, thumbnailUrl: true,
+                            modules: {
+                                include: {
+                                    lessons: {
+                                        select: {
+                                            id: true,
+                                            progress: {
+                                                where: { userId, completed: true }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }),
         ]);
 
-        const recentCourses = recentEnrollments.map((e: any) => ({
-            ...e.course,
-            enrolledAt: e.enrolledAt,
-        }));
+        const recentCourses = recentEnrollments.map((e: any) => {
+            const course = e.course;
+            let totalLessons = 0;
+            let completedCourseLessons = 0;
+
+            course.modules.forEach((module: any) => {
+                totalLessons += module.lessons.length;
+                module.lessons.forEach((lesson: any) => {
+                    if (lesson.progress && lesson.progress.length > 0) {
+                        completedCourseLessons++;
+                    }
+                });
+            });
+
+            const progressPercent = totalLessons === 0 ? 0 : Math.round((completedCourseLessons / totalLessons) * 100);
+
+            return {
+                id: course.id,
+                title: course.title,
+                slug: course.slug,
+                thumbnailUrl: course.thumbnailUrl,
+                enrolledAt: e.enrolledAt,
+                totalLessons,
+                completedLessons: completedCourseLessons,
+                progressPercent
+            };
+        });
 
         return NextResponse.json({
             activeCourses,
             completedLessons,
             totalTransactions,
             pendingTransactions,
-            recentCourses,
+            recentCourses: recentCourses,
         }, { status: 200 });
 
     } catch (error: any) {

@@ -1,12 +1,231 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-  output   = "./generated/client"
+model User {
+  id             String           @id @default(uuid())
+  email          String           @unique
+  name           String
+  avatarUrl      String?
+  role           Role             @default(STUDENT)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  password       String?
+  reviews        CourseReview[]
+  enrollments    Enrollment[]
+  lessonProgress LessonProgress[]
+  quizAttempts   QuizAttempt[]    @relation("UserQuizAttempts")
+  transactions   Transaction[]
+
+  @@map("users")
+}
+
+model Course {
+  id              String         @id @default(cuid())
+  title           String
+  slug            String         @unique
+  description     String?
+  thumbnailUrl    String?
+  originalPrice   Int
+  discountedPrice Int?
+  duration        Int            @default(0)
+  status          CourseStatus   @default(DRAFT)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  deletedAt       DateTime?
+  reviews         CourseReview[]
+  enrollments     Enrollment[]
+  modules         Module[]
+  transactions    Transaction[]
+
+  @@index([status, deletedAt])
+  @@map("courses")
+}
+
+model Module {
+  id        String   @id @default(cuid())
+  courseId  String
+  title     String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  lessons   Lesson[]
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  quiz      Quiz?
+
+  @@index([courseId])
+  @@index([courseId, sortOrder])
+  @@map("modules")
+}
+
+model Lesson {
+  id        String           @id @default(cuid())
+  moduleId  String
+  title     String
+  content   String?
+  videoUrl  String?
+  duration  Int              @default(0)
+  sortOrder Int              @default(0)
+  createdAt DateTime         @default(now())
+  progress  LessonProgress[]
+  module    Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@index([moduleId])
+  @@index([moduleId, sortOrder])
+  @@map("lessons")
+}
+
+model Enrollment {
+  id             String           @id @default(cuid())
+  userId         String
+  courseId       String
+  enrolledAt     DateTime         @default(now())
+  status         EnrollmentStatus @default(ACTIVE)
+  certificateUrl String?
+  course         Course           @relation(fields: [courseId], references: [id])
+  user           User             @relation(fields: [userId], references: [id])
+
+  @@unique([userId, courseId])
+  @@index([userId, status])
+  @@index([courseId])
+  @@map("enrollments")
+}
+
+model Transaction {
+  id              String            @id @default(cuid())
+  userId          String
+  courseId        String
+  amount          Int
+  status          TransactionStatus @default(PENDING)
+  paymentMethod   String?
+  paymentChannel  String?
+  mayarInvoiceId  String?           @unique
+  mayarInvoiceUrl String?
+  paidAt          DateTime?
+  expiredAt       DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  couponId        String?
+  discountAmount  Int?
+  coupon          Coupon?           @relation(fields: [couponId], references: [id])
+  course          Course            @relation(fields: [courseId], references: [id])
+  user            User              @relation(fields: [userId], references: [id])
+  webhookLogs     WebhookLog[]
+
+  @@index([userId])
+  @@index([userId, status])
+  @@index([status])
+  @@index([createdAt])
+  @@map("transactions")
+}
+
+model WebhookLog {
+  id            String       @id @default(cuid())
+  transactionId String?
+  event         String
+  payload       Json
+  httpStatus    Int          @default(200)
+  receivedAt    DateTime     @default(now())
+  transaction   Transaction? @relation(fields: [transactionId], references: [id])
+
+  @@index([transactionId])
+  @@index([receivedAt])
+  @@map("webhook_logs")
+}
+
+model LessonProgress {
+  id          String    @id @default(cuid())
+  userId      String
+  lessonId    String
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  lesson      Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@unique([userId, lessonId])
+  @@index([userId, completed])
+  @@index([lessonId])
+  @@map("lesson_progress")
+}
+
+model CourseReview {
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+  @@map("course_reviews")
+}
+
+model Coupon {
+  id            String        @id @default(cuid())
+  code          String        @unique
+  discountType  String
+  discountValue Int
+  maxUses       Int?
+  usedCount     Int           @default(0)
+  minPurchase   Int?
+  validFrom     DateTime      @default(now())
+  validUntil    DateTime?
+  isActive      Boolean       @default(true)
+  courseId      String?
+  createdAt     DateTime      @default(now())
+  transactions  Transaction[]
+
+  @@index([code])
+  @@map("coupons")
+}
+
+model Quiz {
+  id        String     @id @default(cuid())
+  moduleId  String     @unique
+  title     String
+  questions Question[]
+  module    Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@index([moduleId])
+  @@map("quizzes")
+}
+
+model Question {
+  id           String @id @default(cuid())
+  quizId       String
+  questionText String
+  options      Json
+  correctIndex Int
+  sortOrder    Int    @default(0)
+  quiz         Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([quizId])
+  @@map("questions")
+}
+
+model QuizAttempt {
+  id        String   @id @default(cuid())
+  userId    String
+  quizId    String
+  score     Int
+  totalQ    Int
+  answers   Json
+  createdAt DateTime @default(now())
+  user      User     @relation("UserQuizAttempts", fields: [userId], references: [id])
+
+  @@index([userId, quizId])
+  @@map("quiz_attempts")
 }
 
 enum Role {
@@ -29,223 +248,4 @@ enum TransactionStatus {
 enum EnrollmentStatus {
   ACTIVE
   COMPLETED
-}
-
-model User {
-  id           String        @id @default(uuid())
-  email        String        @unique
-  password     String?
-  name         String
-  avatarUrl    String?
-  role         Role          @default(STUDENT)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  enrollments    Enrollment[]
-  transactions   Transaction[]
-  lessonProgress LessonProgress[]
-  reviews        CourseReview[]
-  quizAttempts   QuizAttempt[] @relation("UserQuizAttempts")
-
-  @@map("users")
-}
-
-model Course {
-  id              String        @id @default(cuid())
-  title           String
-  slug            String        @unique
-  description     String?       @db.Text
-  thumbnailUrl    String?
-  originalPrice   Int
-  discountedPrice Int?
-  duration        Int           @default(0)    // total jam
-  status          CourseStatus  @default(DRAFT)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  deletedAt       DateTime?     // soft delete
-  modules         Module[]
-  enrollments     Enrollment[]
-  transactions    Transaction[]
-  reviews         CourseReview[]
-
-  @@index([status, deletedAt])
-  @@map("courses")
-}
-
-model Module {
-  id        String   @id @default(cuid())
-  courseId   String
-  title     String
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  lessons   Lesson[]
-  quiz      Quiz?
-
-  @@index([courseId])
-  @@index([courseId, sortOrder])
-  @@map("modules")
-}
-
-model Lesson {
-  id        String   @id @default(cuid())
-  moduleId  String
-  title     String
-  content   String?  @db.Text
-  videoUrl  String?
-  duration  Int      @default(0) // menit
-  sortOrder  Int      @default(0)
-  createdAt  DateTime @default(now())
-  module     Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  progress   LessonProgress[]
-
-  @@index([moduleId])
-  @@index([moduleId, sortOrder])
-  @@map("lessons")
-}
-
-model Enrollment {
-  id         String           @id @default(cuid())
-  userId     String
-  courseId    String
-  enrolledAt    DateTime         @default(now())
-  status        EnrollmentStatus @default(ACTIVE)
-  certificateUrl String?
-  user       User             @relation(fields: [userId], references: [id])
-  course     Course           @relation(fields: [courseId], references: [id])
-
-  @@unique([userId, courseId])
-  @@index([userId, status])
-  @@index([courseId])
-  @@map("enrollments")
-}
-
-model Transaction {
-  id              String            @id @default(cuid())
-  userId          String
-  courseId         String
-  amount          Int
-  status          TransactionStatus @default(PENDING)
-  paymentMethod   String?
-  paymentChannel  String?
-  mayarInvoiceId  String?           @unique
-  mayarInvoiceUrl String?
-  couponId        String?
-  discountAmount  Int?
-  paidAt          DateTime?
-  expiredAt       DateTime?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  user            User              @relation(fields: [userId], references: [id])
-  course          Course            @relation(fields: [courseId], references: [id])
-  coupon          Coupon?           @relation(fields: [couponId], references: [id])
-  webhookLogs     WebhookLog[]
-
-  @@index([userId])
-  @@index([userId, status])
-  @@index([status])
-  @@index([createdAt])
-  @@map("transactions")
-}
-
-model WebhookLog {
-  id            String      @id @default(cuid())
-  transactionId String?
-  event         String
-  payload       Json
-  httpStatus    Int         @default(200)
-  receivedAt    DateTime    @default(now())
-  transaction   Transaction? @relation(fields: [transactionId], references: [id])
-
-  @@index([transactionId])
-  @@index([receivedAt])
-  @@map("webhook_logs")
-}
-
-model LessonProgress {
-  id          String    @id @default(cuid())
-  userId      String
-  lessonId    String
-  completed   Boolean   @default(false)
-  completedAt DateTime?
-  createdAt   DateTime  @default(now())
-  user        User      @relation(fields: [userId], references: [id])
-  lesson      Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, lessonId])
-  @@index([userId, completed])
-  @@index([lessonId])
-  @@map("lesson_progress")
-}
-
-model CourseReview {
-  id        String   @id @default(cuid())
-  userId    String
-  courseId  String
-  rating    Int      // 1 to 5 stars
-  comment   String?  @db.Text
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, courseId]) // One review per user per course
-  @@index([courseId])
-  @@map("course_reviews")
-}
-
-model Coupon {
-  id             String    @id @default(cuid())
-  code           String    @unique
-  discountType   String
-  discountValue  Int
-  maxUses        Int?
-  usedCount      Int       @default(0)
-  minPurchase    Int?
-  validFrom      DateTime  @default(now())
-  validUntil     DateTime?
-  isActive       Boolean   @default(true)
-  courseId       String?
-  createdAt      DateTime  @default(now())
-  transactions   Transaction[]
-
-  @@index([code])
-  @@map("coupons")
-}
-
-model Quiz {
-  id        String     @id @default(cuid())
-  moduleId  String     @unique
-  title     String
-  module    Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  questions Question[]
-
-  @@index([moduleId])
-  @@map("quizzes")
-}
-
-model Question {
-  id            String   @id @default(cuid())
-  quizId        String
-  questionText  String   @db.Text
-  options       Json
-  correctIndex  Int
-  sortOrder     Int      @default(0)
-  quiz          Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
-
-  @@index([quizId])
-  @@map("questions")
-}
-
-model QuizAttempt {
-  id         String   @id @default(cuid())
-  userId     String
-  quizId     String
-  score      Int
-  totalQ     Int
-  answers    Json
-  createdAt  DateTime @default(now())
-  user       User     @relation("UserQuizAttempts", fields: [userId], references: [id])
-
-  @@index([userId, quizId])
-  @@map("quiz_attempts")
 }

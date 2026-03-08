@@ -26,7 +26,7 @@ export async function POST(
                 where: { slug },
                 include: {
                     enrollments: {
-                        where: { userId: session.user.id, status: "ACTIVE" }
+                        where: { userId: session.user.id, status: { in: ["ACTIVE", "COMPLETED"] } }
                     }
                 }
             });

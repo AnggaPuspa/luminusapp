@@ -67,9 +67,11 @@ const CertificateTemplate = forwardRef<HTMLDivElement, CertificateTemplateProps>
                         </div>
 
                         <div className="flex flex-col items-center">
-                            {/* Optional Badge Graphic */}
-                            <div className="w-24 h-24 bg-blue-100 rounded-full border-4 border-blue-600 flex items-center justify-center -mt-16 mb-2 shadow-lg bg-white">
-                                <span className="text-3xl">🏆</span>
+                            {/* Pure CSS Badge Seal */}
+                            <div className="relative w-24 h-24 bg-blue-600 rounded-full border-[6px] border-white flex items-center justify-center -mt-16 mb-2 shadow-xl shrink-0">
+                                <div className="absolute inset-1 border-[2px] border-dashed border-white/60 rounded-full flex items-center justify-center">
+                                    <span className="text-white font-serif font-black text-[28px] tracking-widest ml-1">LE</span>
+                                </div>
                             </div>
                             <p className="font-bold text-blue-900 mt-2">Luminus Team</p>
                         </div>
