@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { verifySession } from "@/lib/auth";
+import { checkSubscriberAccess } from "@/lib/access-control";
 
 export async function GET(request: Request) {
     try {
@@ -79,12 +80,15 @@ export async function GET(request: Request) {
             };
         });
 
+        const subscriptionDetails = await checkSubscriberAccess(userId);
+
         return NextResponse.json({
             activeCourses,
             completedLessons,
             totalTransactions,
             pendingTransactions,
             recentCourses: recentCourses,
+            subscription: subscriptionDetails
         }, { status: 200 });
 
     } catch (error: any) {

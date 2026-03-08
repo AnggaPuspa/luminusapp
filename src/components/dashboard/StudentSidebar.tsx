@@ -2,16 +2,17 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import {
     LayoutDashboard,
     PlayCircle,
     ReceiptText,
     Settings,
     LogOut,
-    Sparkles
+    Sparkles,
+    Bot
 } from "lucide-react";
 import Image from "next/image";
+import { useDashboardOverview } from "@/hooks/use-dashboard";
 
 interface SidebarCourse {
     id: string;
@@ -22,22 +23,8 @@ interface SidebarCourse {
 export default function StudentSidebar() {
     const pathname = usePathname();
     const router = useRouter();
-    const [recentCourses, setRecentCourses] = useState<SidebarCourse[]>([]);
-
-    useEffect(() => {
-        const fetchSidebarData = async () => {
-            try {
-                const res = await fetch("/api/student/overview");
-                if (res.ok) {
-                    const data = await res.json();
-                    setRecentCourses(data.recentCourses || []);
-                }
-            } catch (error) {
-                console.error("Failed to fetch sidebar data", error);
-            }
-        };
-        fetchSidebarData();
-    }, []);
+    const { stats } = useDashboardOverview();
+    const recentCourses: SidebarCourse[] = stats?.recentCourses || [];
 
     const handleLogout = async () => {
         try {
@@ -54,6 +41,8 @@ export default function StudentSidebar() {
         { label: "Kelas Saya", href: "/dashboard/courses", icon: PlayCircle },
         { label: "Transaksi", href: "/dashboard/transactions", icon: ReceiptText },
     ];
+
+    const isAiActive = pathname.startsWith('/dashboard/ai-mentor');
 
     return (
         <aside className="w-64 bg-white h-full hidden md:flex flex-col shadow-sm border-r border-gray-100 z-20 overflow-y-auto">
@@ -90,7 +79,7 @@ export default function StudentSidebar() {
                     </nav>
                 </div>
 
-                {/* KELAS AKTIF (FRIENDS REPLACEMENT) */}
+                {/* KELAS AKTIF */}
                 <div>
                     <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Kelas Aktif</h3>
                     <div className="space-y-4">
@@ -116,6 +105,20 @@ export default function StudentSidebar() {
                             ))
                         )}
                     </div>
+                </div>
+
+                {/* AI MENTOR */}
+                <div>
+                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">AI Mentor</h3>
+                    <nav>
+                        <Link
+                            href="/dashboard/ai-mentor"
+                            className={`flex items-center gap-4 transition-colors ${isAiActive ? 'text-[#696EFF] font-semibold' : 'text-gray-600 hover:text-gray-900 font-medium'}`}
+                        >
+                            <Bot className={`w-5 h-5 ${isAiActive ? 'text-[#696EFF]' : 'text-gray-500'}`} />
+                            <span>Chat AI Mentor</span>
+                        </Link>
+                    </nav>
                 </div>
 
                 {/* SETTINGS SECTION */}

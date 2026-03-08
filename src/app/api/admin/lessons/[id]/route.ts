@@ -14,7 +14,7 @@ export async function PUT(
         }
 
         const body = await request.json();
-        const { title, content, videoUrl, duration, sortOrder } = body;
+        const { title, content, videoUrl, duration, sortOrder, resources } = body;
 
         const updatedData: any = {};
         if (title !== undefined) updatedData.title = title;
@@ -22,6 +22,7 @@ export async function PUT(
         if (videoUrl !== undefined) updatedData.videoUrl = videoUrl;
         if (duration !== undefined) updatedData.duration = parseInt(duration);
         if (sortOrder !== undefined) updatedData.sortOrder = sortOrder;
+        if (resources !== undefined) updatedData.resources = resources ? JSON.stringify(resources) : undefined;
 
         const updatedLesson = await prisma.lesson.update({
             where: { id },

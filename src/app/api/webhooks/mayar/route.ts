@@ -20,73 +20,122 @@ export async function POST(request: Request) {
 
         // 2. We only care about payment.received for now
         if (eventName === "payment.received") {
-            // Find transaction by Mayar Invoice ID or Reference ID
-            // Make sure the transaction exists and is currently PENDING
             const transactionStr = eventData?.transaction?.id || eventData?.id;
-            // NOTE: The exact payload mapping (data.id vs data.transaction.id) 
-            // depends on Mayar's exact JSON structure for payment.received. 
-            // We'll search our DB by mayarInvoiceId first.
+            const refId = eventData?.referenceId;
 
-            let transaction = await (prisma as any).transaction.findFirst({
+            // FIRST: Check if this payment is for a Subscription Invoice
+            let subInvoice = await prisma.subscriptionInvoice.findFirst({
                 where: { mayarInvoiceId: transactionStr },
-                include: { user: true, course: true }
+                include: { subscription: true }
             });
 
-            // If we don't find it by mayarInvoiceId, let's try the referenceId if Mayar returns it
-            if (!transaction && eventData?.referenceId) {
-                transaction = await (prisma as any).transaction.findUnique({
-                    where: { id: eventData.referenceId },
-                    include: { user: true, course: true }
+            if (!subInvoice && refId) {
+                subInvoice = await prisma.subscriptionInvoice.findFirst({
+                    where: { id: refId },
+                    include: { subscription: true }
                 });
             }
 
-            if (transaction && transaction.status === "PENDING") {
-                const dbOps: any[] = [
-                    (prisma as any).transaction.update({
-                        where: { id: transaction.id },
-                        data: {
-                            status: "PAID",
-                            paidAt: new Date(),
-                            paymentMethod: eventData?.paymentMethod || eventData?.transaction?.paymentMethod || "unknown",
-                            paymentChannel: eventData?.paymentChannel || eventData?.transaction?.paymentChannel || "unknown"
-                        }
-                    }),
-                    prisma.enrollment.upsert({
-                        where: {
-                            userId_courseId: {
-                                userId: transaction.userId,
-                                courseId: transaction.courseId
-                            }
-                        },
-                        update: { status: "ACTIVE" },
-                        create: {
-                            userId: transaction.userId,
-                            courseId: transaction.courseId,
-                            status: "ACTIVE"
-                        }
-                    })
-                ];
+            if (subInvoice && subInvoice.status === "PENDING") {
+                // --- Handle Subscription Payment ---
+                const now = new Date();
+                const sub = subInvoice.subscription;
 
-                // If a coupon was used, increment its usage count
-                if (transaction.couponId) {
-                    dbOps.push(
-                        (prisma as any).coupon.update({
-                            where: { id: transaction.couponId },
-                            data: { usedCount: { increment: 1 } }
-                        })
-                    );
+                // Calculate new period ends 
+                let newStart = sub.currentPeriodStart;
+                let newEnd = sub.currentPeriodEnd;
+
+                // If subscription was inactive or expired, reset the start date to now
+                if (sub.status !== "ACTIVE" || sub.currentPeriodEnd < now) {
+                    newStart = now;
+                    newEnd = new Date(now);
+                    if (sub.billingCycle === "YEARLY") newEnd.setFullYear(newEnd.getFullYear() + 1);
+                    else newEnd.setMonth(newEnd.getMonth() + 1);
+                } else {
+                    // It's an active renewal (paid before expiration), just extend the end date
+                    newEnd = new Date(sub.currentPeriodEnd);
+                    if (sub.billingCycle === "YEARLY") newEnd.setFullYear(newEnd.getFullYear() + 1);
+                    else newEnd.setMonth(newEnd.getMonth() + 1);
                 }
 
-                // 3. Execute all updates atomically
-                await prisma.$transaction(dbOps);
+                await prisma.$transaction([
+                    prisma.subscriptionInvoice.update({
+                        where: { id: subInvoice.id },
+                        data: { status: "PAID", paidAt: now }
+                    }),
+                    prisma.userSubscription.update({
+                        where: { id: sub.id },
+                        data: {
+                            status: "ACTIVE",
+                            currentPeriodStart: newStart,
+                            currentPeriodEnd: newEnd,
+                            // NOTE: aiChatUsedThisMonth NOT reset here — only via cron reset-ai-quota on 1st of month
+                        }
+                    })
+                ]);
 
-                // 4. Send Payment Success Email
-                sendPaymentSuccessEmail(
-                    transaction.user.name,
-                    transaction.user.email,
-                    transaction.course.title,
-                    transaction.amount
-                ).catch(err => console.error("Payment Success email error:", err));
+                // TODO: We could send a "Subscription Activated/Renewed" email here
+                console.log(`[Webhook] Subscription ${sub.id} activated/renewed successfully.`);
+            } else {
+                // SECOND: If not a subscription, process as One-Time Transaction
+                let transaction = await (prisma as any).transaction.findFirst({
+                    where: { mayarInvoiceId: transactionStr },
+                    include: { user: true, course: true }
+                });
+
+                if (!transaction && refId) {
+                    transaction = await (prisma as any).transaction.findUnique({
+                        where: { id: refId },
+                        include: { user: true, course: true }
+                    });
+                }
+
+                if (transaction && transaction.status === "PENDING") {
+                    const dbOps: any[] = [
+                        (prisma as any).transaction.update({
+                            where: { id: transaction.id },
+                            data: {
+                                status: "PAID",
+                                paidAt: new Date(),
+                                paymentMethod: eventData?.paymentMethod || eventData?.transaction?.paymentMethod || "unknown",
+                                paymentChannel: eventData?.paymentChannel || eventData?.transaction?.paymentChannel || "unknown"
+                            }
+                        }),
+                        prisma.enrollment.upsert({
+                            where: {
+                                userId_courseId: {
+                                    userId: transaction.userId,
+                                    courseId: transaction.courseId
+                                }
+                            },
+                            update: { status: "ACTIVE", source: "PURCHASE" }, // Upgrade ke lifetime jika sebelumnya via subscription
+                            create: {
+                                userId: transaction.userId,
+                                courseId: transaction.courseId,
+                                status: "ACTIVE",
+                                source: "PURCHASE"
+                            }
+                        })
+                    ];
+
+                    if (transaction.couponId) {
+                        dbOps.push(
+                            (prisma as any).coupon.update({
+                                where: { id: transaction.couponId },
+                                data: { usedCount: { increment: 1 } }
+                            })
+                        );
+                    }
+
+                    await prisma.$transaction(dbOps);
+
+                    sendPaymentSuccessEmail(
+                        transaction.user.name,
+                        transaction.user.email,
+                        transaction.course.title,
+                        transaction.amount
+                    ).catch(err => console.error("Payment Success email error:", err));
+                }
             }
         }
 

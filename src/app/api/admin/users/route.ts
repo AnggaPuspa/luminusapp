@@ -26,7 +26,7 @@ export async function GET(request: Request) {
         });
 
         // Omit passwords explicitly before sending to client
-        const safeUsers = users.map(user => {
+        const safeUsers = users.map((user: any) => {
             const { password, ...safeUser } = user;
             return safeUser;
         });

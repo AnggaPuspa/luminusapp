@@ -46,6 +46,9 @@ export default function Navbar() {
                 <li className={`mx-2 font-medium ${pathname === '/kursus' ? (scrolled ? 'text-black' : 'text-white') : 'nav-links'}`}>
                   <Link href="/kursus">Kursus</Link>
                 </li>
+                <li className={`mx-2 font-medium ${pathname === '/pricing' ? (scrolled ? 'text-black' : 'text-white') : 'nav-links'}`}>
+                  <Link href="/pricing">Langganan</Link>
+                </li>
                 <li className={`mx-2 font-medium ${pathname === '/forum' ? (scrolled ? 'text-black' : 'text-white') : 'nav-links'}`}>
                   <Link href="/forum">Forum</Link>
                 </li>
@@ -129,6 +132,10 @@ export default function Navbar() {
             </li>
             <li className={`text-lg font-semibold flex items-center w-full justify-between ${pathname === '/kursus' ? 'text-[#696EFF]' : 'text-black'}`}>
               <span><Link href="/kursus">Kursus</Link></span>
+              <i className="fa-solid fa-info w-6 text-center text-xs text-gray-400 aspect-square"></i>
+            </li>
+            <li className={`text-lg font-semibold flex items-center w-full justify-between ${pathname === '/pricing' ? 'text-[#696EFF]' : 'text-black'}`}>
+              <span><Link href="/pricing">Langganan</Link></span>
               <i className="fa-solid fa-info w-6 text-center text-xs text-gray-400 aspect-square"></i>
             </li>
             <li className={`text-lg font-semibold flex items-center w-full justify-between ${pathname === '/forum' ? 'text-[#696EFF]' : 'text-black'}`}>

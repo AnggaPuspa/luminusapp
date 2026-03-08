@@ -9,6 +9,9 @@ import { use } from "react";
 import CertificateDownloader from "@/components/common/CertificateDownloader";
 import AddReviewModal from "@/components/AddReviewModal";
 import QuizModal from "@/components/classroom/QuizModal";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 
 interface Lesson {
     id: string;
@@ -18,6 +21,7 @@ interface Lesson {
     content?: string | null;
     moduleId: string;
     progress?: { completed: boolean }[];
+    resources?: any;
 }
 
 interface Module {
@@ -31,6 +35,8 @@ interface Course {
     id: string;
     title: string;
     modules: Module[];
+    accessType?: string;
+    isSubscriber?: boolean;
 }
 
 export default function ClassroomPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -272,7 +278,9 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
 
                             <div className="prose prose-sm max-w-none text-gray-600 leading-relaxed font-medium">
                                 {activeLesson?.content ? (
-                                    <div dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                                        {activeLesson.content}
+                                    </ReactMarkdown>
                                 ) : (
                                     <p className="text-gray-400 italic">Tidak ada teks panduan untuk materi ini.</p>
                                 )}
@@ -382,9 +390,74 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
                         )}
 
                         {activeTab === 'resources' && (
-                            <div className="py-10 text-center">
-                                <FileText className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                                <p className="text-sm text-gray-400 font-medium">Belum ada resource tambahan untuk kelas ini.</p>
+                            <div className="py-6">
+                                {/* Parse resources string if needed */}
+                                {(() => {
+                                    let parsedResources: any[] = [];
+                                    try {
+                                        if (activeLesson?.resources) {
+                                            parsedResources = typeof activeLesson.resources === 'string'
+                                                ? JSON.parse(activeLesson.resources)
+                                                : activeLesson.resources;
+                                        }
+                                    } catch (e) { console.error(e); }
+
+                                    const isSubscriber = course.isSubscriber === true;
+
+                                    if (parsedResources.length === 0) {
+                                        return (
+                                            <div className="text-center py-10">
+                                                <FileText className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                                                <p className="text-sm text-gray-400 font-medium">Belum ada resource tambahan untuk materi ini.</p>
+                                            </div>
+                                        );
+                                    }
+
+                                    if (!isSubscriber) {
+                                        return (
+                                            <div className="text-center py-10 bg-gray-50 border border-gray-100 rounded-2xl mx-2 shadow-inner">
+                                                <Award className="w-12 h-12 text-[#A855F7] mx-auto mb-4 opacity-70" />
+                                                <h3 className="text-gray-900 font-bold mb-2">Premium Resources</h3>
+                                                <p className="text-sm text-gray-500 max-w-[250px] mx-auto mb-5 leading-relaxed">
+                                                    Materi ini melampirkan file premium (source code, template, dll). Upgrade ke Subscription untuk mengunduh.
+                                                </p>
+                                                <Link href="/pricing" className="inline-block bg-[#A855F7] text-white px-5 py-2 rounded-full text-sm font-bold shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
+                                                    Upgrade Sekarang
+                                                </Link>
+                                            </div>
+                                        );
+                                    }
+
+                                    return (
+                                        <div className="px-2 space-y-3">
+                                            <div className="mb-4">
+                                                <span className="inline-block px-3 py-1 bg-purple-100 text-purple-700 text-[10px] font-bold rounded-full uppercase tracking-wider mb-2">
+                                                    Premium Akses
+                                                </span>
+                                                <h3 className="font-bold text-gray-900">Download Resources</h3>
+                                            </div>
+                                            {parsedResources.map((res: any, idx: number) => (
+                                                <a
+                                                    key={idx}
+                                                    href={res.url}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="flex items-center gap-3 p-4 bg-white border border-gray-100 rounded-xl hover:border-purple-200 hover:shadow-sm transition-all group"
+                                                >
+                                                    <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-purple-50 group-hover:text-purple-600 transition-colors">
+                                                        <FileText className="w-5 h-5" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-bold text-gray-800 line-clamp-1 group-hover:text-purple-700 transition-colors">
+                                                            {res.title || "Download File"}
+                                                        </p>
+                                                        <p className="text-xs text-gray-400 truncate mt-0.5">{res.url}</p>
+                                                    </div>
+                                                </a>
+                                            ))}
+                                        </div>
+                                    );
+                                })()}
                             </div>
                         )}
 

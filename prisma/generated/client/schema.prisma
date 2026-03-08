@@ -1,50 +1,29 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-  output   = "./generated/client"
-}
-
-enum Role {
-  ADMIN
-  STUDENT
-}
-
-enum CourseStatus {
-  DRAFT
-  PUBLISHED
-}
-
-enum TransactionStatus {
-  PENDING
-  PAID
-  FAILED
-  EXPIRED
-}
-
-enum EnrollmentStatus {
-  ACTIVE
-  COMPLETED
-}
-
 model User {
-  id             String           @id @default(uuid())
-  email          String           @unique
-  password       String?
+  id             String             @id @default(uuid())
+  email          String             @unique
   name           String
   avatarUrl      String?
-  role           Role             @default(STUDENT)
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  enrollments    Enrollment[]
-  transactions   Transaction[]
-  lessonProgress LessonProgress[]
+  role           Role               @default(STUDENT)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  password       String?
   reviews        CourseReview[]
-  quizAttempts   QuizAttempt[]    @relation("UserQuizAttempts")
+  enrollments    Enrollment[]
+  lessonProgress LessonProgress[]
+  quizAttempts   QuizAttempt[]      @relation("UserQuizAttempts")
+  transactions   Transaction[]
+  subscriptions  UserSubscription[]
 
   @@map("users")
 }
@@ -53,19 +32,20 @@ model Course {
   id              String         @id @default(cuid())
   title           String
   slug            String         @unique
-  description     String?        @db.Text
+  description     String?
   thumbnailUrl    String?
   originalPrice   Int
   discountedPrice Int?
-  duration        Int            @default(0) // total jam
+  duration        Int            @default(0)
   status          CourseStatus   @default(DRAFT)
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
-  deletedAt       DateTime? // soft delete
-  modules         Module[]
-  enrollments     Enrollment[]
-  transactions    Transaction[]
+  deletedAt       DateTime?
   reviews         CourseReview[]
+  enrollments     Enrollment[]
+  modules         Module[]
+  transactions    Transaction[]
+  planCourses     PlanCourse[]
 
   @@index([status, deletedAt])
   @@map("courses")
@@ -77,8 +57,8 @@ model Module {
   title     String
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   lessons   Lesson[]
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   quiz      Quiz?
 
   @@index([courseId])
@@ -90,13 +70,14 @@ model Lesson {
   id        String           @id @default(cuid())
   moduleId  String
   title     String
-  content   String?          @db.Text
+  content   String?
   videoUrl  String?
-  duration  Int              @default(0) // menit
+  duration  Int              @default(0)
   sortOrder Int              @default(0)
+  resources Json?
   createdAt DateTime         @default(now())
-  module    Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   progress  LessonProgress[]
+  module    Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
 
   @@index([moduleId])
   @@index([moduleId, sortOrder])
@@ -109,9 +90,10 @@ model Enrollment {
   courseId       String
   enrolledAt     DateTime         @default(now())
   status         EnrollmentStatus @default(ACTIVE)
+  source         EnrollmentSource @default(PURCHASE)
   certificateUrl String?
-  user           User             @relation(fields: [userId], references: [id])
   course         Course           @relation(fields: [courseId], references: [id])
+  user           User             @relation(fields: [userId], references: [id])
 
   @@unique([userId, courseId])
   @@index([userId, status])
@@ -129,15 +111,16 @@ model Transaction {
   paymentChannel  String?
   mayarInvoiceId  String?           @unique
   mayarInvoiceUrl String?
-  couponId        String?
-  discountAmount  Int?
   paidAt          DateTime?
   expiredAt       DateTime?
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
-  user            User              @relation(fields: [userId], references: [id])
-  course          Course            @relation(fields: [courseId], references: [id])
+  type            TransactionType   @default(ONE_TIME)
+  couponId        String?
+  discountAmount  Int?
   coupon          Coupon?           @relation(fields: [couponId], references: [id])
+  course          Course            @relation(fields: [courseId], references: [id])
+  user            User              @relation(fields: [userId], references: [id])
   webhookLogs     WebhookLog[]
 
   @@index([userId])
@@ -168,8 +151,8 @@ model LessonProgress {
   completed   Boolean   @default(false)
   completedAt DateTime?
   createdAt   DateTime  @default(now())
-  user        User      @relation(fields: [userId], references: [id])
   lesson      Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id])
 
   @@unique([userId, lessonId])
   @@index([userId, completed])
@@ -181,14 +164,14 @@ model CourseReview {
   id        String   @id @default(cuid())
   userId    String
   courseId  String
-  rating    Int // 1 to 5 stars
-  comment   String?  @db.Text
+  rating    Int
+  comment   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, courseId]) // One review per user per course
+  @@unique([userId, courseId])
   @@index([courseId])
   @@map("course_reviews")
 }
@@ -216,8 +199,8 @@ model Quiz {
   id        String     @id @default(cuid())
   moduleId  String     @unique
   title     String
-  module    Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   questions Question[]
+  module    Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
 
   @@index([moduleId])
   @@map("quizzes")
@@ -226,7 +209,7 @@ model Quiz {
 model Question {
   id           String @id @default(cuid())
   quizId       String
-  questionText String @db.Text
+  questionText String
   options      Json
   correctIndex Int
   sortOrder    Int    @default(0)
@@ -248,4 +231,144 @@ model QuizAttempt {
 
   @@index([userId, quizId])
   @@map("quiz_attempts")
+}
+
+model SubscriptionPlan {
+  id                 String           @id @default(cuid())
+  name               String
+  slug               String           @unique
+  tier               SubscriptionTier @default(MURID)
+  description        String?
+  monthlyPrice       Int
+  yearlyPrice        Int?
+  isActive           Boolean          @default(true)
+  features           Json?
+  allCoursesIncluded Boolean          @default(false)
+  communityInviteUrl String?
+  aiMentorQuota      Int              @default(0)
+  sortOrder          Int              @default(0)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  includedCourses PlanCourse[]
+  subscriptions   UserSubscription[]
+
+  @@index([isActive, sortOrder])
+  @@map("subscription_plans")
+}
+
+model PlanCourse {
+  id       String           @id @default(cuid())
+  planId   String
+  courseId String
+  plan     SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  course   Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, courseId])
+  @@index([courseId])
+  @@map("plan_courses")
+}
+
+model UserSubscription {
+  id                  String             @id @default(cuid())
+  userId              String
+  planId              String
+  status              SubscriptionStatus @default(PENDING)
+  billingCycle        BillingCycle       @default(MONTHLY)
+  currentPeriodStart  DateTime
+  currentPeriodEnd    DateTime
+  cancelledAt         DateTime?
+  cancelReason        String?
+  aiChatUsedThisMonth Int                @default(0)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  user     User                  @relation(fields: [userId], references: [id])
+  plan     SubscriptionPlan      @relation(fields: [planId], references: [id])
+  invoices SubscriptionInvoice[]
+
+  @@index([userId, status])
+  @@index([status, currentPeriodEnd])
+  @@map("user_subscriptions")
+}
+
+model SubscriptionInvoice {
+  id                 String                    @id @default(cuid())
+  subscriptionId     String
+  amount             Int
+  status             SubscriptionInvoiceStatus @default(PENDING)
+  billingPeriodStart DateTime
+  billingPeriodEnd   DateTime
+  mayarInvoiceId     String?                   @unique
+  mayarInvoiceUrl    String?
+  paidAt             DateTime?
+  failedAt           DateTime?
+  failureReason      String?
+  retryCount         Int                       @default(0)
+  createdAt          DateTime                  @default(now())
+
+  subscription UserSubscription @relation(fields: [subscriptionId], references: [id])
+
+  @@index([subscriptionId])
+  @@index([mayarInvoiceId])
+  @@map("subscription_invoices")
+}
+
+enum Role {
+  ADMIN
+  STUDENT
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum TransactionStatus {
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  SUSPENDED
+}
+
+enum EnrollmentSource {
+  PURCHASE
+  SUBSCRIPTION
+}
+
+enum TransactionType {
+  ONE_TIME
+  SUBSCRIPTION
+}
+
+enum SubscriptionTier {
+  BIASA
+  MURID
+  PROFESIONAL
+}
+
+enum SubscriptionStatus {
+  PENDING
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+enum BillingCycle {
+  MONTHLY
+  YEARLY
+}
+
+enum SubscriptionInvoiceStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
 }

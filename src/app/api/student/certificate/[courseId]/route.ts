@@ -55,7 +55,7 @@ export async function GET(
         const progress = await prisma.lessonProgress.count({
             where: {
                 userId,
-                lessonId: { in: lessons.map(l => l.id) },
+                lessonId: { in: lessons.map((l: any) => l.id) },
                 completed: true
             }
         });
