@@ -2,8 +2,11 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import prisma from "@/lib/prisma";
+import { cache } from "react";
 import CheckoutButton from "@/components/common/CheckoutButton";
 import { Navbar, Footer } from "@/components";
+
+export const revalidate = 3600; // ISR: cache 1 hour
 
 function formatPrice(price: number) {
     return new Intl.NumberFormat('id-ID', {
@@ -13,22 +16,9 @@ function formatPrice(price: number) {
     }).format(price);
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
-    const { slug } = await params;
-    const course = await prisma.course.findUnique({
-        where: { slug }
-    });
-    if (!course) return { title: "Kursus Tidak Ditemukan" };
-    return {
-        title: `${course.title} | Luminus Education`,
-        description: course.description?.substring(0, 150) || "Pelajari materi ini di Luminus Education."
-    };
-}
-
-export default async function PublicCourseDetailPage({ params }: { params: Promise<{ slug: string }> }) {
-    const { slug } = await params;
-
-    const course = await prisma.course.findUnique({
+// Deduplicate: generateMetadata + page share this single DB call per request
+const getCourseBySlug = cache(async (slug: string) => {
+    return prisma.course.findUnique({
         where: {
             slug,
             status: "PUBLISHED",
@@ -53,6 +43,21 @@ export default async function PublicCourseDetailPage({ params }: { params: Promi
             }
         }
     }) as any;
+});
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = await params;
+    const course = await getCourseBySlug(slug);
+    if (!course) return { title: "Kursus Tidak Ditemukan" };
+    return {
+        title: `${course.title} | Luminus Education`,
+        description: course.description?.substring(0, 150) || "Pelajari materi ini di Luminus Education."
+    };
+}
+
+export default async function PublicCourseDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = await params;
+    const course = await getCourseBySlug(slug);
 
     if (!course) notFound();
 

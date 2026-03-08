@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { BookOpenCheck, Trophy, CreditCard, Hourglass, ChevronLeft, ChevronRight, MoreVertical, Bell, Mail, User, Play, GraduationCap, PlayCircle } from "lucide-react";
+import { BookOpenCheck, Trophy, CreditCard, Hourglass, ChevronLeft, ChevronRight, MoreVertical, Bell, Mail, User, Play, GraduationCap, PlayCircle, Bot, MessageCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { format } from "date-fns";
 import StudentTopbar from "@/components/dashboard/StudentTopbar";
+import AiMentorChat from "@/components/dashboard/AiMentorChat";
+import { useDashboardOverview } from "@/hooks/use-dashboard";
 
 interface CourseData {
     id: string;
@@ -24,37 +25,21 @@ interface DashboardStats {
     totalTransactions: number;
     pendingTransactions: number;
     recentCourses: CourseData[];
+    subscription?: any;
 }
 
 export default function StudentOverviewPage() {
-    const [stats, setStats] = useState<DashboardStats>({
+    const { stats: fetchedStats, isLoading: loading } = useDashboardOverview();
+    const stats: DashboardStats = fetchedStats || {
         activeCourses: 0,
         completedLessons: 0,
         totalTransactions: 0,
         pendingTransactions: 0,
         recentCourses: [],
-    });
-    const [loading, setLoading] = useState(true);
+        subscription: null,
+    };
     // TODO: fetch real user profile data if available. Using placeholder for now
     const userName = "Pelajar";
-
-    useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const res = await fetch("/api/student/overview");
-                if (res.ok) {
-                    const data = await res.json();
-                    setStats(data);
-                }
-            } catch (error) {
-                console.error("Failed to fetch dashboard stats", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchStats();
-    }, []);
 
     const recentCourses = stats.recentCourses || [];
 
@@ -315,7 +300,14 @@ export default function StudentOverviewPage() {
                         <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm bg-gray-100 flex items-center justify-center">
                             <User className="w-5 h-5 text-gray-400" />
                         </div>
-                        <span className="font-semibold text-gray-800 text-sm">{userName.split(' ')[0]} User</span>
+                        <div className="flex flex-col">
+                            <span className="font-semibold text-gray-800 text-sm">{userName.split(' ')[0]} User</span>
+                            {stats.subscription?.isSubscriber && (
+                                <span className="text-[9px] font-bold uppercase tracking-wider text-[#696EFF]">
+                                    {stats.subscription.tier === 'PROFESIONAL' ? 'Pro' : stats.subscription.tier === 'MURID' ? 'Murid' : 'Biasa'} Plan
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -450,6 +442,56 @@ export default function StudentOverviewPage() {
                             </div>
                         </div>
                     </div>
+
+                    {/* VIP Community Card */}
+                    {!loading && (
+                        <div className="mt-4">
+                            <div className={`rounded-[24px] p-6 border relative overflow-hidden flex flex-col items-center text-center ${stats.subscription?.isSubscriber ? 'bg-[#111111] text-white border-transparent shadow-lg' : 'bg-white border-gray-100'}`}>
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 z-10 ${stats.subscription?.isSubscriber ? 'bg-[#2b2b2b] text-white' : 'bg-[#F3F0FF] text-[#8B7AFF]'}`}>
+                                    <MessageCircle className="w-6 h-6" />
+                                </div>
+                                <h3 className={`text-lg font-bold mb-2 z-10 ${stats.subscription?.isSubscriber ? 'text-white' : 'text-gray-900'}`}>VIP Community</h3>
+                                <p className={`text-xs font-medium mb-6 z-10 ${stats.subscription?.isSubscriber ? 'text-white/70' : 'text-gray-500'}`}>
+                                    {stats.subscription?.isSubscriber
+                                        ? "Akses eksklusif grup Discord untuk tanya jawab langsung dengan mentor dan peers."
+                                        : "Tingkatkan langganan untuk masuk ke komunitas premium kami."}
+                                </p>
+                                <div className="z-10 w-full">
+                                    {stats.subscription?.isSubscriber ? (
+                                        stats.subscription?.communityUrl ? (
+                                            <a
+                                                href={stats.subscription.communityUrl}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="block w-full py-2.5 rounded-full bg-[#696EFF] text-white text-sm font-semibold hover:bg-[#585cee] transition-colors"
+                                            >
+                                                Join Server Discord
+                                            </a>
+                                        ) : (
+                                            <span className="block w-full py-2.5 rounded-full border border-white/20 text-white/50 text-sm font-semibold">
+                                                Link Belum Tersedia
+                                            </span>
+                                        )
+                                    ) : (
+                                        <Link
+                                            href="/pricing"
+                                            className="block w-full py-2.5 rounded-full bg-[#8B7AFF] text-white text-sm font-semibold hover:bg-[#7a6aee] transition-colors"
+                                        >
+                                            Upgrade Langganan
+                                        </Link>
+                                    )}
+                                </div>
+
+                                {/* Abstract background elements if subscriber */}
+                                {stats.subscription?.isSubscriber && (
+                                    <>
+                                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#696EFF] rounded-full blur-[40px] opacity-20"></div>
+                                        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-[#A855F7] rounded-full blur-[40px] opacity-20"></div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

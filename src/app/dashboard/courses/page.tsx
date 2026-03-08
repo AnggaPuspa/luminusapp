@@ -8,6 +8,7 @@ import StudentTopbar from "@/components/dashboard/StudentTopbar";
 import CertificateDownloader from "@/components/common/CertificateDownloader";
 import CertificateTemplate from "@/components/common/CertificateTemplate";
 import { toast } from "sonner";
+import { useStudentCourses } from "@/hooks/use-dashboard";
 
 interface CourseItem {
     id: string;
@@ -20,6 +21,7 @@ interface CourseItem {
     totalLessons: number;
     userId: string;
     enrolledAt: string;
+    source?: string;
 }
 
 interface Analytics {
@@ -34,9 +36,8 @@ interface Analytics {
 }
 
 export default function MyCoursesPage() {
-    const [courses, setCourses] = useState<CourseItem[]>([]);
+    const { courses, isLoading: loading } = useStudentCourses();
     const [analytics, setAnalytics] = useState<Analytics | null>(null);
-    const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'ALL' | 'IN_PROGRESS' | 'COMPLETED'>('ALL');
     const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -52,30 +53,13 @@ export default function MyCoursesPage() {
     }, [courses, selectedCourseId]);
 
     useEffect(() => {
-        const fetchData = async () => {
+        const fetchAnalytics = async () => {
             try {
-                const [coursesRes, analyticsRes] = await Promise.all([
-                    fetch("/api/student/courses"),
-                    fetch("/api/student/analytics")
-                ]);
-
-                if (coursesRes.ok) {
-                    const data = await coursesRes.json();
-                    setCourses(data);
-                }
-
-                if (analyticsRes.ok) {
-                    const data = await analyticsRes.json();
-                    setAnalytics(data);
-                }
-            } catch (error) {
-                console.error("Failed to fetch data", error);
-            } finally {
-                setLoading(false);
-            }
+                const res = await fetch("/api/student/analytics");
+                if (res.ok) setAnalytics(await res.json());
+            } catch (e) { console.error("Failed to fetch analytics", e); }
         };
-
-        fetchData();
+        fetchAnalytics();
     }, []);
 
     const formatDate = (dateString?: string) => {
@@ -259,9 +243,24 @@ export default function MyCoursesPage() {
                                 <div className={`flex flex-col flex-1 min-w-0 ${viewMode === 'list' ? 'py-1 justify-center' : ''}`}>
                                     {/* Category and Action layout */}
                                     <div className={`flex items-center justify-between ${viewMode === 'list' ? 'mb-1' : 'mb-3'}`}>
-                                        <div className="inline-block px-2.5 py-1 bg-[#F3F0FF] text-[#8B7AFF] text-[10px] font-semibold rounded-md uppercase tracking-wider">
-                                            KURSUS
-                                        </div>
+                                        {course.source === 'SUBSCRIPTION' ? (
+                                            <div className="inline-flex items-center gap-1 px-2 py-1 bg-purple-50 border border-purple-100/50 text-purple-600 text-[10px] font-bold rounded flex-shrink-0 tracking-widest relative overflow-hidden group/badge shadow-sm">
+                                                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-500/10 to-purple-500/0 translate-x-[-100%] group-hover/badge:translate-x-[100%] transition-transform duration-1000"></div>
+                                                <div className="w-[14px] h-[14px] rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-inner">
+                                                    <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                    </svg>
+                                                </div>
+                                                LANGGANAN
+                                            </div>
+                                        ) : (
+                                            <div className="inline-flex items-center gap-1 px-2 py-1 bg-gray-50 border border-gray-200/50 text-gray-600 text-[10px] font-bold rounded flex-shrink-0 tracking-widest shadow-sm">
+                                                <div className="w-[14px] h-[14px] rounded-full bg-gray-800 flex items-center justify-center">
+                                                    <Lock className="w-2 h-2 text-white" />
+                                                </div>
+                                                LIFETIME
+                                            </div>
+                                        )}
                                         {viewMode === 'grid' && (
                                             course.progressPercent === 100 ? (
                                                 <Link

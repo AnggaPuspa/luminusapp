@@ -125,12 +125,12 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
 exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   email: 'email',
-  password: 'password',
   name: 'name',
   avatarUrl: 'avatarUrl',
   role: 'role',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  password: 'password'
 };
 
 exports.Prisma.CourseScalarFieldEnum = {
@@ -164,6 +164,7 @@ exports.Prisma.LessonScalarFieldEnum = {
   videoUrl: 'videoUrl',
   duration: 'duration',
   sortOrder: 'sortOrder',
+  resources: 'resources',
   createdAt: 'createdAt'
 };
 
@@ -173,6 +174,7 @@ exports.Prisma.EnrollmentScalarFieldEnum = {
   courseId: 'courseId',
   enrolledAt: 'enrolledAt',
   status: 'status',
+  source: 'source',
   certificateUrl: 'certificateUrl'
 };
 
@@ -186,12 +188,13 @@ exports.Prisma.TransactionScalarFieldEnum = {
   paymentChannel: 'paymentChannel',
   mayarInvoiceId: 'mayarInvoiceId',
   mayarInvoiceUrl: 'mayarInvoiceUrl',
-  couponId: 'couponId',
-  discountAmount: 'discountAmount',
   paidAt: 'paidAt',
   expiredAt: 'expiredAt',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  type: 'type',
+  couponId: 'couponId',
+  discountAmount: 'discountAmount'
 };
 
 exports.Prisma.WebhookLogScalarFieldEnum = {
@@ -262,9 +265,69 @@ exports.Prisma.QuizAttemptScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.SubscriptionPlanScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  slug: 'slug',
+  tier: 'tier',
+  description: 'description',
+  monthlyPrice: 'monthlyPrice',
+  yearlyPrice: 'yearlyPrice',
+  isActive: 'isActive',
+  features: 'features',
+  allCoursesIncluded: 'allCoursesIncluded',
+  communityInviteUrl: 'communityInviteUrl',
+  aiMentorQuota: 'aiMentorQuota',
+  sortOrder: 'sortOrder',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PlanCourseScalarFieldEnum = {
+  id: 'id',
+  planId: 'planId',
+  courseId: 'courseId'
+};
+
+exports.Prisma.UserSubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  planId: 'planId',
+  status: 'status',
+  billingCycle: 'billingCycle',
+  currentPeriodStart: 'currentPeriodStart',
+  currentPeriodEnd: 'currentPeriodEnd',
+  cancelledAt: 'cancelledAt',
+  cancelReason: 'cancelReason',
+  aiChatUsedThisMonth: 'aiChatUsedThisMonth',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.SubscriptionInvoiceScalarFieldEnum = {
+  id: 'id',
+  subscriptionId: 'subscriptionId',
+  amount: 'amount',
+  status: 'status',
+  billingPeriodStart: 'billingPeriodStart',
+  billingPeriodEnd: 'billingPeriodEnd',
+  mayarInvoiceId: 'mayarInvoiceId',
+  mayarInvoiceUrl: 'mayarInvoiceUrl',
+  paidAt: 'paidAt',
+  failedAt: 'failedAt',
+  failureReason: 'failureReason',
+  retryCount: 'retryCount',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
 };
 
 exports.Prisma.JsonNullValueInput = {
@@ -298,7 +361,13 @@ exports.CourseStatus = exports.$Enums.CourseStatus = {
 
 exports.EnrollmentStatus = exports.$Enums.EnrollmentStatus = {
   ACTIVE: 'ACTIVE',
-  COMPLETED: 'COMPLETED'
+  COMPLETED: 'COMPLETED',
+  SUSPENDED: 'SUSPENDED'
+};
+
+exports.EnrollmentSource = exports.$Enums.EnrollmentSource = {
+  PURCHASE: 'PURCHASE',
+  SUBSCRIPTION: 'SUBSCRIPTION'
 };
 
 exports.TransactionStatus = exports.$Enums.TransactionStatus = {
@@ -306,6 +375,37 @@ exports.TransactionStatus = exports.$Enums.TransactionStatus = {
   PAID: 'PAID',
   FAILED: 'FAILED',
   EXPIRED: 'EXPIRED'
+};
+
+exports.TransactionType = exports.$Enums.TransactionType = {
+  ONE_TIME: 'ONE_TIME',
+  SUBSCRIPTION: 'SUBSCRIPTION'
+};
+
+exports.SubscriptionTier = exports.$Enums.SubscriptionTier = {
+  BIASA: 'BIASA',
+  MURID: 'MURID',
+  PROFESIONAL: 'PROFESIONAL'
+};
+
+exports.SubscriptionStatus = exports.$Enums.SubscriptionStatus = {
+  PENDING: 'PENDING',
+  ACTIVE: 'ACTIVE',
+  PAST_DUE: 'PAST_DUE',
+  CANCELLED: 'CANCELLED',
+  EXPIRED: 'EXPIRED'
+};
+
+exports.BillingCycle = exports.$Enums.BillingCycle = {
+  MONTHLY: 'MONTHLY',
+  YEARLY: 'YEARLY'
+};
+
+exports.SubscriptionInvoiceStatus = exports.$Enums.SubscriptionInvoiceStatus = {
+  PENDING: 'PENDING',
+  PAID: 'PAID',
+  FAILED: 'FAILED',
+  REFUNDED: 'REFUNDED'
 };
 
 exports.Prisma.ModelName = {
@@ -321,7 +421,11 @@ exports.Prisma.ModelName = {
   Coupon: 'Coupon',
   Quiz: 'Quiz',
   Question: 'Question',
-  QuizAttempt: 'QuizAttempt'
+  QuizAttempt: 'QuizAttempt',
+  SubscriptionPlan: 'SubscriptionPlan',
+  PlanCourse: 'PlanCourse',
+  UserSubscription: 'UserSubscription',
+  SubscriptionInvoice: 'SubscriptionInvoice'
 };
 
 /**

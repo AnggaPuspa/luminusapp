@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 import StudentTopbar from "@/components/dashboard/StudentTopbar";
+import { invalidateProfile, invalidateDashboard } from "@/hooks/use-dashboard";
 
 export default function StudentSettingsPage() {
     const [loading, setLoading] = useState(true);
@@ -95,6 +96,9 @@ export default function StudentSettingsPage() {
                 // Clear password field after save
                 setFormData(prev => ({ ...prev, password: "" }));
                 setOriginalData({ name: formData.name, email: formData.email });
+                // Invalidate SWR caches so sidebar/dashboard show updated name
+                invalidateProfile();
+                invalidateDashboard();
             } else {
                 const data = await res.json();
                 toast.error(data.message || "Gagal memperbarui profil");

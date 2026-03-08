@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CopyIcon, X, Plus } from "lucide-react";
+import { CopyIcon, X, Plus, Trash2 } from "lucide-react";
 
 interface LessonFormModalProps {
     isOpen: boolean;
@@ -16,6 +16,7 @@ export default function LessonFormModal({ isOpen, onClose, onSubmit, initialData
     const [content, setContent] = useState("");
     const [videoUrl, setVideoUrl] = useState("");
     const [duration, setDuration] = useState("");
+    const [resources, setResources] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -24,11 +25,23 @@ export default function LessonFormModal({ isOpen, onClose, onSubmit, initialData
             setContent(initialData.content || "");
             setVideoUrl(initialData.videoUrl || "");
             setDuration(initialData.duration?.toString() || "");
+
+            // Parse resources if it's a string, or use as is if it's already an array
+            if (initialData.resources) {
+                try {
+                    setResources(typeof initialData.resources === 'string' ? JSON.parse(initialData.resources) : initialData.resources);
+                } catch (e) {
+                    setResources([]);
+                }
+            } else {
+                setResources([]);
+            }
         } else {
             setTitle("");
             setContent("");
             setVideoUrl("");
             setDuration("");
+            setResources([]);
         }
     }, [initialData, isOpen]);
 
@@ -43,6 +56,7 @@ export default function LessonFormModal({ isOpen, onClose, onSubmit, initialData
                 content,
                 videoUrl,
                 duration: parseInt(duration) || 0,
+                resources,
                 moduleId
             });
             onClose();
@@ -116,6 +130,71 @@ export default function LessonFormModal({ isOpen, onClose, onSubmit, initialData
                             value={content}
                             onChange={(e) => setContent(e.target.value)}
                         />
+                    </div>
+
+                    {/* Premium Resources Section */}
+                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50/50">
+                        <div className="flex items-center justify-between mb-3">
+                            <div>
+                                <h3 className="text-sm font-semibold text-gray-900">Premium Resources</h3>
+                                <p className="text-xs text-gray-500">File download atau link yang hanya bisa diakses oleh Subscriber.</p>
+                            </div>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setResources([...resources, { title: "", url: "" }])}
+                                className="h-8 text-xs bg-white"
+                            >
+                                <Plus className="w-3 h-3 mr-1" /> Add Link
+                            </Button>
+                        </div>
+
+                        {resources.length === 0 ? (
+                            <div className="text-center py-4 bg-white border border-dashed border-gray-300 rounded-lg text-xs text-gray-400">
+                                Belum ada resource premium untuk materi ini.
+                            </div>
+                        ) : (
+                            <div className="space-y-3 mt-2">
+                                {resources.map((res, index) => (
+                                    <div key={index} className="flex items-start gap-2 bg-white p-2 border rounded-md">
+                                        <div className="flex-1 space-y-2">
+                                            <Input
+                                                placeholder="Nama File/Link (e.g. Source Code Starter)"
+                                                value={res.title}
+                                                onChange={(e) => {
+                                                    const newRes = [...resources];
+                                                    newRes[index].title = e.target.value;
+                                                    setResources(newRes);
+                                                }}
+                                                className="h-8 text-xs"
+                                            />
+                                            <Input
+                                                placeholder="URL (e.g. https://drive.google.com/...)"
+                                                value={res.url}
+                                                onChange={(e) => {
+                                                    const newRes = [...resources];
+                                                    newRes[index].url = e.target.value;
+                                                    setResources(newRes);
+                                                }}
+                                                className="h-8 text-xs"
+                                            />
+                                        </div>
+                                        <button
+                                            type="button"
+                                            className="p-1.5 text-red-500 hover:bg-red-50 rounded"
+                                            onClick={() => {
+                                                const newRes = [...resources];
+                                                newRes.splice(index, 1);
+                                                setResources(newRes);
+                                            }}
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex justify-end gap-3 pt-4 border-t">

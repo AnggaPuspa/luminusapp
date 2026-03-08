@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { verifySession } from "@/lib/auth";
+import { checkCourseAccess, checkSubscriberAccess } from "@/lib/access-control";
 
 export async function GET(
     request: Request,
@@ -43,24 +44,24 @@ export async function GET(
             return NextResponse.json({ message: "Course not found" }, { status: 404 });
         }
 
-        // 2. Security Check: ACTIVE enrollment only
+        // 2. Security Check: ACTIVE enrollment or VALID SUBSCRIPTION
         // Admin user can bypass enrollment check for preview
         if (session.user.role !== "ADMIN") {
-            const enrollment = await prisma.enrollment.findUnique({
-                where: {
-                    userId_courseId: {
-                        userId,
-                        courseId: course.id,
-                    }
-                }
-            });
+            const access = await checkCourseAccess(userId, course.id);
 
-            if (!enrollment || !["ACTIVE", "COMPLETED"].includes(enrollment.status)) {
+            if (!access.hasAccess) {
                 return NextResponse.json(
-                    { message: "Access Denied: You must be enrolled in this course to access the classroom." },
+                    { message: "Access Denied: You must be enrolled or have an active subscription covering this course." },
                     { status: 403 }
                 );
             }
+            // Add access type to response so frontend can show/hide premium features
+            (course as any).accessType = access.accessType;
+
+            // Also inject subscriber status — separate from accessType
+            // A user can access via PURCHASE but still be a subscriber with resource download rights
+            const subAccess = await checkSubscriberAccess(userId);
+            (course as any).isSubscriber = subAccess.isSubscriber;
         }
 
         return NextResponse.json(course, { status: 200 });

@@ -9,7 +9,9 @@ import {
     ShoppingCart,
     Activity,
     LogOut,
-    Ticket
+    Ticket,
+    Award,
+    CreditCard
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -29,7 +31,9 @@ export default function Sidebar() {
         { label: "Dashboard", href: "/admin", icon: BarChart3 },
         { label: "Courses", href: "/admin/courses", icon: BookOpen },
         { label: "Users", href: "/admin/users", icon: Users },
+        { label: "Subscribers", href: "/admin/subscribers", icon: CreditCard },
         { label: "Orders", href: "/admin/orders", icon: ShoppingCart },
+        { label: "Plans", href: "/admin/plans", icon: Award },
         { label: "Coupons", href: "/admin/coupons", icon: Ticket },
         { label: "Webhooks", href: "/admin/webhooks", icon: Activity },
     ];

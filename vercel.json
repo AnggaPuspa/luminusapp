@@ -1,0 +1,20 @@
+{
+    "crons": [
+        {
+            "path": "/api/cron/renew-subscriptions",
+            "schedule": "0 0 * * *"
+        },
+        {
+            "path": "/api/cron/mark-past-due",
+            "schedule": "0 6 * * *"
+        },
+        {
+            "path": "/api/cron/expire-subscriptions",
+            "schedule": "0 6 * * *"
+        },
+        {
+            "path": "/api/cron/reset-ai-quota",
+            "schedule": "0 0 1 * *"
+        }
+    ]
+}

@@ -22,6 +22,7 @@ export async function GET(request: Request) {
             },
             select: {
                 enrolledAt: true,
+                source: true,
                 course: {
                     select: {
                         id: true,
@@ -65,6 +66,7 @@ export async function GET(request: Request) {
                 ...courseData,
                 userId: e.userId || userId,
                 enrolledAt: e.enrolledAt,
+                source: e.source,
                 totalLessons: allLessons.length,
                 completedLessons: completedLessons.length,
                 progressPercent: allLessons.length > 0

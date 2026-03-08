@@ -10,19 +10,20 @@ datasource db {
 }
 
 model User {
-  id             String           @id @default(uuid())
-  email          String           @unique
+  id             String             @id @default(uuid())
+  email          String             @unique
   name           String
   avatarUrl      String?
-  role           Role             @default(STUDENT)
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  role           Role               @default(STUDENT)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
   password       String?
   reviews        CourseReview[]
   enrollments    Enrollment[]
   lessonProgress LessonProgress[]
-  quizAttempts   QuizAttempt[]    @relation("UserQuizAttempts")
+  quizAttempts   QuizAttempt[]      @relation("UserQuizAttempts")
   transactions   Transaction[]
+  subscriptions  UserSubscription[]
 
   @@map("users")
 }
@@ -44,6 +45,7 @@ model Course {
   enrollments     Enrollment[]
   modules         Module[]
   transactions    Transaction[]
+  planCourses     PlanCourse[]
 
   @@index([status, deletedAt])
   @@map("courses")
@@ -72,6 +74,7 @@ model Lesson {
   videoUrl  String?
   duration  Int              @default(0)
   sortOrder Int              @default(0)
+  resources Json?
   createdAt DateTime         @default(now())
   progress  LessonProgress[]
   module    Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
@@ -87,6 +90,7 @@ model Enrollment {
   courseId       String
   enrolledAt     DateTime         @default(now())
   status         EnrollmentStatus @default(ACTIVE)
+  source         EnrollmentSource @default(PURCHASE)
   certificateUrl String?
   course         Course           @relation(fields: [courseId], references: [id])
   user           User             @relation(fields: [userId], references: [id])
@@ -111,6 +115,7 @@ model Transaction {
   expiredAt       DateTime?
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
+  type            TransactionType   @default(ONE_TIME)
   couponId        String?
   discountAmount  Int?
   coupon          Coupon?           @relation(fields: [couponId], references: [id])
@@ -228,6 +233,87 @@ model QuizAttempt {
   @@map("quiz_attempts")
 }
 
+model SubscriptionPlan {
+  id                 String           @id @default(cuid())
+  name               String
+  slug               String           @unique
+  tier               SubscriptionTier @default(MURID)
+  description        String?
+  monthlyPrice       Int
+  yearlyPrice        Int?
+  isActive           Boolean          @default(true)
+  features           Json?
+  allCoursesIncluded Boolean          @default(false)
+  communityInviteUrl String?
+  aiMentorQuota      Int              @default(0)
+  sortOrder          Int              @default(0)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  includedCourses PlanCourse[]
+  subscriptions   UserSubscription[]
+
+  @@index([isActive, sortOrder])
+  @@map("subscription_plans")
+}
+
+model PlanCourse {
+  id       String           @id @default(cuid())
+  planId   String
+  courseId String
+  plan     SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  course   Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, courseId])
+  @@index([courseId])
+  @@map("plan_courses")
+}
+
+model UserSubscription {
+  id                  String             @id @default(cuid())
+  userId              String
+  planId              String
+  status              SubscriptionStatus @default(PENDING)
+  billingCycle        BillingCycle       @default(MONTHLY)
+  currentPeriodStart  DateTime
+  currentPeriodEnd    DateTime
+  cancelledAt         DateTime?
+  cancelReason        String?
+  aiChatUsedThisMonth Int                @default(0)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  user     User                  @relation(fields: [userId], references: [id])
+  plan     SubscriptionPlan      @relation(fields: [planId], references: [id])
+  invoices SubscriptionInvoice[]
+
+  @@index([userId, status])
+  @@index([status, currentPeriodEnd])
+  @@map("user_subscriptions")
+}
+
+model SubscriptionInvoice {
+  id                 String                    @id @default(cuid())
+  subscriptionId     String
+  amount             Int
+  status             SubscriptionInvoiceStatus @default(PENDING)
+  billingPeriodStart DateTime
+  billingPeriodEnd   DateTime
+  mayarInvoiceId     String?                   @unique
+  mayarInvoiceUrl    String?
+  paidAt             DateTime?
+  failedAt           DateTime?
+  failureReason      String?
+  retryCount         Int                       @default(0)
+  createdAt          DateTime                  @default(now())
+
+  subscription UserSubscription @relation(fields: [subscriptionId], references: [id])
+
+  @@index([subscriptionId])
+  @@index([mayarInvoiceId])
+  @@map("subscription_invoices")
+}
+
 enum Role {
   ADMIN
   STUDENT
@@ -248,4 +334,41 @@ enum TransactionStatus {
 enum EnrollmentStatus {
   ACTIVE
   COMPLETED
+  SUSPENDED
+}
+
+enum EnrollmentSource {
+  PURCHASE
+  SUBSCRIPTION
+}
+
+enum TransactionType {
+  ONE_TIME
+  SUBSCRIPTION
+}
+
+enum SubscriptionTier {
+  BIASA
+  MURID
+  PROFESIONAL
+}
+
+enum SubscriptionStatus {
+  PENDING
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+enum BillingCycle {
+  MONTHLY
+  YEARLY
+}
+
+enum SubscriptionInvoiceStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
 }

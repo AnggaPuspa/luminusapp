@@ -1,18 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 import { ExternalLink, ReceiptText, Mail, Bell, User, CheckCircle2, Clock, AlertCircle, FileText, MoreHorizontal, Printer, ChevronLeft, ChevronRight } from "lucide-react";
 import StudentTopbar from "@/components/dashboard/StudentTopbar";
+import { useStudentTransactions } from "@/hooks/use-dashboard";
 
 interface TransactionItem {
     id: string;
-    course: {
-        title: string;
-        thumbnailUrl: string | null;
-    };
+    type: 'COURSE' | 'SUBSCRIPTION';
+    title: string;
+    subtitle: string;
+    thumbnailUrl: string | null;
     createdAt: string;
     amount: number;
     status: string;
@@ -20,28 +21,9 @@ interface TransactionItem {
 }
 
 export default function StudentTransactionsPage() {
-    const [transactions, setTransactions] = useState<TransactionItem[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { transactions, isLoading: loading } = useStudentTransactions();
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 5;
-
-    useEffect(() => {
-        const fetchTransactions = async () => {
-            try {
-                const res = await fetch("/api/student/transactions");
-                if (res.ok) {
-                    const data = await res.json();
-                    setTransactions(data);
-                }
-            } catch (error) {
-                console.error("Failed to fetch transactions", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchTransactions();
-    }, []);
 
     const getStatusStyle = (status: string) => {
         switch (status) {
@@ -207,9 +189,13 @@ export default function StudentTransactionsPage() {
                                             </td>
                                             <td className="py-5 px-4 max-w-[250px]">
                                                 <div className="flex items-center gap-4">
-                                                    {tx.course.thumbnailUrl ? (
+                                                    {tx.thumbnailUrl ? (
                                                         <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-gray-100 bg-gray-50 relative">
-                                                            <Image src={tx.course.thumbnailUrl} alt={tx.course.title} fill className="object-cover" />
+                                                            <Image src={tx.thumbnailUrl} alt={tx.title} fill className="object-cover" />
+                                                        </div>
+                                                    ) : tx.type === 'SUBSCRIPTION' ? (
+                                                        <div className="w-10 h-10 rounded-full bg-[#111111] flex items-center justify-center shrink-0 border border-gray-800">
+                                                            <ReceiptText className="w-4 h-4 text-gray-300" />
                                                         </div>
                                                     ) : (
                                                         <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0 border border-gray-200">
@@ -217,8 +203,8 @@ export default function StudentTransactionsPage() {
                                                         </div>
                                                     )}
                                                     <div className="flex flex-col min-w-0">
-                                                        <span className="font-bold text-gray-900 truncate">{tx.course.title}</span>
-                                                        <span className="text-xs font-medium text-gray-400 truncate">Sistem Pembelian Kelas</span>
+                                                        <span className="font-bold text-gray-900 truncate">{tx.title}</span>
+                                                        <span className="text-xs font-medium text-gray-400 truncate">{tx.subtitle}</span>
                                                     </div>
                                                 </div>
                                             </td>
@@ -300,8 +286,8 @@ export default function StudentTransactionsPage() {
                                             key={pageNum}
                                             onClick={() => handlePageChange(pageNum)}
                                             className={`w-10 h-10 flex items-center justify-center rounded-full text-sm font-bold transition-all duration-300 ${currentPage === pageNum
-                                                    ? "bg-[#696EFF] text-white shadow-lg shadow-[#696EFF]/30 scale-105"
-                                                    : "bg-white text-gray-500 border-2 border-gray-200 hover:border-[#696EFF] hover:text-[#696EFF]"
+                                                ? "bg-[#696EFF] text-white shadow-lg shadow-[#696EFF]/30 scale-105"
+                                                : "bg-white text-gray-500 border-2 border-gray-200 hover:border-[#696EFF] hover:text-[#696EFF]"
                                                 }`}
                                         >
                                             {pageNum}

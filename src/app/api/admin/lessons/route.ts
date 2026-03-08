@@ -10,13 +10,13 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json();
-        const { title, moduleId, content, videoUrl, duration, sortOrder } = body;
+        const { title, moduleId, content, videoUrl, duration, sortOrder, resources } = body;
 
         if (!title || !moduleId) {
             return NextResponse.json({ message: "Title and moduleId are required" }, { status: 400 });
         }
 
-        const newLesson = await prisma.lesson.create({
+        const newLesson: any = await prisma.lesson.create({
             data: {
                 title,
                 moduleId,
@@ -24,6 +24,7 @@ export async function POST(request: Request) {
                 videoUrl: videoUrl || null,
                 duration: duration ? parseInt(duration) : 0,
                 sortOrder: sortOrder || 0,
+                resources: resources ? JSON.stringify(resources) : undefined,
             },
             include: { module: true }
         });
