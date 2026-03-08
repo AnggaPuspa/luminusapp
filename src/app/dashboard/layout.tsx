@@ -1,5 +1,11 @@
 import React from "react";
 import StudentSidebar from "@/components/dashboard/StudentSidebar";
+import { Poppins } from "next/font/google";
+
+const poppins = Poppins({
+    subsets: ["latin"],
+    weight: ["400", "500", "600", "700", "800"]
+});
 
 export default function DashboardLayout({
     children,
@@ -7,7 +13,7 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="flex h-screen bg-[#FAFAFA] overflow-hidden font-sans">
+        <div className={`flex h-screen bg-[#FAFAFA] overflow-hidden ${poppins.className}`}>
             {/* Sidebar Component */}
             <StudentSidebar />
 

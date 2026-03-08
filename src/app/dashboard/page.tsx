@@ -413,9 +413,12 @@ export default function StudentOverviewPage() {
                     <div>
                         <div className="flex items-center justify-between mb-4 px-1">
                             <h2 className="text-[17px] font-bold text-gray-900">Kelas Prioritas</h2>
-                            <button className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-[#A855F7] hover:bg-purple-50 transition-colors">
+                            <Link
+                                href="/dashboard/courses"
+                                className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-[#A855F7] hover:bg-purple-50 transition-colors"
+                            >
                                 <span className="text-lg leading-none mt-[-2px]">+</span>
-                            </button>
+                            </Link>
                         </div>
 
                         <div className="bg-[#FAFAFA] rounded-[32px] p-4 border border-gray-50">
