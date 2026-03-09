@@ -8,36 +8,45 @@ import {
   TopicSelection,
   QuestionCountSelection,
   QuizSection,
-  CourseRecommendation,
 } from '@/components/chat';
-import { topics, questions, CONSTANTS, Question } from '@/data/questions';
+import { topics, Question } from '@/data/questions';
 import '@/styles/chat.css';
 import '@/styles/common.css';
+import Link from 'next/link';
+import { Loader2, Trophy, Star, BookOpen, ArrowRight, RotateCcw } from 'lucide-react';
 
 interface Message {
   content: string;
   isBot: boolean;
 }
 
-interface Course {
-  title: string;
-  rating: string;
+interface AssessmentResult {
   level: string;
-  image: string;
+  score: string;
+  percentage: number;
+  summary: string;
+  recommendation: string;
+  recommendedCourseSlug: string | null;
+  recommendedCourseTitle?: string;
+  recommendedCourseThumbnail?: string;
 }
+
+const DELAY = 800;
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [showTopicSelection, setShowTopicSelection] = useState(false);
   const [showQuestionCount, setShowQuestionCount] = useState(false);
   const [showQuiz, setShowQuiz] = useState(false);
-  const [showRecommendation, setShowRecommendation] = useState(false);
 
   const [currentTopic, setCurrentTopic] = useState('');
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [totalQuestions, setTotalQuestions] = useState(5);
-  const [score, setScore] = useState(0);
-  const [course, setCourse] = useState<Course | null>(null);
+  const [aiQuestions, setAiQuestions] = useState<Question[]>([]);
+  const [userAnswers, setUserAnswers] = useState<{ question: string; userAnswer: string; correct: string; difficulty: string }[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [result, setResult] = useState<AssessmentResult | null>(null);
 
   const chatMessagesRef = useRef<HTMLDivElement>(null);
 
@@ -53,15 +62,14 @@ export default function ChatPage() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, showQuiz, result]);
 
   useEffect(() => {
-    // Initialize chat
-    addMessage('Halo! Saya akan membantu kamu menemukan kelas yang tepat berdasarkan minat belajar kamu.');
+    addMessage('Halo! 👋 Saya Luminus AI — saya akan bantu analisa skill kamu lewat quiz singkat.');
     setTimeout(() => {
-      addMessage('Topik apa yang ingin kamu kuasai?');
+      addMessage('Pilih topik yang ingin kamu test:');
       setShowTopicSelection(true);
-    }, CONSTANTS.DELAY);
+    }, DELAY);
   }, []);
 
   const handleTopicSelect = (topicId: string) => {
@@ -73,28 +81,56 @@ export default function ChatPage() {
     setShowTopicSelection(false);
 
     setTimeout(() => {
-      addMessage('Bagus! Berapa banyak pertanyaan yang ingin kamu jawab?');
+      addMessage('Berapa banyak pertanyaan yang mau kamu jawab?');
       setShowQuestionCount(true);
-    }, CONSTANTS.DELAY);
+    }, DELAY);
   };
 
-  const handleQuestionCountSelect = (count: number) => {
+  const handleQuestionCountSelect = async (count: number) => {
     setTotalQuestions(count);
     setShowQuestionCount(false);
-    addMessage(`${count} questions`, false);
+    addMessage(`${count} pertanyaan`, false);
 
     setTimeout(() => {
-      addMessage(`Sempurna! Mari kita mulai dengan ${count} pertanyaan.`);
+      addMessage('⏳ Sedang membuat soal yang disesuaikan dengan level kamu...');
+    }, 300);
+
+    setIsGenerating(true);
+
+    try {
+      const res = await fetch('/api/ai/assessment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: 'generate', topic: currentTopic, questionCount: count }),
+      });
+
+      if (!res.ok) throw new Error('Failed to generate');
+
+      const data = await res.json();
+      const questions = data.questions as Question[];
+
+      setAiQuestions(questions);
       setCurrentQuestion(0);
-      setScore(0);
-      setShowQuiz(true);
-    }, CONSTANTS.DELAY);
+      setUserAnswers([]);
+
+      // Remove loading message and show ready
+      setMessages(prev => prev.filter(m => m.content !== '⏳ Sedang membuat soal yang disesuaikan dengan level kamu...'));
+      addMessage(`✅ ${questions.length} soal siap! Dari level easy sampai hard. Yuk mulai!`);
+
+      setTimeout(() => {
+        setShowQuiz(true);
+      }, DELAY);
+    } catch (e) {
+      setMessages(prev => prev.filter(m => m.content !== '⏳ Sedang membuat soal yang disesuaikan dengan level kamu...'));
+      addMessage('❌ Gagal membuat soal. Coba lagi ya!');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const getCurrentQuestion = (): Question | null => {
-    if (!currentTopic || !questions[currentTopic]) return null;
-    const topicQuestions = questions[currentTopic];
-    return topicQuestions[currentQuestion % topicQuestions.length];
+    if (aiQuestions.length === 0) return null;
+    return aiQuestions[currentQuestion] || null;
   };
 
   const handleAnswer = (answer: string) => {
@@ -106,61 +142,57 @@ export default function ChatPage() {
       addMessage(selectedOption.label, false);
     }
 
-    let newScore = score;
-    if (answer === question.correct) {
-      newScore = score + 1;
-      setScore(newScore);
-    }
+    // Track answer
+    setUserAnswers(prev => [...prev, {
+      question: question.question,
+      userAnswer: answer,
+      correct: question.correct,
+      difficulty: (question as any).difficulty || 'medium',
+    }]);
 
     const nextQuestion = currentQuestion + 1;
     setCurrentQuestion(nextQuestion);
     setShowQuiz(false);
 
-    if (nextQuestion < totalQuestions) {
+    if (nextQuestion < aiQuestions.length) {
       setTimeout(() => {
         setShowQuiz(true);
-      }, CONSTANTS.DELAY);
+      }, DELAY);
     } else {
+      // Done — analyze results
       setTimeout(() => {
-        showCourseRecommendation(newScore);
-      }, CONSTANTS.DELAY);
+        analyzeResults([...userAnswers, {
+          question: question.question,
+          userAnswer: answer,
+          correct: question.correct,
+          difficulty: (question as any).difficulty || 'medium',
+        }]);
+      }, DELAY);
     }
   };
 
-  const showCourseRecommendation = (finalScore: number) => {
-    const percentage = (finalScore / totalQuestions) * 100;
-    let level: string;
-    let courseData: Course;
+  const analyzeResults = async (finalAnswers: typeof userAnswers) => {
+    setIsAnalyzing(true);
+    addMessage('🧠 Menganalisa jawaban kamu...');
 
-    if (percentage >= CONSTANTS.SCORE_THRESHOLDS.ADVANCED) {
-      level = 'Advanced';
-      courseData = {
-        title: `${currentTopic.charAt(0).toUpperCase() + currentTopic.slice(1)} Expert Course`,
-        rating: '4.9',
-        level,
-        image: `/images/${currentTopic}.png`,
-      };
-    } else if (percentage >= CONSTANTS.SCORE_THRESHOLDS.INTERMEDIATE) {
-      level = 'Intermediate';
-      courseData = {
-        title: `Intermediate ${currentTopic.charAt(0).toUpperCase() + currentTopic.slice(1)}`,
-        rating: '4.7',
-        level,
-        image: `/images/${currentTopic}.png`,
-      };
-    } else {
-      level = 'Beginner';
-      courseData = {
-        title: `${currentTopic.charAt(0).toUpperCase() + currentTopic.slice(1)} Fundamentals`,
-        rating: '4.5',
-        level,
-        image: `/images/${currentTopic}.png`,
-      };
+    try {
+      const res = await fetch('/api/ai/assessment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: 'analyze', topic: currentTopic, answers: finalAnswers }),
+      });
+
+      if (!res.ok) throw new Error('Failed to analyze');
+
+      const data = await res.json();
+      setResult(data);
+      setMessages(prev => prev.filter(m => m.content !== '🧠 Menganalisa jawaban kamu...'));
+    } catch (e) {
+      setMessages(prev => prev.filter(m => m.content !== '🧠 Menganalisa jawaban kamu...'));
+      addMessage('❌ Gagal menganalisa. Coba lagi ya!');
+    } finally {
+      setIsAnalyzing(false);
     }
-
-    addMessage(`Based on your responses, you are at a ${level} level. Here's a recommended course:`);
-    setCourse(courseData);
-    setShowRecommendation(true);
   };
 
   const handleReset = () => {
@@ -168,21 +200,38 @@ export default function ChatPage() {
     setShowTopicSelection(false);
     setShowQuestionCount(false);
     setShowQuiz(false);
-    setShowRecommendation(false);
     setCurrentTopic('');
     setCurrentQuestion(0);
     setTotalQuestions(5);
-    setScore(0);
-    setCourse(null);
+    setAiQuestions([]);
+    setUserAnswers([]);
+    setResult(null);
+    setIsGenerating(false);
+    setIsAnalyzing(false);
 
-    // Re-initialize
     setTimeout(() => {
-      addMessage('Halo! Saya akan membantu kamu menemukan kelas yang tepat berdasarkan minat belajar kamu.');
+      addMessage('Halo! 👋 Saya Luminus AI — saya akan bantu analisa skill kamu lewat quiz singkat.');
       setTimeout(() => {
-        addMessage('Topik apa yang ingin kamu kuasai?');
+        addMessage('Pilih topik yang ingin kamu test:');
         setShowTopicSelection(true);
-      }, CONSTANTS.DELAY);
+      }, DELAY);
     }, 100);
+  };
+
+  const getLevelColor = (level: string) => {
+    switch (level) {
+      case 'Advanced': return 'bg-gradient-to-r from-green-500 to-emerald-600';
+      case 'Intermediate': return 'bg-gradient-to-r from-yellow-500 to-orange-500';
+      default: return 'bg-gradient-to-r from-blue-500 to-indigo-600';
+    }
+  };
+
+  const getLevelEmoji = (level: string) => {
+    switch (level) {
+      case 'Advanced': return '🔥';
+      case 'Intermediate': return '⚡';
+      default: return '🌱';
+    }
   };
 
   return (
@@ -205,6 +254,72 @@ export default function ChatPage() {
                     isBot={message.isBot}
                   />
                 ))}
+
+                {/* Loading States */}
+                {(isGenerating || isAnalyzing) && (
+                  <div className="flex items-center gap-3 py-3">
+                    <Loader2 className="w-5 h-5 text-[#696eff] animate-spin" />
+                    <span className="text-gray-500 text-sm">
+                      {isGenerating ? 'AI sedang menyiapkan soal...' : 'AI sedang menganalisa...'}
+                    </span>
+                  </div>
+                )}
+
+                {/* Result Card */}
+                {result && (
+                  <div className="my-4 rounded-2xl overflow-hidden border border-gray-100 shadow-lg">
+                    <div className={`${getLevelColor(result.level)} p-6 text-white`}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="text-3xl">{getLevelEmoji(result.level)}</span>
+                        <div>
+                          <p className="text-white/80 text-xs font-medium uppercase tracking-wider">Skill Level Kamu</p>
+                          <h3 className="text-2xl font-bold">{result.level}</h3>
+                        </div>
+                      </div>
+                      <div className="mt-4 flex items-center gap-4">
+                        <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
+                          <p className="text-xs text-white/80">Skor</p>
+                          <p className="text-lg font-bold">{result.score}</p>
+                        </div>
+                        <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
+                          <p className="text-xs text-white/80">Akurasi</p>
+                          <p className="text-lg font-bold">{result.percentage}%</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Summary */}
+                    <div className="p-5 bg-white">
+                      <p className="text-gray-700 text-sm leading-relaxed">{result.summary}</p>
+                    </div>
+
+                    {/* Recommendation */}
+                    <div className="px-5 pb-5 bg-white border-t border-gray-50">
+                      <div className="flex items-center gap-2 mt-4 mb-3">
+                        <BookOpen className="w-4 h-4 text-[#696eff]" />
+                        <h4 className="font-bold text-sm text-gray-900">Rekomendasi Kelas</h4>
+                      </div>
+                      <p className="text-gray-600 text-sm mb-4">{result.recommendation}</p>
+
+                      <div className="flex gap-3">
+                        {result.recommendedCourseSlug && (
+                          <Link
+                            href={`/kursus/${result.recommendedCourseSlug}`}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#696eff] text-white text-sm font-bold rounded-xl hover:bg-[#5a5ee6] transition-colors"
+                          >
+                            Lihat Kelas <ArrowRight className="w-4 h-4" />
+                          </Link>
+                        )}
+                        <button
+                          onClick={handleReset}
+                          className="flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-200 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-50 transition-colors"
+                        >
+                          <RotateCcw className="w-4 h-4" /> Ulang
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Topic selection */}
@@ -217,20 +332,17 @@ export default function ChatPage() {
               {/* Question count selection */}
               <QuestionCountSelection
                 onSelect={handleQuestionCountSelect}
-                visible={showQuestionCount}
+                visible={showQuestionCount && !isGenerating}
               />
 
               {/* Quiz section */}
               <QuizSection
                 question={getCurrentQuestion()}
                 currentQuestion={currentQuestion}
-                totalQuestions={totalQuestions}
+                totalQuestions={aiQuestions.length}
                 onAnswer={handleAnswer}
-                visible={showQuiz}
+                visible={showQuiz && !isGenerating}
               />
-
-              {/* Course recommendation */}
-              <CourseRecommendation course={course} visible={showRecommendation} />
             </div>
           </div>
         </div>

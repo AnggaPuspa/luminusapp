@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, CheckCircle2, Circle, PlayCircle, FileText, HelpCircle, Award, Heart } from "lucide-react";
+import { ChevronLeft, CheckCircle2, Circle, PlayCircle, FileText, HelpCircle, Award, Heart, Lock } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { use } from "react";
@@ -140,6 +140,13 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
                 }
 
                 setCourse(updatedCourse);
+
+                // Auto-advance to the next lesson
+                const flat = updatedCourse.modules.flatMap((m: Module) => m.lessons);
+                const currentIdx = flat.findIndex((l: Lesson) => l.id === activeLesson.id);
+                if (currentIdx >= 0 && currentIdx < flat.length - 1) {
+                    setActiveLesson(flat[currentIdx + 1]);
+                }
             } else {
                 toast.error("Gagal menyimpan progress");
             }
@@ -161,6 +168,17 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
 
     const isLessonCompleted = (lesson: Lesson) => {
         return lesson.progress && lesson.progress.length > 0 && lesson.progress[0].completed;
+    };
+
+    // Flatten all lessons across all modules into a single ordered array
+    const allLessonsFlat: Lesson[] = course.modules?.flatMap((m: Module) => m.lessons) || [];
+
+    // Sequential lock: lesson is locked if previous lesson in the flat list is not completed
+    const isLessonLocked = (lesson: Lesson): boolean => {
+        const idx = allLessonsFlat.findIndex((l) => l.id === lesson.id);
+        if (idx <= 0) return false; // First lesson is always unlocked
+        const prevLesson = allLessonsFlat[idx - 1];
+        return !isLessonCompleted(prevLesson);
     };
 
     // Calculate total course completion
@@ -342,24 +360,41 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
                                         {module.lessons?.map((lesson: Lesson) => {
                                             const active = activeLesson?.id === lesson.id;
                                             const completed = isLessonCompleted(lesson);
+                                            const locked = isLessonLocked(lesson);
 
                                             return (
                                                 <button
                                                     key={lesson.id}
-                                                    onClick={() => setActiveLesson(lesson)}
-                                                    className="w-full flex gap-4 px-2 py-3 text-left transition-all border-b border-gray-50 last:border-0 hover:bg-gray-50 group rounded-xl"
+                                                    onClick={() => !locked && setActiveLesson(lesson)}
+                                                    disabled={locked}
+                                                    title={locked ? 'Selesaikan materi sebelumnya terlebih dahulu' : ''}
+                                                    className={`w-full flex gap-4 px-2 py-3 text-left transition-all border-b border-gray-50 last:border-0 rounded-xl
+                                                        ${locked
+                                                            ? 'opacity-50 cursor-not-allowed'
+                                                            : 'hover:bg-gray-50 group'
+                                                        }`}
                                                 >
                                                     {/* Icon */}
-                                                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${active
-                                                        ? 'bg-[#A855F7] text-white shadow-md shadow-purple-200'
-                                                        : 'bg-white text-gray-400 border border-gray-200 group-hover:border-purple-200'
+                                                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors
+                                                        ${locked
+                                                            ? 'bg-gray-100 text-gray-300 border border-gray-200'
+                                                            : active
+                                                                ? 'bg-[#A855F7] text-white shadow-md shadow-purple-200'
+                                                                : completed
+                                                                    ? 'bg-green-50 text-green-500 border border-green-200'
+                                                                    : 'bg-white text-gray-400 border border-gray-200 group-hover:border-purple-200'
                                                         }`}>
-                                                        <PlayCircle className={`w-5 h-5 ${active ? 'fill-white text-[#A855F7]' : ''}`} />
+                                                        {locked
+                                                            ? <Lock className="w-4 h-4" />
+                                                            : completed
+                                                                ? <CheckCircle2 className="w-5 h-5" />
+                                                                : <PlayCircle className={`w-5 h-5 ${active ? 'fill-white text-[#A855F7]' : ''}`} />
+                                                        }
                                                     </div>
 
                                                     {/* Info */}
                                                     <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                                        <p className={`text-sm leading-snug ${active ? 'font-bold text-gray-900' : 'font-semibold text-gray-700 group-hover:text-gray-900'}`}>
+                                                        <p className={`text-sm leading-snug ${locked ? 'text-gray-400' : active ? 'font-bold text-gray-900' : 'font-semibold text-gray-700 group-hover:text-gray-900'}`}>
                                                             {lesson.title}
                                                         </p>
                                                         <p className="text-sm text-gray-400 mt-1">

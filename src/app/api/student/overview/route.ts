@@ -80,6 +80,13 @@ export async function GET(request: Request) {
             };
         });
 
+        // Netflix-style threshold: only show courses actively in progress
+        // - completedLessons >= 1 (user has actually started learning)
+        // - progressPercent < 100 (not yet fully completed)
+        const inProgressCourses = recentCourses.filter(
+            (c: any) => c.completedLessons >= 1 && c.progressPercent < 100
+        );
+
         const subscriptionDetails = await checkSubscriberAccess(userId);
 
         return NextResponse.json({
@@ -87,7 +94,7 @@ export async function GET(request: Request) {
             completedLessons,
             totalTransactions,
             pendingTransactions,
-            recentCourses: recentCourses,
+            recentCourses: inProgressCourses,
             subscription: subscriptionDetails
         }, { status: 200 });
 

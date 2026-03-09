@@ -47,6 +47,21 @@ export function useStudentCourses() {
     };
 }
 
+// ===== Available courses (not started apps/subs): used by dashboard/courses page =====
+export function useAvailableCourses() {
+    const { data, error, isLoading, mutate } = useSWR("/api/student/available-courses", fetcher, {
+        revalidateOnFocus: true,
+        dedupingInterval: 60000,
+    });
+
+    return {
+        availableCourses: data?.courses || [],
+        isLoading,
+        isError: !!error,
+        mutate,
+    };
+}
+
 // ===== Student transactions: used by dashboard/transactions page =====
 export function useStudentTransactions() {
     const { data, error, isLoading, mutate } = useSWR("/api/student/transactions", fetcher, {
