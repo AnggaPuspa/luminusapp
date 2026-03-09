@@ -44,9 +44,9 @@ export default function StudentTransactionsPage() {
     };
 
     const totalTx = transactions.length;
-    const paidTx = transactions.filter(t => t.status === 'PAID').length;
-    const pendingTx = transactions.filter(t => t.status === 'PENDING').length;
-    const failedTx = transactions.filter(t => ['FAILED', 'EXPIRED'].includes(t.status)).length;
+    const paidTx = transactions.filter((t: any) => t.status === 'PAID').length;
+    const pendingTx = transactions.filter((t: any) => t.status === 'PENDING').length;
+    const failedTx = transactions.filter((t: any) => ['FAILED', 'EXPIRED'].includes(t.status)).length;
 
     // Pagination Logic
     const totalPages = Math.ceil(totalTx / ITEMS_PER_PAGE);
@@ -182,7 +182,7 @@ export default function StudentTransactionsPage() {
                                         </td>
                                     </tr>
                                 ) : (
-                                    paginatedTransactions.map((tx) => (
+                                    paginatedTransactions.map((tx: any) => (
                                         <tr key={tx.id} className="group hover:bg-[#FAFAFA]/50 transition-colors">
                                             <td className="py-5 px-2">
                                                 <div className="w-5 h-5 rounded border-2 border-gray-200 flex items-center justify-center group-hover:border-[#696EFF] transition-colors ml-2"></div>

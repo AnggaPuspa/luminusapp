@@ -75,7 +75,11 @@ export async function GET(request: Request) {
             };
         });
 
-        return NextResponse.json(courses, { status: 200 });
+        // Netflix-style threshold: only show courses where user has completed >= 1 lesson
+        // Courses with 0 progress stay in "Tersedia di Paket Kamu" via available-courses endpoint
+        const activeCourses = courses.filter((c: any) => c.completedLessons >= 1);
+
+        return NextResponse.json(activeCourses, { status: 200 });
     } catch (error: any) {
         console.error("Failed to fetch student courses:", error);
         return NextResponse.json({ message: "Internal server error" }, { status: 500 });

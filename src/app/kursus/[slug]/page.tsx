@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import prisma from "@/lib/prisma";
 import { cache } from "react";
-import CheckoutButton from "@/components/common/CheckoutButton";
+import CourseDetailCTA from "@/components/common/CourseDetailCTA";
 import { Navbar, Footer } from "@/components";
 
 export const revalidate = 3600; // ISR: cache 1 hour
@@ -111,28 +111,13 @@ export default async function PublicCourseDetailPage({ params }: { params: Promi
                                 className="w-full h-auto rounded-xl mb-6 object-cover"
                             />
 
-                            <div className="mb-6">
-                                {course.discountedPrice ? (
-                                    <div className="flex flex-col">
-                                        <span className="text-gray-400 line-through text-lg">{formatPrice(course.originalPrice)}</span>
-                                        <span className="text-3xl font-bold text-gray-900">{formatPrice(course.discountedPrice)}</span>
-                                    </div>
-                                ) : (
-                                    <span className="text-3xl font-bold text-gray-900">{formatPrice(course.originalPrice)}</span>
-                                )}
-                            </div>
-
-                            <CheckoutButton
+                            <CourseDetailCTA
                                 courseId={course.id}
-                                title={course.title}
+                                courseSlug={course.slug}
+                                courseTitle={course.title}
                                 originalPrice={course.originalPrice}
                                 discountedPrice={course.discountedPrice}
-                                className="w-full py-4 bg-[#696EFF] hover:bg-blue-700 text-white font-bold rounded-xl text-lg transition shadow-lg shadow-blue-200 flex justify-center items-center"
                             />
-
-                            <p className="text-center text-sm text-gray-500 mt-4">
-                                Akses selamanya & update materi gratis
-                            </p>
                         </div>
                     </div>
                 </div>

@@ -8,7 +8,7 @@ import StudentTopbar from "@/components/dashboard/StudentTopbar";
 import CertificateDownloader from "@/components/common/CertificateDownloader";
 import CertificateTemplate from "@/components/common/CertificateTemplate";
 import { toast } from "sonner";
-import { useStudentCourses } from "@/hooks/use-dashboard";
+import { useStudentCourses, useAvailableCourses } from "@/hooks/use-dashboard";
 
 interface CourseItem {
     id: string;
@@ -35,8 +35,159 @@ interface Analytics {
     }[];
 }
 
+const CourseCard = ({ course, viewMode, selectedCourseId, onClick, isAvailable = false }: any) => {
+    return (
+        <div
+            onClick={onClick}
+            className={`bg-white rounded-xl shadow-sm border hover:shadow-lg hover:shadow-gray-200/50 transition-all cursor-pointer group ${viewMode === 'list' ? 'p-3 flex flex-row items-stretch gap-4' : 'p-4 flex flex-col'} ${selectedCourseId === course.id ? 'border-[#696EFF] ring-2 ring-[#696EFF]/20 shadow-md shadow-[#696EFF]/10' : 'border-gray-100'}`}
+        >
+            {/* Image Box */}
+            <div className={`relative bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 ${viewMode === 'list' ? 'w-48 h-full min-h-[120px]' : 'w-full h-40 mb-4'}`}>
+                {course.thumbnailUrl ? (
+                    <Image
+                        src={course.thumbnailUrl}
+                        alt={course.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-300 bg-gray-50 flex-col">
+                        <PlayCircle className={viewMode === 'list' ? "w-8 h-8" : "w-10 h-10"} />
+                    </div>
+                )}
+            </div>
+
+            {/* Content wrapper */}
+            <div className={`flex flex-col flex-1 min-w-0 ${viewMode === 'list' ? 'py-1 justify-center' : ''}`}>
+                <div className={`flex items-center justify-between ${viewMode === 'list' ? 'mb-1' : 'mb-3'}`}>
+                    {(course.source === 'SUBSCRIPTION' || isAvailable) ? (
+                        <div className="inline-flex items-center gap-1 px-2 py-1 bg-purple-50 border border-purple-100/50 text-purple-600 text-[10px] font-bold rounded flex-shrink-0 tracking-widest relative overflow-hidden group/badge shadow-sm">
+                            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-500/10 to-purple-500/0 translate-x-[-100%] group-hover/badge:translate-x-[100%] transition-transform duration-1000"></div>
+                            <div className="w-[14px] h-[14px] rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-inner">
+                                <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                            </div>
+                            LANGGANAN
+                        </div>
+                    ) : (
+                        <div className="inline-flex items-center gap-1 px-2 py-1 bg-gray-50 border border-gray-200/50 text-gray-600 text-[10px] font-bold rounded flex-shrink-0 tracking-widest shadow-sm">
+                            <div className="w-[14px] h-[14px] rounded-full bg-gray-800 flex items-center justify-center">
+                                <Lock className="w-2 h-2 text-white" />
+                            </div>
+                            LIFETIME
+                        </div>
+                    )}
+                    {viewMode === 'grid' && (
+                        isAvailable ? (
+                            <Link
+                                href={`/kursus/${course.slug}/belajar`}
+                                className="px-3 py-1.5 rounded-[12px] border border-[#E9D5FF] text-[#A855F7] text-xs font-semibold hover:bg-[#A855F7] hover:text-white transition-all flex items-center gap-1.5 flex-shrink-0"
+                            >
+                                <Play className="w-[10px] h-[10px] fill-current" /> Mulai
+                            </Link>
+                        ) : course.progressPercent === 100 ? (
+                            <Link
+                                href={`/kursus/${course.slug}/belajar`}
+                                className="px-3 py-1.5 rounded-[12px] border border-[#111111] bg-[#111111] text-white text-xs font-semibold hover:bg-black transition-all flex items-center gap-1.5 flex-shrink-0 shadow-sm"
+                            >
+                                <Award className="w-[10px] h-[10px] fill-current" /> Detail
+                            </Link>
+                        ) : (
+                            <Link
+                                href={`/kursus/${course.slug}/belajar`}
+                                className="px-3 py-1.5 rounded-[12px] border border-[#E9D5FF] text-[#A855F7] text-xs font-semibold hover:bg-[#A855F7] hover:text-white transition-all flex items-center gap-1.5 flex-shrink-0"
+                            >
+                                <Play className="w-[10px] h-[10px] fill-current" /> Lanjut
+                            </Link>
+                        )
+                    )}
+                </div>
+
+                <h3 className={`font-bold text-gray-900 leading-tight ${viewMode === 'list' ? 'mb-2 text-[15px] truncate' : 'mb-2 line-clamp-2'}`}>
+                    {course.title}
+                </h3>
+
+                {viewMode === 'grid' && (
+                    <p className="text-[13px] text-gray-500 mb-5 leading-relaxed flex-grow min-h-[40px]">
+                        {(course.description && course.description.length > 55)
+                            ? <>{course.description.substring(0, 55).trim()}... <span className="text-[#8B7AFF] font-semibold whitespace-nowrap">baca selengkapnya</span></>
+                            : course.description || "Tidak ada deskripsi tersedia untuk kelas ini."
+                        }
+                    </p>
+                )}
+
+                <div className={viewMode === 'list' ? 'flex flex-row items-center justify-between mt-auto gap-4 pt-2 border-t border-gray-50' : 'contents'}>
+                    <div className={viewMode === 'list' ? 'flex-1' : 'w-full'}>
+                        {!isAvailable && (
+                            <div className={`w-full bg-gray-100 rounded-full overflow-hidden ${viewMode === 'grid' ? 'h-1.5 mb-5 mt-auto' : 'h-2 mb-2 w-3/4'}`}>
+                                <div
+                                    className={`h-full rounded-full transition-all duration-1000 ${course.progressPercent === 100 ? 'bg-green-500' : 'bg-[#696EFF]'}`}
+                                    style={{ width: `${course.progressPercent}%` }}
+                                ></div>
+                            </div>
+                        )}
+
+                        <div className={`flex items-center gap-3 ${viewMode === 'list' ? '' : ''}`}>
+                            {viewMode === 'grid' && !isAvailable && (
+                                <div className="w-8 h-8 rounded-lg bg-[#F3F0FF] flex items-center justify-center text-[#8B7AFF] flex-shrink-0">
+                                    {course.progressPercent === 100 ? <Trophy className="w-4 h-4" /> : <GraduationCap className="w-4 h-4" />}
+                                </div>
+                            )}
+                            <div className="text-xs">
+                                {viewMode === 'grid' && !isAvailable && (
+                                    <p className="font-semibold text-gray-900">
+                                        {course.progressPercent === 100 ? 'Selesai' : 'Progres Belajar'}
+                                    </p>
+                                )}
+                                {!isAvailable ? (
+                                    <p className={`font-medium ${viewMode === 'list' ? 'text-gray-600' : 'text-gray-500'}`}>
+                                        {course.completedLessons} dari {course.totalLessons} materi diselesaikan <span className="font-bold text-gray-900 ml-1">({course.progressPercent}%)</span>
+                                    </p>
+                                ) : (
+                                    <p className={`font-medium ${viewMode === 'list' ? 'text-gray-600' : 'text-gray-500'} flex items-center gap-1.5`}>
+                                        <Clock className="w-3.5 h-3.5" /> {(course.duration / 60).toFixed(0)} jam belajar
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {viewMode === 'list' && (
+                        <div className="flex-shrink-0 pr-2">
+                            {isAvailable ? (
+                                <Link
+                                    href={`/kursus/${course.slug}/belajar`}
+                                    className="px-5 py-2.5 rounded-xl bg-[#8B7AFF] text-white text-xs font-bold hover:bg-[#7E6CE0] transition-all flex items-center gap-2 shadow-md shadow-[#8B7AFF]/20"
+                                >
+                                    <Play className="w-[12px] h-[12px] fill-current" /> Mulai Belajar
+                                </Link>
+                            ) : course.progressPercent === 100 ? (
+                                <Link
+                                    href={`/kursus/${course.slug}/belajar`}
+                                    className="px-5 py-2 rounded-xl border border-[#111111] bg-[#111111] text-white text-xs font-bold hover:bg-black transition-all flex items-center gap-2 shadow-sm"
+                                >
+                                    <Award className="w-[12px] h-[12px] fill-current" /> Detail
+                                </Link>
+                            ) : (
+                                <Link
+                                    href={`/kursus/${course.slug}/belajar`}
+                                    className="px-5 py-2.5 rounded-xl bg-[#8B7AFF] text-white text-xs font-bold hover:bg-[#7E6CE0] transition-all flex items-center gap-2 shadow-md shadow-[#8B7AFF]/20"
+                                >
+                                    <Play className="w-[12px] h-[12px] fill-current" /> Lanjut Belajar
+                                </Link>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 export default function MyCoursesPage() {
     const { courses, isLoading: loading } = useStudentCourses();
+    const { availableCourses, isLoading: loadingAvailable } = useAvailableCourses();
     const [analytics, setAnalytics] = useState<Analytics | null>(null);
     const [filter, setFilter] = useState<'ALL' | 'IN_PROGRESS' | 'COMPLETED'>('ALL');
     const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
@@ -75,7 +226,7 @@ export default function MyCoursesPage() {
 
     // Calculate aggregated stats
     // Derive selected course data
-    const activeCourse = courses.find(c => c.id === selectedCourseId) || courses[0];
+    const activeCourse = courses.find((c: any) => c.id === selectedCourseId) || courses[0];
     const totalLessons = activeCourse?.totalLessons || 0;
     const completedLessons = activeCourse?.completedLessons || 0;
     const overallProgress = activeCourse?.progressPercent || 0;
@@ -121,7 +272,7 @@ export default function MyCoursesPage() {
         }
     };
 
-    const filteredCourses = courses.filter(course => {
+    const filteredCourses = courses.filter((course: any) => {
         if (filter === 'COMPLETED') return course.progressPercent === 100;
         if (filter === 'IN_PROGRESS') return course.progressPercent < 100;
         return true;
@@ -162,7 +313,7 @@ export default function MyCoursesPage() {
                                 onChange={(e) => setFilter(e.target.value as 'ALL' | 'IN_PROGRESS' | 'COMPLETED')}
                                 className="appearance-none bg-white border border-gray-100 shadow-sm hover:border-gray-200 transition-colors text-gray-700 text-[13px] font-bold rounded-xl pl-4 pr-10 h-10 focus:outline-none focus:ring-2 focus:ring-[#8B7AFF]/20 focus:border-[#8B7AFF] cursor-pointer"
                             >
-                                <option value="ALL">Semua Kelas</option>
+                                <option value="ALL">Semua Filter</option>
                                 <option value="IN_PROGRESS">Sedang Belajar</option>
                                 <option value="COMPLETED">Selesai</option>
                             </select>
@@ -188,7 +339,12 @@ export default function MyCoursesPage() {
                     </div>
                 </div>
 
-                {/* Grid Area */}
+                {/* Section 1: Lanjutkan Belajar (Active Enrollments) */}
+                <div className="flex items-center justify-between mt-8 mb-4">
+                    <h2 className="text-lg font-bold text-gray-900">Lanjutkan Belajar</h2>
+                    <span className="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">{filteredCourses.length}</span>
+                </div>
+
                 {loading ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
                         {[1, 2, 3].map(i => (
@@ -201,163 +357,56 @@ export default function MyCoursesPage() {
                         ))}
                     </div>
                 ) : courses.length === 0 ? (
-                    <div className="bg-white rounded-2xl p-16 text-center border border-gray-100">
-                        <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <PlayCircle className="w-8 h-8 text-gray-400" />
+                    <div className="bg-white rounded-2xl p-12 text-center border border-gray-100">
+                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <PlayCircle className="w-6 h-6 text-gray-400" />
                         </div>
-                        <h3 className="text-xl font-bold text-[#1e293b] mb-2">Kamu belum daftar kelas apapun</h3>
+                        <h3 className="text-lg font-bold text-[#1e293b] mb-1">Daftar kelas kamu masih kosong</h3>
                         <p className="text-gray-500 mb-6 max-w-sm mx-auto text-sm">Cari dan daftar kelas pertamamu sekarang.</p>
                         <Link href="/kursus" className="inline-block px-6 py-2.5 bg-[#425a8b] text-white rounded-lg font-bold hover:bg-[#344870] transition-colors text-sm">
                             Cari Kelas
                         </Link>
                     </div>
                 ) : filteredCourses.length === 0 ? (
-                    <div className="bg-white rounded-2xl p-16 text-center border border-dashed border-gray-200">
-                        <p className="text-gray-500 font-medium text-lg">Tidak ada kelas di kategori ini.</p>
+                    <div className="bg-white rounded-2xl p-12 text-center border border-dashed border-gray-200">
+                        <p className="text-gray-500 font-medium text-md">Tidak ada kelas di kategori ini.</p>
                     </div>
                 ) : (
                     <div className={viewMode === 'list' ? "flex flex-col gap-4" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6"}>
-                        {filteredCourses.map(course => (
-                            <div
-                                key={course.id}
-                                onClick={() => setSelectedCourseId(course.id)}
-                                className={`bg-white rounded-xl shadow-sm border hover:shadow-lg hover:shadow-gray-200/50 transition-all cursor-pointer group ${viewMode === 'list' ? 'p-3 flex flex-row items-stretch gap-4' : 'p-4 flex flex-col'} ${selectedCourseId === course.id ? 'border-[#696EFF] ring-2 ring-[#696EFF]/20 shadow-md shadow-[#696EFF]/10' : 'border-gray-100'}`}
-                            >
-                                {/* Image Box */}
-                                <div className={`relative bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 ${viewMode === 'list' ? 'w-48 h-full min-h-[120px]' : 'w-full h-40 mb-4'}`}>
-                                    {course.thumbnailUrl ? (
-                                        <Image
-                                            src={course.thumbnailUrl}
-                                            alt={course.title}
-                                            fill
-                                            className="object-cover group-hover:scale-105 transition-transform duration-500"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-300 bg-gray-50 flex-col">
-                                            <PlayCircle className={viewMode === 'list' ? "w-8 h-8" : "w-10 h-10"} />
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Content wrapper */}
-                                <div className={`flex flex-col flex-1 min-w-0 ${viewMode === 'list' ? 'py-1 justify-center' : ''}`}>
-                                    {/* Category and Action layout */}
-                                    <div className={`flex items-center justify-between ${viewMode === 'list' ? 'mb-1' : 'mb-3'}`}>
-                                        {course.source === 'SUBSCRIPTION' ? (
-                                            <div className="inline-flex items-center gap-1 px-2 py-1 bg-purple-50 border border-purple-100/50 text-purple-600 text-[10px] font-bold rounded flex-shrink-0 tracking-widest relative overflow-hidden group/badge shadow-sm">
-                                                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-500/10 to-purple-500/0 translate-x-[-100%] group-hover/badge:translate-x-[100%] transition-transform duration-1000"></div>
-                                                <div className="w-[14px] h-[14px] rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-inner">
-                                                    <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                                    </svg>
-                                                </div>
-                                                LANGGANAN
-                                            </div>
-                                        ) : (
-                                            <div className="inline-flex items-center gap-1 px-2 py-1 bg-gray-50 border border-gray-200/50 text-gray-600 text-[10px] font-bold rounded flex-shrink-0 tracking-widest shadow-sm">
-                                                <div className="w-[14px] h-[14px] rounded-full bg-gray-800 flex items-center justify-center">
-                                                    <Lock className="w-2 h-2 text-white" />
-                                                </div>
-                                                LIFETIME
-                                            </div>
-                                        )}
-                                        {viewMode === 'grid' && (
-                                            course.progressPercent === 100 ? (
-                                                <Link
-                                                    href={`/kursus/${course.slug}/belajar`}
-                                                    className="px-3 py-1.5 rounded-[12px] border border-[#111111] bg-[#111111] text-white text-xs font-semibold hover:bg-black transition-all flex items-center gap-1.5 flex-shrink-0 shadow-sm"
-                                                >
-                                                    <Award className="w-[10px] h-[10px] fill-current" />
-                                                    Detail
-                                                </Link>
-                                            ) : (
-                                                <Link
-                                                    href={`/kursus/${course.slug}/belajar`}
-                                                    className="px-3 py-1.5 rounded-[12px] border border-[#E9D5FF] text-[#A855F7] text-xs font-semibold hover:bg-[#A855F7] hover:text-white transition-all flex items-center gap-1.5 flex-shrink-0"
-                                                >
-                                                    <Play className="w-[10px] h-[10px] fill-current" />
-                                                    Lanjut
-                                                </Link>
-                                            )
-                                        )}
-                                    </div>
-
-                                    {/* Title */}
-                                    <h3 className={`font-bold text-gray-900 leading-tight ${viewMode === 'list' ? 'mb-2 text-[15px] truncate' : 'mb-2 line-clamp-2'}`}>
-                                        {course.title}
-                                    </h3>
-
-                                    {/* Description */}
-                                    {viewMode === 'grid' && (
-                                        <p className="text-[13px] text-gray-500 mb-5 leading-relaxed flex-grow min-h-[40px]">
-                                            {(course.description && course.description.length > 55)
-                                                ? <>{course.description.substring(0, 55).trim()}... <span className="text-[#8B7AFF] font-semibold whitespace-nowrap">baca selengkapnya</span></>
-                                                : course.description || "Tidak ada deskripsi tersedia untuk kelas ini."
-                                            }
-                                        </p>
-                                    )}
-
-                                    {/* Progress and Info Container for list view */}
-                                    <div className={viewMode === 'list' ? 'flex flex-row items-center justify-between mt-auto gap-4 pt-2 border-t border-gray-50' : 'contents'}>
-                                        <div className={viewMode === 'list' ? 'flex-1' : 'w-full'}>
-                                            {/* Progress Bar */}
-                                            <div className={`w-full bg-gray-100 rounded-full overflow-hidden ${viewMode === 'grid' ? 'h-1.5 mb-5 mt-auto' : 'h-2 mb-2 w-3/4'}`}>
-                                                <div
-                                                    className={`h-full rounded-full transition-all duration-1000 ${course.progressPercent === 100 ? 'bg-green-500' : 'bg-[#696EFF]'}`}
-                                                    style={{ width: `${course.progressPercent}%` }}
-                                                ></div>
-                                            </div>
-
-                                            {/* Info section */}
-                                            <div className={`flex items-center gap-3 ${viewMode === 'list' ? '' : ''}`}>
-                                                {viewMode === 'grid' && (
-                                                    <div className="w-8 h-8 rounded-lg bg-[#F3F0FF] flex items-center justify-center text-[#8B7AFF] flex-shrink-0">
-                                                        {course.progressPercent === 100 ? (
-                                                            <Trophy className="w-4 h-4" />
-                                                        ) : (
-                                                            <GraduationCap className="w-4 h-4" />
-                                                        )}
-                                                    </div>
-                                                )}
-                                                <div className="text-xs">
-                                                    {viewMode === 'grid' && (
-                                                        <p className="font-semibold text-gray-900">
-                                                            {course.progressPercent === 100 ? 'Selesai' : 'Progres Belajar'}
-                                                        </p>
-                                                    )}
-                                                    <p className={`font-medium ${viewMode === 'list' ? 'text-gray-600' : 'text-gray-500'}`}>
-                                                        {course.completedLessons} dari {course.totalLessons} materi diselesaikan <span className="font-bold text-gray-900 ml-1">({course.progressPercent}%)</span>
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Action Button for List View */}
-                                        {viewMode === 'list' && (
-                                            <div className="flex-shrink-0 pr-2">
-                                                {course.progressPercent === 100 ? (
-                                                    <Link
-                                                        href={`/kursus/${course.slug}/belajar`}
-                                                        className="px-5 py-2 rounded-xl border border-[#111111] bg-[#111111] text-white text-xs font-bold hover:bg-black transition-all flex items-center gap-2 shadow-sm"
-                                                    >
-                                                        <Award className="w-[12px] h-[12px] fill-current" />
-                                                        Detail
-                                                    </Link>
-                                                ) : (
-                                                    <Link
-                                                        href={`/kursus/${course.slug}/belajar`}
-                                                        className="px-5 py-2.5 rounded-xl bg-[#8B7AFF] text-white text-xs font-bold hover:bg-[#7E6CE0] transition-all flex items-center gap-2 shadow-md shadow-[#8B7AFF]/20"
-                                                    >
-                                                        <Play className="w-[12px] h-[12px] fill-current" />
-                                                        Lanjut Belajar
-                                                    </Link>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
+                        {filteredCourses.map((course: any) => (
+                            <CourseCard key={course.id} course={course} viewMode={viewMode} selectedCourseId={selectedCourseId} onClick={() => setSelectedCourseId(course.id)} />
                         ))}
+                    </div>
+                )}
+
+                {/* Section 2: Tersedia di Paket Kamu (Available Subscriptions) */}
+                {(availableCourses?.length > 0 || loadingAvailable) && (
+                    <div className="mt-12 pt-8 border-t border-gray-100">
+                        <div className="flex flex-col mb-6">
+                            <div className="flex items-center justify-between mb-1">
+                                <h2 className="text-lg font-bold text-gray-900">Tersedia di Paket Kamu</h2>
+                                <span className="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">{availableCourses?.length || 0}</span>
+                            </div>
+                            <p className="text-sm text-gray-500">Kelas-kelas ini termasuk dalam paket langgananmu dan siap dipelajari.</p>
+                        </div>
+
+                        {loadingAvailable ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+                                {[1, 2, 3].map(i => (
+                                    <div key={i} className="bg-white/50 rounded-[20px] p-4 h-80 animate-pulse border border-dashed border-gray-200">
+                                        <div className="w-full h-40 bg-gray-100 rounded-xl mb-4"></div>
+                                        <div className="h-3 bg-gray-200 rounded-full w-24 mb-4"></div>
+                                        <div className="h-4 bg-gray-200 rounded-full w-3/4 mb-2"></div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className={viewMode === 'list' ? "flex flex-col gap-4" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6"}>
+                                {availableCourses.map((course: any) => (
+                                    <CourseCard key={course.id} course={course} viewMode={viewMode} isAvailable={true} />
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -394,7 +443,7 @@ export default function MyCoursesPage() {
                                     <h3 className="text-sm font-bold text-gray-900 line-clamp-1 mb-1">Aktivitas Belajar</h3>
                                     <p className="text-xs font-semibold text-gray-400">Rerata Progress Kelas</p>
                                 </div>
-                                <span className="text-2xl font-black text-[#8B7AFF] mt-1">{courses.length > 0 ? Math.round(courses.reduce((acc, c) => acc + c.progressPercent, 0) / courses.length) : 0}%</span>
+                                <span className="text-2xl font-black text-[#8B7AFF] mt-1">{courses.length > 0 ? Math.round(courses.reduce((acc: any, c: any) => acc + c.progressPercent, 0) / courses.length) : 0}%</span>
                             </div>
 
                             {/* Bar Chart Area */}
@@ -444,24 +493,24 @@ export default function MyCoursesPage() {
                     <div>
                         <div className="flex items-center justify-between mb-4 px-1">
                             <h2 className="text-[17px] font-bold text-gray-900">Target Belajar</h2>
-                            {courses.filter(c => c.progressPercent < 100).length > 0 ? (
+                            {courses.filter((c: any) => c.progressPercent < 100).length > 0 ? (
                                 <span className="bg-[#F3F0FF] text-[#8B7AFF] text-[11px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider">
                                     IN PROGRESS
                                 </span>
                             ) : null}
                         </div>
 
-                        {courses.filter(c => c.progressPercent < 100).length === 0 ? (
+                        {courses.filter((c: any) => c.progressPercent < 100).length === 0 ? (
                             <div className="text-center py-6 bg-white rounded-[24px] border border-gray-50/50 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
                                 <Target className="w-8 h-8 text-gray-300 mx-auto mb-2" />
                                 <p className="text-xs font-medium text-gray-500">Semua kelas sudah selesai!</p>
                             </div>
                         ) : (
                             <div className="flex flex-col gap-3">
-                                {(courses.filter(c => c.progressPercent < 100 && c.progressPercent > 0).length > 0
-                                    ? courses.filter(c => c.progressPercent < 100 && c.progressPercent > 0).sort((a, b) => b.progressPercent - a.progressPercent).slice(0, 3)
-                                    : courses.filter(c => c.progressPercent === 0).slice(0, 3)
-                                ).map((course) => (
+                                {(courses.filter((c: any) => c.progressPercent < 100 && c.progressPercent > 0).length > 0
+                                    ? courses.filter((c: any) => c.progressPercent < 100 && c.progressPercent > 0).sort((a: any, b: any) => b.progressPercent - a.progressPercent).slice(0, 3)
+                                    : courses.filter((c: any) => c.progressPercent === 0).slice(0, 3)
+                                ).map((course: any) => (
                                     <div key={course.id} className="flex items-center p-3.5 bg-white rounded-[24px] shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-50/50 hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelectedCourseId(course.id)}>
                                         <div className="relative w-10 h-10 rounded-[14px] overflow-hidden shrink-0 mr-3 border border-gray-100 bg-gray-50">
                                             {course.thumbnailUrl ? (
