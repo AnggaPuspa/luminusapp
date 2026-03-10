@@ -1,8 +1,11 @@
 "use client";
 
 import { Bell, User } from "lucide-react";
+import { useStudentProfile } from "@/hooks/use-dashboard";
 
 export default function StudentTopbar() {
+    const { profile } = useStudentProfile();
+
     return (
         <header className="flex items-center justify-between z-10 w-full">
             <div className="flex items-center flex-1 w-full gap-4">
@@ -41,10 +44,15 @@ export default function StudentTopbar() {
                     <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
                     <Bell className="w-5 h-5" />
                 </button>
-                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#696EFF] to-[#F8ACFF] flex items-center justify-center text-white cursor-pointer hover:scale-105 transition-transform shadow-sm">
-                    <User className="w-5 h-5" />
+                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm bg-gradient-to-r from-[#696EFF] to-[#F8ACFF] flex items-center justify-center text-white cursor-pointer hover:scale-105 transition-transform">
+                    {profile?.avatarUrl ? (
+                        <img src={profile.avatarUrl} alt={profile.name} className="w-full h-full object-cover" />
+                    ) : (
+                        <User className="w-5 h-5" />
+                    )}
                 </div>
             </div>
         </header>
     );
 }
+

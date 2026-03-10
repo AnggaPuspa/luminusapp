@@ -1,6 +1,16 @@
 import Image from 'next/image';
 
-export default function CTA() {
+interface CTAProps {
+  title?: string;
+  description?: string;
+  buttonText?: string;
+}
+
+export default function CTA({
+  title = "Jadilah Ahli di Bidangmu! 🚀",
+  description = "Akses kursus premium dengan mentor berpengalaman, kapan saja dan di mana saja. Jangan lewatkan kesempatan ini!",
+  buttonText = "Dapatkan Sekarang"
+}: CTAProps) {
   return (
     <section className="cta-section">
       <div className="cta-container">
@@ -10,15 +20,15 @@ export default function CTA() {
 
         <div className="cta-text-section">
           <div className="cta-title">
-            <h1>Jadilah Ahli di Bidangmu! 🚀</h1>
+            <h1>{title}</h1>
           </div>
           <div className="cta-description">
             <p>
-              Akses kursus premium dengan mentor berpengalaman, kapan saja dan di mana saja. Jangan lewatkan kesempatan ini!
+              {description}
             </p>
           </div>
           <div className="cta-button">
-            <button>Dapatkan Sekarang</button>
+            <button>{buttonText}</button>
           </div>
         </div>
 

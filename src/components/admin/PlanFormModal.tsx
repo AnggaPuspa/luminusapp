@@ -19,10 +19,7 @@ export default function PlanFormModal({ isOpen, onClose, initialData, onSaved }:
     const [allCoursesIncluded, setAllCoursesIncluded] = useState(false);
     const [aiMentorQuota, setAiMentorQuota] = useState("0");
     const [communityInviteUrl, setCommunityInviteUrl] = useState("");
-
-    // Features as array of strings
     const [features, setFeatures] = useState<string[]>([]);
-
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -37,7 +34,6 @@ export default function PlanFormModal({ isOpen, onClose, initialData, onSaved }:
                 setAllCoursesIncluded(initialData.allCoursesIncluded ?? false);
                 setAiMentorQuota(initialData.aiMentorQuota?.toString() || "0");
                 setCommunityInviteUrl(initialData.communityInviteUrl || "");
-
                 try {
                     const parsedFeatures = typeof initialData.features === 'string' ? JSON.parse(initialData.features) : initialData.features;
                     setFeatures(Array.isArray(parsedFeatures) ? parsedFeatures : []);
@@ -45,17 +41,9 @@ export default function PlanFormModal({ isOpen, onClose, initialData, onSaved }:
                     setFeatures([]);
                 }
             } else {
-                // Reset form
-                setName("");
-                setTier("MURID");
-                setDescription("");
-                setMonthlyPrice("");
-                setYearlyPrice("");
-                setIsActive(true);
-                setAllCoursesIncluded(false);
-                setAiMentorQuota("0");
-                setCommunityInviteUrl("");
-                setFeatures([]);
+                setName(""); setTier("MURID"); setDescription(""); setMonthlyPrice("");
+                setYearlyPrice(""); setIsActive(true); setAllCoursesIncluded(false);
+                setAiMentorQuota("0"); setCommunityInviteUrl(""); setFeatures([]);
             }
         }
     }, [isOpen, initialData]);
@@ -66,43 +54,22 @@ export default function PlanFormModal({ isOpen, onClose, initialData, onSaved }:
         setFeatures(newFeatures);
     };
 
-    const handleAddFeature = () => {
-        setFeatures([...features, ""]);
-    };
-
-    const handleRemoveFeature = (index: number) => {
-        const newFeatures = [...features];
-        newFeatures.splice(index, 1);
-        setFeatures(newFeatures);
-    };
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-
         const payload = {
-            name,
-            tier,
-            description,
+            name, tier, description,
             monthlyPrice: parseInt(monthlyPrice) || 0,
             yearlyPrice: yearlyPrice ? parseInt(yearlyPrice) : null,
-            isActive,
-            allCoursesIncluded,
+            isActive, allCoursesIncluded,
             aiMentorQuota: parseInt(aiMentorQuota) || 0,
             communityInviteUrl,
-            features: features.filter(f => f.trim() !== "") // Remove empty strings
+            features: features.filter(f => f.trim() !== "")
         };
-
         try {
             const url = initialData ? `/api/admin/plans/${initialData.id}` : `/api/admin/plans`;
             const method = initialData ? 'PUT' : 'POST';
-
-            const res = await fetch(url, {
-                method,
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-
+            const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
             if (res.ok) {
                 toast.success(`Paket berhasil ${initialData ? 'diperbarui' : 'dibuat'}`);
                 onSaved();
@@ -121,45 +88,47 @@ export default function PlanFormModal({ isOpen, onClose, initialData, onSaved }:
 
     if (!isOpen) return null;
 
+    const inputClass = "w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#4F46E5] text-[13px] bg-gray-50 hover:bg-white transition-colors";
+    const labelClass = "block text-[13px] font-semibold text-[#1a1a1a] mb-1.5";
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-                <div className="flex items-center justify-between p-6 border-b border-gray-100">
-                    <div>
-                        <h2 className="text-xl font-bold text-gray-900">
-                            {initialData ? "Edit Paket Langganan" : "Buat Paket Baru"}
-                        </h2>
-                        <p className="text-sm text-gray-500 mt-1">Atur harga, akses kelas, dan fitur premium.</p>
-                    </div>
+
+                {/* Header */}
+                <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center z-10">
+                    <h2 className="text-[17px] font-bold text-[#1a1a1a]">
+                        {initialData ? "Edit Paket Langganan" : "Buat Paket Baru"}
+                    </h2>
                     <button
                         onClick={onClose}
-                        className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors"
+                        className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                     >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-6">
-                    <form id="planForm" onSubmit={handleSubmit} className="space-y-6">
+                {/* Body */}
+                <div className="flex-1 overflow-y-auto">
+                    <form id="planForm" onSubmit={handleSubmit} className="p-6 space-y-5">
 
+                        {/* Nama + Tier */}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Nama Paket</label>
+                                <label className={labelClass}>Nama Paket *</label>
                                 <input
-                                    required
-                                    type="text"
-                                    value={name}
+                                    required type="text" value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     placeholder="e.g. Paket Murid"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A855F7] focus:border-[#A855F7] outline-none text-sm transition-shadow"
+                                    className={inputClass}
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Tingkat Tier</label>
+                                <label className={labelClass}>Tingkat Tier</label>
                                 <select
                                     value={tier}
                                     onChange={(e) => setTier(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A855F7] focus:border-[#A855F7] outline-none text-sm bg-white"
+                                    className={inputClass + " cursor-pointer"}
                                 >
                                     <option value="BIASA">Biasa (Basic)</option>
                                     <option value="MURID">Murid (Standard)</option>
@@ -168,145 +137,141 @@ export default function PlanFormModal({ isOpen, onClose, initialData, onSaved }:
                             </div>
                         </div>
 
+                        {/* Deskripsi */}
                         <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Deskripsi Singkat</label>
+                            <label className={labelClass}>Deskripsi Singkat</label>
                             <input
-                                type="text"
-                                value={description}
+                                type="text" value={description}
                                 onChange={(e) => setDescription(e.target.value)}
                                 placeholder="e.g. Cocok untuk mulai belajar coding dari nol"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A855F7] focus:border-[#A855F7] outline-none text-sm"
+                                className={inputClass}
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        {/* Harga */}
+                        <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Harga Bulanan (Rp) <span className="text-red-500">*</span></label>
+                                <label className={labelClass}>Harga Bulanan (Rp) *</label>
                                 <input
-                                    required
-                                    type="number"
-                                    min="0"
-                                    value={monthlyPrice}
+                                    required type="number" min="0" value={monthlyPrice}
                                     onChange={(e) => setMonthlyPrice(e.target.value)}
                                     placeholder="99000"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A855F7] outline-none text-sm"
+                                    className={inputClass}
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Harga Tahunan (Rp) (Opsi)</label>
+                                <label className={labelClass}>Harga Tahunan (Rp) <span className="text-[#8e95a5] font-normal">— Opsional</span></label>
                                 <input
-                                    type="number"
-                                    min="0"
-                                    value={yearlyPrice}
+                                    type="number" min="0" value={yearlyPrice}
                                     onChange={(e) => setYearlyPrice(e.target.value)}
                                     placeholder="990000"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A855F7] outline-none text-sm"
+                                    className={inputClass}
                                 />
                             </div>
                         </div>
 
-                        <div className="space-y-4">
-                            <h3 className="font-bold text-gray-900 border-b pb-2">Pengaturan Akses Konten</h3>
+                        {/* Divider */}
+                        <div className="border-t border-gray-100 pt-1">
+                            <p className="text-[12px] font-semibold text-[#8e95a5] uppercase tracking-wide mb-4">Pengaturan Akses</p>
 
-                            <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                            {/* All Access Toggle */}
+                            <label className="flex items-center gap-3 p-4 border border-gray-100 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors mb-3">
                                 <input
                                     type="checkbox"
                                     checked={allCoursesIncluded}
                                     onChange={(e) => setAllCoursesIncluded(e.target.checked)}
-                                    className="w-5 h-5 text-[#A855F7] rounded focus:ring-[#A855F7]"
+                                    className="w-4 h-4 rounded border-gray-300 text-[#4F46E5] focus:ring-[#4F46E5]"
                                 />
                                 <div>
-                                    <p className="font-semibold text-sm text-gray-800">Buka Semua Kelas (All Access)</p>
-                                    <p className="text-xs text-gray-500">Jika dicentang, user bisa mengakses semua course tanpa batas.</p>
+                                    <p className="text-[13px] font-semibold text-[#1a1a1a]">Buka Semua Kelas (All Access)</p>
+                                    <p className="text-[12px] text-[#8e95a5] font-medium mt-0.5">Jika dicentang, user bisa mengakses semua course tanpa batas.</p>
                                 </div>
                             </label>
 
                             {!allCoursesIncluded && (
-                                <div className="p-3 bg-yellow-50 text-yellow-800 text-xs border border-yellow-200 rounded-lg">
-                                    Paket terbatas. Anda harus assign course secara manual setelah paket dibuat.
+                                <div className="p-3 bg-[#FEF9C3] text-[#854D0E] text-[12px] font-medium border border-[#FDE68A] rounded-lg mb-3">
+                                    ⚠️ Paket terbatas. Anda harus assign course secara manual setelah paket dibuat.
                                 </div>
                             )}
 
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Limit AI Mentor Chat / Bulan</label>
-                                <input
-                                    required
-                                    type="number"
-                                    min="0"
-                                    value={aiMentorQuota}
-                                    onChange={(e) => setAiMentorQuota(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A855F7] outline-none text-sm"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">Ketik 0 jika unlimited (tanpa batas).</p>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Link Invite VIP Community</label>
-                                <input
-                                    type="url"
-                                    value={communityInviteUrl}
-                                    onChange={(e) => setCommunityInviteUrl(e.target.value)}
-                                    placeholder="https://discord.gg/..."
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A855F7] outline-none text-sm"
-                                />
+                            {/* AI Quota + Community */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className={labelClass}>Limit AI Chat / Bulan</label>
+                                    <input
+                                        required type="number" min="0" value={aiMentorQuota}
+                                        onChange={(e) => setAiMentorQuota(e.target.value)}
+                                        className={inputClass}
+                                    />
+                                    <p className="text-[11px] text-[#8e95a5] font-medium mt-1">Ketik 0 jika unlimited.</p>
+                                </div>
+                                <div>
+                                    <label className={labelClass}>Link Invite VIP Community</label>
+                                    <input
+                                        type="url" value={communityInviteUrl}
+                                        onChange={(e) => setCommunityInviteUrl(e.target.value)}
+                                        placeholder="https://discord.gg/..."
+                                        className={inputClass}
+                                    />
+                                </div>
                             </div>
                         </div>
 
-                        <div>
-                            <div className="flex items-center justify-between mb-3 border-b pb-2">
-                                <h3 className="font-bold text-gray-900">List Fitur (Untuk Pricing Page)</h3>
+                        {/* Features */}
+                        <div className="border-t border-gray-100 pt-4">
+                            <div className="flex items-center justify-between mb-3">
+                                <p className="text-[12px] font-semibold text-[#8e95a5] uppercase tracking-wide">List Fitur (Pricing Page)</p>
                                 <button
                                     type="button"
-                                    onClick={handleAddFeature}
-                                    className="text-xs bg-[#FDF4FF] text-[#A855F7] px-2 py-1 rounded-md font-semibold hover:bg-[#F5D0FE] transition-colors flex items-center gap-1"
+                                    onClick={() => setFeatures([...features, ""])}
+                                    className="flex items-center gap-1 text-[12px] font-semibold text-[#4F46E5] bg-[#EEEDFA] hover:bg-[#E0DEFB] px-2.5 py-1 rounded-lg transition-colors"
                                 >
                                     <Plus className="w-3 h-3" /> Tambah Fitur
                                 </button>
                             </div>
-
                             <div className="space-y-2">
                                 {features.map((feature, index) => (
                                     <div key={index} className="flex gap-2 items-center">
                                         <input
-                                            type="text"
-                                            value={feature}
+                                            type="text" value={feature}
                                             onChange={(e) => handleFeatureChange(index, e.target.value)}
                                             placeholder="e.g. Bebas download source code"
-                                            className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A855F7] outline-none text-sm"
+                                            className={inputClass}
                                         />
                                         <button
                                             type="button"
-                                            onClick={() => handleRemoveFeature(index)}
-                                            className="p-1.5 text-gray-400 hover:text-red-500 rounded bg-gray-50 hover:bg-red-50 transition-colors"
+                                            onClick={() => { const f = [...features]; f.splice(index, 1); setFeatures(f); }}
+                                            className="p-2 text-gray-400 hover:text-[#EF4444] hover:bg-[#FEF2F2] rounded-lg transition-colors shrink-0"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
                                     </div>
                                 ))}
                                 {features.length === 0 && (
-                                    <p className="text-sm text-gray-400 italic text-center py-2">Belum ada fitur ditambahkan.</p>
+                                    <p className="text-[12px] text-[#8e95a5] font-medium italic text-center py-2">Belum ada fitur ditambahkan.</p>
                                 )}
                             </div>
                         </div>
 
-                        <label className="flex items-center gap-2 cursor-pointer pt-2">
+                        {/* Status */}
+                        <label className="flex items-center gap-3 cursor-pointer pt-1">
                             <input
-                                type="checkbox"
-                                checked={isActive}
+                                type="checkbox" checked={isActive}
                                 onChange={(e) => setIsActive(e.target.checked)}
-                                className="w-4 h-4 text-[#A855F7] rounded focus:ring-[#A855F7]"
+                                className="w-4 h-4 rounded border-gray-300 text-[#4F46E5] focus:ring-[#4F46E5]"
                             />
-                            <span className="text-sm font-semibold text-gray-800">Paket Aktif (tampil di halaman form)</span>
+                            <span className="text-[13px] font-semibold text-[#1a1a1a]">Paket Aktif <span className="text-[#8e95a5] font-normal">(tampil di halaman pricing)</span></span>
                         </label>
 
                     </form>
                 </div>
 
-                <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+                {/* Footer */}
+                <div className="p-5 border-t border-gray-100 flex justify-end gap-3">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-2 text-sm font-semibold text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        className="px-5 py-2.5 rounded-lg text-[13px] font-semibold text-gray-600 hover:bg-gray-100 transition-colors border border-gray-200"
                     >
                         Batal
                     </button>
@@ -314,11 +279,13 @@ export default function PlanFormModal({ isOpen, onClose, initialData, onSaved }:
                         type="submit"
                         form="planForm"
                         disabled={loading}
-                        className="px-5 py-2 text-sm font-bold text-white bg-[#A855F7] rounded-lg hover:bg-[#9333EA] transition-colors disabled:opacity-50"
+                        className="bg-[#4F46E5] hover:bg-[#4338CA] text-white px-6 py-2.5 rounded-lg text-[13px] font-semibold transition-colors disabled:opacity-70 flex items-center gap-2"
                     >
+                        {loading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                         {loading ? "Menyimpan..." : "Simpan Paket"}
                     </button>
                 </div>
+
             </div>
         </div>
     );
