@@ -1,10 +1,9 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import prisma from "@/lib/prisma";
-import { cache } from "react";
 import CourseDetailCTA from "@/components/common/CourseDetailCTA";
 import { Navbar, Footer } from "@/components";
+import { getCourseBySlug } from "@/services/course.service";
 
 export const revalidate = 3600; // ISR: cache 1 hour
 
@@ -15,35 +14,6 @@ function formatPrice(price: number) {
         minimumFractionDigits: 0
     }).format(price);
 }
-
-// Deduplicate: generateMetadata + page share this single DB call per request
-const getCourseBySlug = cache(async (slug: string) => {
-    return prisma.course.findUnique({
-        where: {
-            slug,
-            status: "PUBLISHED",
-            deletedAt: null
-        },
-        include: {
-            modules: {
-                orderBy: { sortOrder: 'asc' },
-                include: {
-                    lessons: {
-                        orderBy: { sortOrder: 'asc' },
-                        select: { id: true, title: true, duration: true }
-                    }
-                }
-            },
-            reviews: {
-                include: {
-                    user: { select: { name: true, avatarUrl: true } }
-                },
-                orderBy: { createdAt: 'desc' },
-                take: 10
-            }
-        }
-    }) as any;
-});
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;

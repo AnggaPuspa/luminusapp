@@ -6,7 +6,7 @@ import Link from "next/link";
 import { format } from "date-fns";
 import StudentTopbar from "@/components/dashboard/StudentTopbar";
 import AiMentorChat from "@/components/dashboard/AiMentorChat";
-import { useDashboardOverview } from "@/hooks/use-dashboard";
+import { useDashboardOverview, useStudentProfile } from "@/hooks/use-dashboard";
 
 interface CourseData {
     id: string;
@@ -21,7 +21,7 @@ interface CourseData {
 
 interface DashboardStats {
     activeCourses: number;
-    completedLessons: number;
+    completedCourses: number;
     totalTransactions: number;
     pendingTransactions: number;
     recentCourses: CourseData[];
@@ -30,16 +30,15 @@ interface DashboardStats {
 
 export default function StudentOverviewPage() {
     const { stats: fetchedStats, isLoading: loading } = useDashboardOverview();
+    const { profile } = useStudentProfile();
     const stats: DashboardStats = fetchedStats || {
         activeCourses: 0,
-        completedLessons: 0,
+        completedCourses: 0,
         totalTransactions: 0,
         pendingTransactions: 0,
         recentCourses: [],
         subscription: null,
     };
-    // TODO: fetch real user profile data if available. Using placeholder for now
-    const userName = "Pelajar";
 
     const recentCourses = stats.recentCourses || [];
 
@@ -96,8 +95,8 @@ export default function StudentOverviewPage() {
                                 <Trophy className="w-5 h-5" />
                             </div>
                             <div>
-                                <p className="text-xs text-gray-400 font-medium">Materi Selesai</p>
-                                <p className="text-sm font-bold text-gray-900">{stats.completedLessons} Materi</p>
+                                <p className="text-xs text-gray-400 font-medium">Kelas Selesai</p>
+                                <p className="text-sm font-bold text-gray-900">{stats.completedCourses} Kelas</p>
                             </div>
                         </div>
                         <MoreVertical className="w-5 h-5 text-gray-300" />
@@ -301,7 +300,7 @@ export default function StudentOverviewPage() {
                             <User className="w-5 h-5 text-gray-400" />
                         </div>
                         <div className="flex flex-col">
-                            <span className="font-semibold text-gray-800 text-sm">{userName.split(' ')[0]} User</span>
+                            <span className="font-semibold text-gray-800 text-sm">{profile?.name ? profile.name.split(' ')[0] : '...'}</span>
                             {stats.subscription?.isSubscriber && (
                                 <span className="text-[9px] font-bold uppercase tracking-wider text-[#696EFF]">
                                     {stats.subscription.tier === 'PROFESIONAL' ? 'Pro' : stats.subscription.tier === 'MURID' ? 'Murid' : 'Biasa'} Plan
@@ -346,7 +345,7 @@ export default function StudentOverviewPage() {
                         {/* Greeting */}
                         <div className="text-center mb-8">
                             <h3 className="text-xl font-bold text-gray-900 mb-1.5 flex items-center justify-center gap-1.5">
-                                Good Morning {userName.split(' ')[0]} 🤠
+                                Good Morning {profile?.name ? profile.name.split(' ')[0] : '...'} 🤠
                             </h3>
                             <p className="text-[13px] text-gray-500 font-medium">Continue your learning to achieve your target!</p>
                         </div>
@@ -354,7 +353,7 @@ export default function StudentOverviewPage() {
                         {/* Dynamic Chart Box */}
                         <div className="bg-[#FAFAFA] rounded-[24px] p-5 relative border border-gray-50">
                             {(() => {
-                                const maxVal = Math.max(stats.activeCourses, stats.completedLessons, stats.totalTransactions, stats.pendingTransactions, 10);
+                                const maxVal = Math.max(stats.activeCourses, stats.completedCourses, stats.totalTransactions, stats.pendingTransactions, 10);
                                 return (
                                     <div className="flex h-32 relative">
                                         {/* Y-axis */}
@@ -372,7 +371,7 @@ export default function StudentOverviewPage() {
                                             <div className="absolute bottom-[20px] left-0 w-full h-[calc(100%-20px)] flex items-end justify-between px-2 gap-2">
                                                 {[
                                                     { val: stats.activeCourses, label: 'Kelas', color: 'bg-[#E9D5FF]', hover: 'group-hover:bg-[#A855F7]' },
-                                                    { val: stats.completedLessons, label: 'Materi', color: 'bg-[#A855F7]', hover: 'group-hover:bg-[#8B5CF6]' },
+                                                    { val: stats.completedCourses, label: 'Selesai', color: 'bg-[#A855F7]', hover: 'group-hover:bg-[#8B5CF6]' },
                                                     { val: stats.totalTransactions, label: 'Order', color: 'bg-[#E9D5FF]', hover: 'group-hover:bg-[#A855F7]' },
                                                     { val: stats.pendingTransactions, label: 'Pending', color: 'bg-[#E9D5FF]', hover: 'group-hover:bg-[#A855F7]' }
                                                 ].map((item, i) => {

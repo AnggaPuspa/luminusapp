@@ -1,10 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { ChevronLeft, CheckCircle2, Circle, PlayCircle, FileText, HelpCircle, Award, Heart, Lock } from "lucide-react";
+import { useState } from "react";
+import { ChevronLeft, FileText, HelpCircle, Award, Heart, Lock, Check, Play } from "lucide-react";
 import Link from "next/link";
-import { toast } from "sonner";
 import { use } from "react";
 import CertificateDownloader from "@/components/common/CertificateDownloader";
 import AddReviewModal from "@/components/AddReviewModal";
@@ -12,151 +10,23 @@ import QuizModal from "@/components/classroom/QuizModal";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
-
-interface Lesson {
-    id: string;
-    title: string;
-    duration: number;
-    videoUrl?: string | null;
-    content?: string | null;
-    moduleId: string;
-    progress?: { completed: boolean }[];
-    resources?: any;
-}
-
-interface Module {
-    id: string;
-    title: string;
-    lessons: Lesson[];
-    quiz?: { title: string } | null;
-}
-
-interface Course {
-    id: string;
-    title: string;
-    modules: Module[];
-    accessType?: string;
-    isSubscriber?: boolean;
-}
+import { useClassroom, getEmbedUrl, isLessonCompleted, isLessonLocked, type Module, type Lesson } from "@/hooks/use-classroom";
 
 export default function ClassroomPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = use(params);
-    const router = useRouter();
+    const {
+        course,
+        activeLesson,
+        setActiveLesson,
+        loading,
+        markingProgress,
+        handleMarkCompleted,
+    } = useClassroom(slug);
 
-    const [course, setCourse] = useState<Course | null>(null);
-    const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [markingProgress, setMarkingProgress] = useState(false);
     const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'videos' | 'resources' | 'support'>('videos');
-
-    // Quiz State
     const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
     const [activeQuizModule, setActiveQuizModule] = useState<{ id: string, moduleId: string, title?: string } | null>(null);
-
-    useEffect(() => {
-        const fetchClassroom = async () => {
-            try {
-                const res = await fetch(`/api/classroom/${slug}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    setCourse(data);
-
-                    // Auto select first lesson if none active
-                    if (data.modules?.length > 0 && data.modules[0].lessons?.length > 0) {
-                        setActiveLesson(data.modules[0].lessons[0]);
-                    }
-                } else if (res.status === 403) {
-                    toast.error("Kamu belum terdaftar di kelas ini.");
-                    router.push(`/kursus`);
-                } else {
-                    toast.error("Gagal memuat kelas.");
-                }
-            } catch (error) {
-                console.error("Error fetching classroom", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        if (slug) fetchClassroom();
-    }, [slug, router]);
-
-    const getEmbedUrl = (url: string | null) => {
-        if (!url) return null;
-
-        try {
-            if (url.includes('youtube.com/watch') || url.includes('youtu.be/')) {
-                let videoId = '';
-                if (url.includes('youtube.com/watch')) {
-                    videoId = new URL(url).searchParams.get('v') || '';
-                } else {
-                    videoId = url.split('youtu.be/')[1].split('?')[0];
-                }
-                return `https://www.youtube.com/embed/${videoId}`;
-            }
-
-            if (url.includes('vimeo.com/')) {
-                const videoId = url.split('vimeo.com/')[1].split('/')[0];
-                return `https://player.vimeo.com/video/${videoId}`;
-            }
-
-            return null;
-        } catch (e) {
-            return null;
-        }
-    };
-
-    const handleMarkCompleted = async () => {
-        if (!activeLesson || markingProgress || !course) return;
-        setMarkingProgress(true);
-
-        try {
-            const res = await fetch("/api/classroom/progress", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ lessonId: activeLesson.id })
-            });
-
-            if (res.ok) {
-                toast.success("Materi berhasil diselesaikan!");
-
-                // Update local state so UI reflects the checkmark immediately
-                const updatedCourse = { ...course };
-                let foundMatch = false;
-
-                for (let i = 0; i < updatedCourse.modules.length; i++) {
-                    if (foundMatch) break;
-                    for (let j = 0; j < updatedCourse.modules[i].lessons.length; j++) {
-                        if (updatedCourse.modules[i].lessons[j].id === activeLesson.id) {
-                            if (!updatedCourse.modules[i].lessons[j].progress) {
-                                updatedCourse.modules[i].lessons[j].progress = [];
-                            }
-                            updatedCourse.modules[i].lessons[j].progress![0] = { completed: true };
-                            foundMatch = true;
-                            break;
-                        }
-                    }
-                }
-
-                setCourse(updatedCourse);
-
-                // Auto-advance to the next lesson
-                const flat = updatedCourse.modules.flatMap((m: Module) => m.lessons);
-                const currentIdx = flat.findIndex((l: Lesson) => l.id === activeLesson.id);
-                if (currentIdx >= 0 && currentIdx < flat.length - 1) {
-                    setActiveLesson(flat[currentIdx + 1]);
-                }
-            } else {
-                toast.error("Gagal menyimpan progress");
-            }
-        } catch (error) {
-            console.error(error);
-            toast.error("Terjadi kesalahan sistem");
-        } finally {
-            setMarkingProgress(false);
-        }
-    };
 
     if (loading) {
         return <div className="min-h-screen flex items-center justify-center bg-[#F1F2F6]">
@@ -166,22 +36,8 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
 
     if (!course) return null;
 
-    const isLessonCompleted = (lesson: Lesson) => {
-        return lesson.progress && lesson.progress.length > 0 && lesson.progress[0].completed;
-    };
-
-    // Flatten all lessons across all modules into a single ordered array
     const allLessonsFlat: Lesson[] = course.modules?.flatMap((m: Module) => m.lessons) || [];
 
-    // Sequential lock: lesson is locked if previous lesson in the flat list is not completed
-    const isLessonLocked = (lesson: Lesson): boolean => {
-        const idx = allLessonsFlat.findIndex((l) => l.id === lesson.id);
-        if (idx <= 0) return false; // First lesson is always unlocked
-        const prevLesson = allLessonsFlat[idx - 1];
-        return !isLessonCompleted(prevLesson);
-    };
-
-    // Calculate total course completion
     const totalLessons = course.modules?.reduce((acc: number, mod: Module) => acc + (mod.lessons?.length || 0), 0) || 0;
     const completedLessonsCount = course.modules?.reduce((acc: number, mod: Module) => {
         return acc + (mod.lessons?.filter(isLessonCompleted).length || 0);
@@ -191,7 +47,6 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
     const isActiveLessonCompleted = activeLesson ? isLessonCompleted(activeLesson) : false;
     const embedUrl = activeLesson ? getEmbedUrl(activeLesson.videoUrl || null) : null;
 
-    // Find if the active lesson is the last lesson of a module with a quiz
     const activeModule = activeLesson ? course.modules?.find((m: Module) => m.id === activeLesson.moduleId) : null;
     const isLastLesson = activeModule && activeLesson ? activeModule.lessons[activeModule.lessons.length - 1].id === activeLesson.id : false;
 
@@ -231,19 +86,25 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                     />
                                 ) : (
-                                    <div className="text-center p-6 bg-gray-800 rounded-xl m-4 w-full max-w-lg border border-gray-700">
-                                        <FileText className="w-12 h-12 text-gray-500 mx-auto mb-3" />
-                                        <p className="text-gray-300 mb-4">Video format tidak dapat di-embed secara otomatis.</p>
-                                        <a href={activeLesson.videoUrl} target="_blank" rel="noopener noreferrer" className="inline-block px-5 py-2.5 bg-[#A855F7] text-white rounded-lg font-medium">
+                                    <div className="text-center p-8 bg-white/5 backdrop-blur-md rounded-[24px] m-4 w-full max-w-lg border border-white/10 shadow-2xl">
+                                        <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-5 border border-white/5">
+                                            <FileText className="w-7 h-7 text-[#96A9C8]" />
+                                        </div>
+                                        <h3 className="text-[19px] font-bold text-white mb-2">Video Tidak Mendukung Auto-Play</h3>
+                                        <p className="text-gray-400 mb-8 text-[14px]">Sistem mendeteksi format video ini tidak dapat diputar langsung di dalam halaman. Silakan tonton melalui tab eksternal.</p>
+                                        <a href={activeLesson.videoUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-white hover:bg-gray-100 text-[#032038] rounded-full font-bold transition-all shadow-lg active:scale-95">
+                                            <Play className="w-[14px] h-[14px] fill-current" />
                                             Buka di Tab Baru
                                         </a>
                                     </div>
                                 )
                             ) : (
-                                <div className="text-center text-gray-500 p-8 w-full max-w-lg bg-gray-800/50 rounded-xl m-4 border border-gray-700/50">
-                                    <FileText className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                                    <p className="text-lg">Materi ini tidak melampirkan video.</p>
-                                    <p className="text-sm mt-2 opacity-70">Silakan baca instruksi di bawah.</p>
+                                <div className="text-center p-8 w-full max-w-lg">
+                                    <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-inner block mx-auto">
+                                        <FileText className="w-8 h-8 text-[#96A9C8]/50" />
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-white mb-2">Materi Teks & Bacaan</h3>
+                                    <p className="text-[#96A9C8] text-[15px]">Tidak ada lampiran video untuk materi ini.<br />Silakan gulir ke bawah untuk mulai membaca modul pembelajaran.</p>
                                 </div>
                             )}
                         </div>
@@ -260,14 +121,13 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
                                 <button
                                     onClick={handleMarkCompleted}
                                     disabled={isActiveLessonCompleted || markingProgress}
-                                    className={`shrink-0 flex items-center gap-2 px-6 py-2 rounded-lg font-bold text-sm transition-all
-                                        ${isActiveLessonCompleted
-                                            ? 'bg-green-100 text-green-700 cursor-not-allowed'
-                                            : 'bg-[#A855F7] text-white hover:bg-[#9333EA] shadow-sm'
+                                    className={`shrink-0 px-8 py-2.5 rounded-full font-bold text-[15px] transition-all bg-[#032038] text-white
+                                        ${(isActiveLessonCompleted || markingProgress)
+                                            ? 'opacity-60 cursor-not-allowed'
+                                            : 'hover:opacity-90 shadow-md'
                                         }`}
                                 >
-                                    {isActiveLessonCompleted ? <CheckCircle2 className="w-4 h-4" /> : <PlayCircle className="w-4 h-4 fill-white text-[#A855F7]" />}
-                                    {isActiveLessonCompleted ? "Selesai" : markingProgress ? "Menyimpan..." : "Tandai Selesai"}
+                                    Selesai
                                 </button>
 
                                 {completedLessonsCount / (totalLessons || 1) >= 0.5 && (
@@ -279,7 +139,6 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
                                     </button>
                                 )}
 
-                                {/* Certificate Button if complete */}
                                 {isCourseFullyCompleted && (
                                     <CertificateDownloader
                                         courseId={course.id}
@@ -360,7 +219,7 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
                                         {module.lessons?.map((lesson: Lesson) => {
                                             const active = activeLesson?.id === lesson.id;
                                             const completed = isLessonCompleted(lesson);
-                                            const locked = isLessonLocked(lesson);
+                                            const locked = isLessonLocked(lesson, allLessonsFlat);
 
                                             return (
                                                 <button
@@ -368,39 +227,46 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
                                                     onClick={() => !locked && setActiveLesson(lesson)}
                                                     disabled={locked}
                                                     title={locked ? 'Selesaikan materi sebelumnya terlebih dahulu' : ''}
-                                                    className={`w-full flex gap-4 px-2 py-3 text-left transition-all border-b border-gray-50 last:border-0 rounded-xl
+                                                    className={`w-full flex items-center gap-2.5 px-3 py-2 border text-left transition-all mb-2 rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.02)]
                                                         ${locked
-                                                            ? 'opacity-50 cursor-not-allowed'
-                                                            : 'hover:bg-gray-50 group'
+                                                            ? 'opacity-60 cursor-not-allowed bg-gray-50 border-gray-100'
+                                                            : active
+                                                                ? 'bg-[#032038] text-white border-transparent shadow-md'
+                                                                : 'bg-white hover:border-gray-300 border-gray-100 group'
                                                         }`}
                                                 >
-                                                    {/* Icon */}
-                                                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors
                                                         ${locked
-                                                            ? 'bg-gray-100 text-gray-300 border border-gray-200'
+                                                            ? 'bg-gray-200 text-gray-400'
                                                             : active
-                                                                ? 'bg-[#A855F7] text-white shadow-md shadow-purple-200'
-                                                                : completed
-                                                                    ? 'bg-green-50 text-green-500 border border-green-200'
-                                                                    : 'bg-white text-gray-400 border border-gray-200 group-hover:border-purple-200'
+                                                                ? 'bg-white text-[#032038]'
+                                                                : 'bg-[#032038] text-white'
                                                         }`}>
                                                         {locked
-                                                            ? <Lock className="w-4 h-4" />
-                                                            : completed
-                                                                ? <CheckCircle2 className="w-5 h-5" />
-                                                                : <PlayCircle className={`w-5 h-5 ${active ? 'fill-white text-[#A855F7]' : ''}`} />
+                                                            ? <Lock className="w-3.5 h-3.5" />
+                                                            : <Play className="w-3 h-3 fill-current ml-[2px]" />
                                                         }
                                                     </div>
 
-                                                    {/* Info */}
-                                                    <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                                        <p className={`text-sm leading-snug ${locked ? 'text-gray-400' : active ? 'font-bold text-gray-900' : 'font-semibold text-gray-700 group-hover:text-gray-900'}`}>
+                                                    <div className="flex-1 min-w-0 pr-1">
+                                                        <p className={`text-[13px] font-bold truncate ${active ? 'text-white' : 'text-[#032038]'}`}>
                                                             {lesson.title}
                                                         </p>
-                                                        <p className="text-sm text-gray-400 mt-1">
-                                                            {lesson.duration > 0 ? `0:${lesson.duration.toString().padStart(2, '0')}` : '0:00'}
+                                                        <p className={`text-[11px] font-medium tracking-wide ${active ? 'text-[#96A9C8]' : 'text-[#032038]/60'}`}>
+                                                            {(() => {
+                                                                if (!lesson.duration || lesson.duration <= 0) return '0:00';
+                                                                const m = Math.floor(lesson.duration / 60);
+                                                                const s = lesson.duration % 60;
+                                                                return `${m}:${s.toString().padStart(2, '0')}`;
+                                                            })()}
                                                         </p>
                                                     </div>
+
+                                                    {completed && (
+                                                        <div className="w-[18px] h-[18px] rounded-full bg-[#20D08A] text-white flex items-center justify-center flex-shrink-0">
+                                                            <Check className="w-[10px] h-[10px] stroke-[3]" />
+                                                        </div>
+                                                    )}
                                                 </button>
                                             );
                                         })}
@@ -408,14 +274,14 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
                                         {module.quiz && (
                                             <button
                                                 onClick={() => openQuiz(module.id, module.quiz?.title)}
-                                                className="w-full flex items-center gap-4 px-2 py-3 text-left transition-all border-b border-gray-50 hover:bg-gray-50 group rounded-xl mt-1"
+                                                className="w-full flex items-center gap-2.5 px-3 py-2 text-left transition-all mb-2 rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.02)] border bg-white border-gray-100 hover:border-gray-300 group mt-1"
                                             >
-                                                <div className="w-11 h-11 rounded-xl bg-white text-gray-400 border border-gray-200 group-hover:border-purple-200 flex items-center justify-center flex-shrink-0 transition-colors">
-                                                    <HelpCircle className="w-5 h-5" />
+                                                <div className="w-8 h-8 rounded-full bg-[#032038] text-white flex items-center justify-center flex-shrink-0">
+                                                    <HelpCircle className="w-4 h-4" />
                                                 </div>
-                                                <div className="flex-1">
-                                                    <p className="text-sm font-semibold text-gray-700 group-hover:text-gray-900">Kuis Modul</p>
-                                                    <p className="text-sm text-gray-400 mt-1">{module.quiz.title || 'Uji Pemahaman'}</p>
+                                                <div className="flex-1 min-w-0 pr-1">
+                                                    <p className="text-[13px] font-bold truncate text-[#032038]">Kuis Modul</p>
+                                                    <p className="text-[11px] font-medium tracking-wide text-[#032038]/60">{module.quiz.title || 'Uji Pemahaman'}</p>
                                                 </div>
                                             </button>
                                         )}
@@ -426,7 +292,6 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
 
                         {activeTab === 'resources' && (
                             <div className="py-6">
-                                {/* Parse resources string if needed */}
                                 {(() => {
                                     let parsedResources: any[] = [];
                                     try {
@@ -518,15 +383,12 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
                 />
             )}
 
-            {/* Student Quiz Modal */}
             <QuizModal
                 isOpen={isQuizModalOpen}
                 onClose={() => setIsQuizModalOpen(false)}
                 moduleId={activeQuizModule?.moduleId || ""}
                 courseSlug={slug}
-                onQuizComplete={() => {
-                    // Optional: trigger confetti or just refresh course data so score is synced
-                }}
+                onQuizComplete={() => { }}
             />
         </div>
     );

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { invalidateDashboard } from "@/hooks/use-dashboard";
 
 function formatPrice(price: number) {
     return new Intl.NumberFormat('id-ID', {
@@ -115,6 +116,9 @@ export default function CheckoutModal({
                 }
                 throw new Error(data.message || "Checkout gagal");
             }
+
+            // Invalidate SWR cache so dashboard shows new enrollment immediately
+            invalidateDashboard();
 
             if (data.paymentUrl) {
                 window.location.href = data.paymentUrl;

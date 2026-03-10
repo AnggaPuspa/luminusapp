@@ -1,115 +1,24 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { User, Mail, Lock, Save, Bell, Camera, CalendarDays, ShieldCheck, Edit3, CheckCircle, Sparkles, PlayCircle, Play } from "lucide-react";
-import { toast } from "sonner";
-import { format } from "date-fns";
-import { id as localeId } from "date-fns/locale";
+import { User, Lock, Mail, Bell, Camera, Edit3, Sparkles, PlayCircle, Play } from "lucide-react";
 import StudentTopbar from "@/components/dashboard/StudentTopbar";
-import { invalidateProfile, invalidateDashboard } from "@/hooks/use-dashboard";
+import Link from "next/link";
+import { useDashboardOverview } from "@/hooks/use-dashboard";
+import { useSettings } from "@/hooks/use-settings";
 
 export default function StudentSettingsPage() {
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const [formData, setFormData] = useState({
-        name: "",
-        email: "",
-        password: "", // Only sent if user types a new one
-        role: "STUDENT",
-        createdAt: "",
-        avatarUrl: null as string | null,
-    });
-    const [originalData, setOriginalData] = useState({
-        name: "",
-        email: "",
-    });
-
-    // Check if form has any unsaved changes
-    const isDirty = formData.name !== originalData.name || formData.email !== originalData.email || formData.password.trim() !== "";
-
-    useEffect(() => {
-        const fetchProfile = async () => {
-            try {
-                const res = await fetch("/api/student/profile");
-                if (res.ok) {
-                    const data = await res.json();
-                    setFormData({
-                        name: data.name || "",
-                        email: data.email || "",
-                        password: "",
-                        role: data.role || "STUDENT",
-                        createdAt: data.createdAt ? format(new Date(data.createdAt), "MMMM yyyy", { locale: localeId }) : "",
-                        avatarUrl: data.avatarUrl || null,
-                    });
-                    setOriginalData({
-                        name: data.name || "",
-                        email: data.email || "",
-                    });
-                }
-            } catch (error) {
-                console.error("Failed to fetch profile", error);
-                toast.error("Gagal memuat profil");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchProfile();
-    }, []);
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
-    };
-
-    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            // Mock upload - update preview locally immediately
-            const imgUrl = URL.createObjectURL(file);
-            setFormData(prev => ({ ...prev, avatarUrl: imgUrl }));
-            toast.success("Foto profil berhasil diperbarui (Simulasi UX)");
-            // Note: In a real app, you would upload this file to S3/Cloudinary/etc. here
-        }
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setSaving(true);
-
-        try {
-            // Only send password if it's not empty
-            const payload: Record<string, string> = { name: formData.name, email: formData.email };
-            if (formData.password.trim() !== "") {
-                payload.password = formData.password;
-            }
-
-            const res = await fetch("/api/student/profile", {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-
-            if (res.ok) {
-                toast.success("Profil berhasil diperbarui!");
-                // Clear password field after save
-                setFormData(prev => ({ ...prev, password: "" }));
-                setOriginalData({ name: formData.name, email: formData.email });
-                // Invalidate SWR caches so sidebar/dashboard show updated name
-                invalidateProfile();
-                invalidateDashboard();
-            } else {
-                const data = await res.json();
-                toast.error(data.message || "Gagal memperbarui profil");
-            }
-        } catch (error) {
-            console.error(error);
-            toast.error("Terjadi kesalahan sistem");
-        } finally {
-            setSaving(false);
-        }
-    };
+    const { stats } = useDashboardOverview();
+    const {
+        loading,
+        saving,
+        formData,
+        isDirty,
+        fileInputRef,
+        handleChange,
+        handleAvatarChange,
+        handleSubmit,
+        resetForm,
+    } = useSettings();
 
     if (loading) {
         return <div className="animate-pulse space-y-6 max-w-2xl">
@@ -128,7 +37,6 @@ export default function StudentSettingsPage() {
                     <form onSubmit={handleSubmit} className="space-y-8">
                         {/* CARD 1: PROFILE PHOTO */}
                         <div className="bg-white border border-gray-100 rounded-2xl p-6 md:p-8 shadow-sm flex items-center justify-between overflow-hidden relative">
-                            {/* Accent Background Graphic */}
                             <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-[#8B7AFF]/10 to-purple-100/30 rounded-full blur-3xl -mr-20 -mt-20 z-0"></div>
 
                             <div className="relative z-10 flex items-center gap-8">
@@ -224,14 +132,12 @@ export default function StudentSettingsPage() {
                             </div>
                         </div>
 
-                        {/* FLOATING ACTION BUTTONS (Only visible when user edits form) */}
+                        {/* FLOATING ACTION BUTTONS */}
                         <div className={`transition-all duration-300 transform ${isDirty ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0 pointer-events-none hidden'}`}>
                             <div className="flex items-center justify-end gap-3 p-4 mt-2 bg-indigo-50/50 rounded-2xl border border-indigo-100">
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        setFormData({ ...formData, name: originalData.name, email: originalData.email, password: "" });
-                                    }}
+                                    onClick={resetForm}
                                     className="px-6 py-2.5 bg-white border-[1.5px] border-gray-200 text-gray-500 font-bold text-sm rounded-xl hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 transition-all shadow-sm"
                                 >
                                     Cancel
@@ -249,9 +155,8 @@ export default function StudentSettingsPage() {
                 </div>
             </div>
 
-            {/* Right Profile Column (Copied layout from dashboard) */}
+            {/* Right Profile Column */}
             <div className="w-full xl:w-[340px] flex-shrink-0 space-y-6 flex flex-col hidden xl:flex">
-                {/* Top Header Match Menu Height */}
                 <div className="flex items-center justify-start gap-5 h-12 mb-2 px-2">
                     <button className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors bg-white shadow-sm">
                         <Mail className="w-4 h-4" />
@@ -269,13 +174,19 @@ export default function StudentSettingsPage() {
                                 <User className="w-5 h-5 text-gray-400" />
                             )}
                         </div>
-                        <span className="font-semibold text-gray-800 text-sm">{formData.name ? formData.name.split(' ')[0] : 'Pelajar'}</span>
+                        <div className="flex flex-col">
+                            <span className="font-semibold text-gray-800 text-sm">{formData.name ? formData.name.split(' ')[0] : 'Pelajar'}</span>
+                            {stats?.subscription?.isSubscriber && (
+                                <span className="text-[9px] font-bold uppercase tracking-wider text-[#696EFF]">
+                                    {stats.subscription.tier === 'PROFESIONAL' ? 'Pro' : stats.subscription.tier === 'MURID' ? 'Murid' : 'Biasa'} Plan
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </div>
 
                 {/* Unified Right Sidebar Card (Marketing) */}
                 <div className="bg-white rounded-[32px] p-6 shadow-[0_2px_20px_rgba(0,0,0,0.02)] border border-gray-50 flex flex-col gap-8">
-                    {/* Section 1: Promo Upsell Layout as Real Product Card */}
                     <div className="pt-2">
                         <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2 mb-4 px-1">
                             <span>PRO CLASSES</span>
@@ -283,7 +194,6 @@ export default function StudentSettingsPage() {
                         </h3>
 
                         <div className="bg-white border border-gray-100 rounded-[20px] overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group cursor-pointer flex flex-col">
-                            {/* Realistic Thumbnail Area */}
                             <div className="h-36 w-full relative bg-gray-50 overflow-hidden">
                                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 group-hover:scale-105 transition-transform duration-700 flex items-center justify-center">
                                     <PlayCircle className="w-10 h-10 text-white/80" />
@@ -292,8 +202,6 @@ export default function StudentSettingsPage() {
                                     50% OFF
                                 </div>
                             </div>
-
-                            {/* Card Content Area */}
                             <div className="p-4 flex flex-col justify-between">
                                 <div className="mb-4">
                                     <h4 className="font-bold text-gray-900 text-sm mb-1 leading-snug line-clamp-2">Mastering UI/UX Design Pro</h4>
@@ -312,7 +220,6 @@ export default function StudentSettingsPage() {
                         </div>
                     </div>
 
-                    {/* Section 2: Recommendations with flat clean layout */}
                     <div>
                         <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2 mb-5 px-1">
                             <span>RECOMMENDED</span>
@@ -321,7 +228,6 @@ export default function StudentSettingsPage() {
 
                         <div className="bg-[#FAFAFA] rounded-[32px] p-4 border border-gray-50">
                             <div className="space-y-3">
-                                {/* Item 1 */}
                                 <div className="flex items-center justify-between bg-white p-2.5 rounded-[24px] shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-50/50 group cursor-pointer">
                                     <div className="flex items-center gap-3">
                                         <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0 relative bg-gray-50">
@@ -340,7 +246,6 @@ export default function StudentSettingsPage() {
                                     </button>
                                 </div>
 
-                                {/* Item 2 */}
                                 <div className="flex items-center justify-between bg-white p-2.5 rounded-[24px] shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-50/50 group cursor-pointer">
                                     <div className="flex items-center gap-3">
                                         <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0 relative bg-gray-50">
