@@ -1,72 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Navbar from "@/components/common/Navbar";
 import Footer from "@/components/common/Footer";
 import Link from "next/link";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import "@/styles/common.css";
 import { usePricingPlans } from "@/hooks/use-dashboard";
-
-interface Plan {
-    id: string;
-    name: string;
-    slug: string;
-    tier: string;
-    description: string | null;
-    monthlyPrice: number;
-    yearlyPrice: number | null;
-    isActive: boolean;
-    features: string[] | string;
-}
+import { useSubscribe } from "@/hooks/use-subscribe";
 
 export default function PricingPage() {
     const { plans: rawPlans, isLoading: loading } = usePricingPlans();
-    const [billingCycle, setBillingCycle] = useState<'MONTHLY' | 'YEARLY'>('MONTHLY');
-    const router = useRouter();
+    const {
+        billingCycle,
+        setBillingCycle,
+        processPlans,
+        formatCurrency,
+        getCurrentPrice,
+        handleSubscribe,
+    } = useSubscribe();
 
-    // Process features from raw data
-    const plans: Plan[] = rawPlans.map((p: any) => ({
-        ...p,
-        features: typeof p.features === 'string' ? JSON.parse(p.features) : p.features
-    }));
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat("id-ID", {
-            style: "currency",
-            currency: "IDR",
-            maximumFractionDigits: 0
-        }).format(amount).replace("Rp", ""); // Remove Rp literally to match existing pattern
-    };
-
-    const handleSubscribe = async (plan: Plan) => {
-        toast.info("Mengarahkan ke pembayaran...");
-
-        try {
-            const res = await fetch("/api/subscribe", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    planId: plan.id,
-                    cycle: billingCycle
-                })
-            });
-
-            const data = await res.json();
-
-            if (res.ok && data.paymentUrl) {
-                window.location.href = data.paymentUrl;
-            } else if (res.status === 401) {
-                toast.error("Silakan login terlebih dahulu untuk berlangganan.");
-                router.push("/login?callbackUrl=/pricing");
-            } else {
-                toast.error(data.error || "Gagal memproses langganan.");
-            }
-        } catch (error) {
-            toast.error("Terjadi kesalahan jaringan.");
-        }
-    };
+    const plans = processPlans(rawPlans);
 
     return (
         <div className="bg-[#f1f2f6] min-h-screen">
@@ -122,10 +74,7 @@ export default function PricingPage() {
                         ) : (
                             plans.map((plan, index) => {
                                 const isHighlighted = plan.tier === 'MURID' || (plans.length === 2 && index === 1) || (plans.length === 3 && index === 1);
-
-                                const currentPrice = billingCycle === 'YEARLY' && plan.yearlyPrice
-                                    ? Math.floor(plan.yearlyPrice / 12)
-                                    : plan.monthlyPrice;
+                                const currentPrice = getCurrentPrice(plan);
 
                                 return (
                                     <div

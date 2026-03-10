@@ -21,7 +21,7 @@ interface CourseData {
 
 interface DashboardStats {
     activeCourses: number;
-    completedLessons: number;
+    completedCourses: number;
     totalTransactions: number;
     pendingTransactions: number;
     recentCourses: CourseData[];
@@ -33,7 +33,7 @@ export default function StudentOverviewPage() {
     const { profile } = useStudentProfile();
     const stats: DashboardStats = fetchedStats || {
         activeCourses: 0,
-        completedLessons: 0,
+        completedCourses: 0,
         totalTransactions: 0,
         pendingTransactions: 0,
         recentCourses: [],
@@ -95,8 +95,8 @@ export default function StudentOverviewPage() {
                                 <Trophy className="w-5 h-5" />
                             </div>
                             <div>
-                                <p className="text-xs text-gray-400 font-medium">Materi Selesai</p>
-                                <p className="text-sm font-bold text-gray-900">{stats.completedLessons} Materi</p>
+                                <p className="text-xs text-gray-400 font-medium">Kelas Selesai</p>
+                                <p className="text-sm font-bold text-gray-900">{stats.completedCourses} Kelas</p>
                             </div>
                         </div>
                         <MoreVertical className="w-5 h-5 text-gray-300" />
@@ -353,7 +353,7 @@ export default function StudentOverviewPage() {
                         {/* Dynamic Chart Box */}
                         <div className="bg-[#FAFAFA] rounded-[24px] p-5 relative border border-gray-50">
                             {(() => {
-                                const maxVal = Math.max(stats.activeCourses, stats.completedLessons, stats.totalTransactions, stats.pendingTransactions, 10);
+                                const maxVal = Math.max(stats.activeCourses, stats.completedCourses, stats.totalTransactions, stats.pendingTransactions, 10);
                                 return (
                                     <div className="flex h-32 relative">
                                         {/* Y-axis */}
@@ -371,7 +371,7 @@ export default function StudentOverviewPage() {
                                             <div className="absolute bottom-[20px] left-0 w-full h-[calc(100%-20px)] flex items-end justify-between px-2 gap-2">
                                                 {[
                                                     { val: stats.activeCourses, label: 'Kelas', color: 'bg-[#E9D5FF]', hover: 'group-hover:bg-[#A855F7]' },
-                                                    { val: stats.completedLessons, label: 'Materi', color: 'bg-[#A855F7]', hover: 'group-hover:bg-[#8B5CF6]' },
+                                                    { val: stats.completedCourses, label: 'Selesai', color: 'bg-[#A855F7]', hover: 'group-hover:bg-[#8B5CF6]' },
                                                     { val: stats.totalTransactions, label: 'Order', color: 'bg-[#E9D5FF]', hover: 'group-hover:bg-[#A855F7]' },
                                                     { val: stats.pendingTransactions, label: 'Pending', color: 'bg-[#E9D5FF]', hover: 'group-hover:bg-[#A855F7]' }
                                                 ].map((item, i) => {

@@ -1,10 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { ChevronLeft, CheckCircle2, Circle, PlayCircle, FileText, HelpCircle, Award, Heart, Lock, Check, Play } from "lucide-react";
+import { useState } from "react";
+import { ChevronLeft, FileText, HelpCircle, Award, Heart, Lock, Check, Play } from "lucide-react";
 import Link from "next/link";
-import { toast } from "sonner";
 import { use } from "react";
 import CertificateDownloader from "@/components/common/CertificateDownloader";
 import AddReviewModal from "@/components/AddReviewModal";
@@ -12,151 +10,23 @@ import QuizModal from "@/components/classroom/QuizModal";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
-
-interface Lesson {
-    id: string;
-    title: string;
-    duration: number;
-    videoUrl?: string | null;
-    content?: string | null;
-    moduleId: string;
-    progress?: { completed: boolean }[];
-    resources?: any;
-}
-
-interface Module {
-    id: string;
-    title: string;
-    lessons: Lesson[];
-    quiz?: { title: string } | null;
-}
-
-interface Course {
-    id: string;
-    title: string;
-    modules: Module[];
-    accessType?: string;
-    isSubscriber?: boolean;
-}
+import { useClassroom, getEmbedUrl, isLessonCompleted, isLessonLocked, type Module, type Lesson } from "@/hooks/use-classroom";
 
 export default function ClassroomPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = use(params);
-    const router = useRouter();
+    const {
+        course,
+        activeLesson,
+        setActiveLesson,
+        loading,
+        markingProgress,
+        handleMarkCompleted,
+    } = useClassroom(slug);
 
-    const [course, setCourse] = useState<Course | null>(null);
-    const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [markingProgress, setMarkingProgress] = useState(false);
     const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'videos' | 'resources' | 'support'>('videos');
-
-    // Quiz State
     const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
     const [activeQuizModule, setActiveQuizModule] = useState<{ id: string, moduleId: string, title?: string } | null>(null);
-
-    useEffect(() => {
-        const fetchClassroom = async () => {
-            try {
-                const res = await fetch(`/api/classroom/${slug}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    setCourse(data);
-
-                    // Auto select first lesson if none active
-                    if (data.modules?.length > 0 && data.modules[0].lessons?.length > 0) {
-                        setActiveLesson(data.modules[0].lessons[0]);
-                    }
-                } else if (res.status === 403) {
-                    toast.error("Kamu belum terdaftar di kelas ini.");
-                    router.push(`/kursus`);
-                } else {
-                    toast.error("Gagal memuat kelas.");
-                }
-            } catch (error) {
-                console.error("Error fetching classroom", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        if (slug) fetchClassroom();
-    }, [slug, router]);
-
-    const getEmbedUrl = (url: string | null) => {
-        if (!url) return null;
-
-        try {
-            if (url.includes('youtube.com/watch') || url.includes('youtu.be/')) {
-                let videoId = '';
-                if (url.includes('youtube.com/watch')) {
-                    videoId = new URL(url).searchParams.get('v') || '';
-                } else {
-                    videoId = url.split('youtu.be/')[1].split('?')[0];
-                }
-                return `https://www.youtube.com/embed/${videoId}`;
-            }
-
-            if (url.includes('vimeo.com/')) {
-                const videoId = url.split('vimeo.com/')[1].split('/')[0];
-                return `https://player.vimeo.com/video/${videoId}`;
-            }
-
-            return null;
-        } catch (e) {
-            return null;
-        }
-    };
-
-    const handleMarkCompleted = async () => {
-        if (!activeLesson || markingProgress || !course) return;
-        setMarkingProgress(true);
-
-        try {
-            const res = await fetch("/api/classroom/progress", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ lessonId: activeLesson.id })
-            });
-
-            if (res.ok) {
-                toast.success("Materi berhasil diselesaikan!");
-
-                // Update local state so UI reflects the checkmark immediately
-                const updatedCourse = { ...course };
-                let foundMatch = false;
-
-                for (let i = 0; i < updatedCourse.modules.length; i++) {
-                    if (foundMatch) break;
-                    for (let j = 0; j < updatedCourse.modules[i].lessons.length; j++) {
-                        if (updatedCourse.modules[i].lessons[j].id === activeLesson.id) {
-                            if (!updatedCourse.modules[i].lessons[j].progress) {
-                                updatedCourse.modules[i].lessons[j].progress = [];
-                            }
-                            updatedCourse.modules[i].lessons[j].progress![0] = { completed: true };
-                            foundMatch = true;
-                            break;
-                        }
-                    }
-                }
-
-                setCourse(updatedCourse);
-
-                // Auto-advance to the next lesson
-                const flat = updatedCourse.modules.flatMap((m: Module) => m.lessons);
-                const currentIdx = flat.findIndex((l: Lesson) => l.id === activeLesson.id);
-                if (currentIdx >= 0 && currentIdx < flat.length - 1) {
-                    setActiveLesson(flat[currentIdx + 1]);
-                }
-            } else {
-                toast.error("Gagal menyimpan progress");
-            }
-        } catch (error) {
-            console.error(error);
-            toast.error("Terjadi kesalahan sistem");
-        } finally {
-            setMarkingProgress(false);
-        }
-    };
 
     if (loading) {
         return <div className="min-h-screen flex items-center justify-center bg-[#F1F2F6]">
@@ -166,22 +36,8 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
 
     if (!course) return null;
 
-    const isLessonCompleted = (lesson: Lesson) => {
-        return lesson.progress && lesson.progress.length > 0 && lesson.progress[0].completed;
-    };
-
-    // Flatten all lessons across all modules into a single ordered array
     const allLessonsFlat: Lesson[] = course.modules?.flatMap((m: Module) => m.lessons) || [];
 
-    // Sequential lock: lesson is locked if previous lesson in the flat list is not completed
-    const isLessonLocked = (lesson: Lesson): boolean => {
-        const idx = allLessonsFlat.findIndex((l) => l.id === lesson.id);
-        if (idx <= 0) return false; // First lesson is always unlocked
-        const prevLesson = allLessonsFlat[idx - 1];
-        return !isLessonCompleted(prevLesson);
-    };
-
-    // Calculate total course completion
     const totalLessons = course.modules?.reduce((acc: number, mod: Module) => acc + (mod.lessons?.length || 0), 0) || 0;
     const completedLessonsCount = course.modules?.reduce((acc: number, mod: Module) => {
         return acc + (mod.lessons?.filter(isLessonCompleted).length || 0);
@@ -191,7 +47,6 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
     const isActiveLessonCompleted = activeLesson ? isLessonCompleted(activeLesson) : false;
     const embedUrl = activeLesson ? getEmbedUrl(activeLesson.videoUrl || null) : null;
 
-    // Find if the active lesson is the last lesson of a module with a quiz
     const activeModule = activeLesson ? course.modules?.find((m: Module) => m.id === activeLesson.moduleId) : null;
     const isLastLesson = activeModule && activeLesson ? activeModule.lessons[activeModule.lessons.length - 1].id === activeLesson.id : false;
 
@@ -284,7 +139,6 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
                                     </button>
                                 )}
 
-                                {/* Certificate Button if complete */}
                                 {isCourseFullyCompleted && (
                                     <CertificateDownloader
                                         courseId={course.id}
@@ -365,7 +219,7 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
                                         {module.lessons?.map((lesson: Lesson) => {
                                             const active = activeLesson?.id === lesson.id;
                                             const completed = isLessonCompleted(lesson);
-                                            const locked = isLessonLocked(lesson);
+                                            const locked = isLessonLocked(lesson, allLessonsFlat);
 
                                             return (
                                                 <button
@@ -381,7 +235,6 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
                                                                 : 'bg-white hover:border-gray-300 border-gray-100 group'
                                                         }`}
                                                 >
-                                                    {/* Play / Lock Icon */}
                                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors
                                                         ${locked
                                                             ? 'bg-gray-200 text-gray-400'
@@ -395,7 +248,6 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
                                                         }
                                                     </div>
 
-                                                    {/* Info */}
                                                     <div className="flex-1 min-w-0 pr-1">
                                                         <p className={`text-[13px] font-bold truncate ${active ? 'text-white' : 'text-[#032038]'}`}>
                                                             {lesson.title}
@@ -410,7 +262,6 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
                                                         </p>
                                                     </div>
 
-                                                    {/* Completed Check */}
                                                     {completed && (
                                                         <div className="w-[18px] h-[18px] rounded-full bg-[#20D08A] text-white flex items-center justify-center flex-shrink-0">
                                                             <Check className="w-[10px] h-[10px] stroke-[3]" />
@@ -441,7 +292,6 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
 
                         {activeTab === 'resources' && (
                             <div className="py-6">
-                                {/* Parse resources string if needed */}
                                 {(() => {
                                     let parsedResources: any[] = [];
                                     try {
@@ -533,15 +383,12 @@ export default function ClassroomPage({ params }: { params: Promise<{ slug: stri
                 />
             )}
 
-            {/* Student Quiz Modal */}
             <QuizModal
                 isOpen={isQuizModalOpen}
                 onClose={() => setIsQuizModalOpen(false)}
                 moduleId={activeQuizModule?.moduleId || ""}
                 courseSlug={slug}
-                onQuizComplete={() => {
-                    // Optional: trigger confetti or just refresh course data so score is synced
-                }}
+                onQuizComplete={() => { }}
             />
         </div>
     );

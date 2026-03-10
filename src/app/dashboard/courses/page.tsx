@@ -8,7 +8,7 @@ import StudentTopbar from "@/components/dashboard/StudentTopbar";
 import CertificateDownloader from "@/components/common/CertificateDownloader";
 import CertificateTemplate from "@/components/common/CertificateTemplate";
 import { toast } from "sonner";
-import { useStudentCourses, useAvailableCourses, useStudentProfile } from "@/hooks/use-dashboard";
+import { useStudentCourses, useAvailableCourses, useStudentProfile, useDashboardOverview } from "@/hooks/use-dashboard";
 
 interface CourseItem {
     id: string;
