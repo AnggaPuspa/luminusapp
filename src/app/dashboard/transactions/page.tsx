@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 import { ExternalLink, ReceiptText, Mail, Bell, User, CheckCircle2, Clock, AlertCircle, FileText, MoreHorizontal, Printer, ChevronLeft, ChevronRight } from "lucide-react";
 import StudentTopbar from "@/components/dashboard/StudentTopbar";
-import { useStudentTransactions } from "@/hooks/use-dashboard";
+import { useStudentTransactions, useStudentProfile, useDashboardOverview } from "@/hooks/use-dashboard";
 
 interface TransactionItem {
     id: string;
@@ -22,6 +22,8 @@ interface TransactionItem {
 
 export default function StudentTransactionsPage() {
     const { transactions, isLoading: loading } = useStudentTransactions();
+    const { profile } = useStudentProfile();
+    const { stats } = useDashboardOverview();
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 5;
 
@@ -83,7 +85,14 @@ export default function StudentTransactionsPage() {
                             <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm bg-gradient-to-r from-[#696EFF] to-indigo-500 flex items-center justify-center text-white group-hover:scale-105 transition-transform">
                                 <User className="w-5 h-5" />
                             </div>
-                            <span className="font-semibold text-gray-800 text-sm group-hover:text-[#696EFF] transition-colors">Pelajar</span>
+                            <div className="flex flex-col">
+                                <span className="font-semibold text-gray-800 text-sm group-hover:text-[#696EFF] transition-colors">{profile?.name ? profile.name.split(' ')[0] : '...'}</span>
+                                {stats?.subscription?.isSubscriber && (
+                                    <span className="text-[9px] font-bold uppercase tracking-wider text-[#696EFF]">
+                                        {stats.subscription.tier === 'PROFESIONAL' ? 'Pro' : stats.subscription.tier === 'MURID' ? 'Murid' : 'Biasa'} Plan
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

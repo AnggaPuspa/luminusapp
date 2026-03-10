@@ -8,7 +8,7 @@ import StudentTopbar from "@/components/dashboard/StudentTopbar";
 import CertificateDownloader from "@/components/common/CertificateDownloader";
 import CertificateTemplate from "@/components/common/CertificateTemplate";
 import { toast } from "sonner";
-import { useStudentCourses, useAvailableCourses } from "@/hooks/use-dashboard";
+import { useStudentCourses, useAvailableCourses, useStudentProfile } from "@/hooks/use-dashboard";
 
 interface CourseItem {
     id: string;
@@ -195,7 +195,8 @@ export default function MyCoursesPage() {
     const [previewCertData, setPreviewCertData] = useState<any>(null);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [isPreviewLoading, setIsPreviewLoading] = useState(false);
-    const userName = "Pelajar"; // Same as dashboard/page.tsx
+    const { profile } = useStudentProfile();
+    const { stats } = useDashboardOverview();
 
     useEffect(() => {
         if (courses.length > 0 && !selectedCourseId) {
@@ -427,7 +428,14 @@ export default function MyCoursesPage() {
                         <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm bg-gray-100 flex items-center justify-center">
                             <User className="w-5 h-5 text-gray-400" />
                         </div>
-                        <span className="font-semibold text-gray-800 text-sm">{userName.split(' ')[0]} User</span>
+                        <div className="flex flex-col">
+                            <span className="font-semibold text-gray-800 text-sm">{profile?.name ? profile.name.split(' ')[0] : '...'}</span>
+                            {stats?.subscription?.isSubscriber && (
+                                <span className="text-[9px] font-bold uppercase tracking-wider text-[#696EFF]">
+                                    {stats.subscription.tier === 'PROFESIONAL' ? 'Pro' : stats.subscription.tier === 'MURID' ? 'Murid' : 'Biasa'} Plan
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </div>
 

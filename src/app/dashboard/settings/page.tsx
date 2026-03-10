@@ -6,11 +6,12 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 import StudentTopbar from "@/components/dashboard/StudentTopbar";
-import { invalidateProfile, invalidateDashboard } from "@/hooks/use-dashboard";
+import { invalidateProfile, invalidateDashboard, useDashboardOverview } from "@/hooks/use-dashboard";
 
 export default function StudentSettingsPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const { stats } = useDashboardOverview();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [formData, setFormData] = useState({
         name: "",
@@ -269,7 +270,14 @@ export default function StudentSettingsPage() {
                                 <User className="w-5 h-5 text-gray-400" />
                             )}
                         </div>
-                        <span className="font-semibold text-gray-800 text-sm">{formData.name ? formData.name.split(' ')[0] : 'Pelajar'}</span>
+                        <div className="flex flex-col">
+                            <span className="font-semibold text-gray-800 text-sm">{formData.name ? formData.name.split(' ')[0] : 'Pelajar'}</span>
+                            {stats?.subscription?.isSubscriber && (
+                                <span className="text-[9px] font-bold uppercase tracking-wider text-[#696EFF]">
+                                    {stats.subscription.tier === 'PROFESIONAL' ? 'Pro' : stats.subscription.tier === 'MURID' ? 'Murid' : 'Biasa'} Plan
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </div>
 
