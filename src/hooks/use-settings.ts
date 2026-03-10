@@ -9,6 +9,7 @@ import { invalidateProfile, invalidateDashboard } from "@/hooks/use-dashboard";
 export function useSettings() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [uploading, setUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [formData, setFormData] = useState({
@@ -62,12 +63,49 @@ export function useSettings() {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            const imgUrl = URL.createObjectURL(file);
-            setFormData(prev => ({ ...prev, avatarUrl: imgUrl }));
-            toast.success("Foto profil berhasil diperbarui (Simulasi UX)");
+        if (!file) return;
+
+        // Client-side validation
+        const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
+        if (!allowedTypes.includes(file.type)) {
+            toast.error("Hanya file JPG dan PNG yang diperbolehkan.");
+            return;
+        }
+
+        if (file.size > 2 * 1024 * 1024) {
+            toast.error("Ukuran file maksimal 2MB.");
+            return;
+        }
+
+        setUploading(true);
+
+        try {
+            const formDataUpload = new FormData();
+            formDataUpload.append("file", file);
+
+            const res = await fetch("/api/student/avatar", {
+                method: "POST",
+                body: formDataUpload,
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.message || "Upload gagal");
+            }
+
+            setFormData(prev => ({ ...prev, avatarUrl: data.avatarUrl }));
+            toast.success("Foto profil berhasil diperbarui!");
+            invalidateProfile();
+        } catch (error: any) {
+            console.error("Avatar upload error:", error);
+            toast.error(error.message || "Gagal mengupload foto");
+        } finally {
+            setUploading(false);
+            // Reset file input so same file can be re-selected
+            if (fileInputRef.current) fileInputRef.current.value = "";
         }
     };
 
@@ -112,6 +150,7 @@ export function useSettings() {
     return {
         loading,
         saving,
+        uploading,
         formData,
         originalData,
         isDirty,
@@ -122,3 +161,4 @@ export function useSettings() {
         resetForm,
     };
 }
+

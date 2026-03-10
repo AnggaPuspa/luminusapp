@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-const faqs = [
+const defaultFaqs = [
   {
     question: 'Apakah kursus ini cocok untuk pemula tanpa pengalaman coding?',
     answer: 'Ya, tentu saja! Kami memiliki kursus yang dirancang khusus untuk pemula. Anda akan belajar dari dasar, mulai dari konsep pemrograman dasar hingga praktik coding yang lebih kompleks.',
@@ -21,7 +21,16 @@ const faqs = [
   },
 ];
 
-export default function FAQ() {
+interface FAQItem {
+  question: string;
+  answer: string;
+}
+
+interface FAQProps {
+  faqsData?: FAQItem[];
+}
+
+export default function FAQ({ faqsData = defaultFaqs }: FAQProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const toggleAccordion = (index: number) => {
@@ -42,7 +51,7 @@ export default function FAQ() {
 
         <div className="w-full h-auto p-3 flex items-center justify-center">
           <div className="accordion w-full max-w-3xl mt-6 text-white flex flex-col items-center">
-            {faqs.map((faq, index) => (
+            {faqsData.map((faq, index) => (
               <div
                 key={index}
                 className="accordion-content w-full my-2 rounded-lg bg-blue-second overflow-hidden"
@@ -55,9 +64,8 @@ export default function FAQ() {
                   <span className="title text-base md:text-lg font-medium">{faq.question}</span>
                 </header>
                 <p
-                  className={`description opacity-60 text-sm font-normal pl-16 md:pl-14 pr-4 transition-all duration-200 overflow-hidden ${
-                    openIndex === index ? 'h-auto mb-4 pb-4' : 'h-0'
-                  }`}
+                  className={`description opacity-60 text-sm font-normal pl-16 md:pl-14 pr-4 transition-all duration-200 overflow-hidden ${openIndex === index ? 'h-auto mb-4 pb-4' : 'h-0'
+                    }`}
                 >
                   {faq.answer}
                 </p>

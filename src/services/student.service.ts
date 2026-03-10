@@ -402,3 +402,13 @@ export async function submitCourseReview(
         create: { userId, courseId, rating, comment },
     });
 }
+
+// ─── Avatar ──────────────────────────────────────────────────────
+
+export async function updateAvatar(userId: string, avatarUrl: string) {
+    return prisma.user.update({
+        where: { id: userId },
+        data: { avatarUrl },
+        select: { id: true, avatarUrl: true }
+    });
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { User, Lock, Mail, Bell, Camera, Edit3, Sparkles, PlayCircle, Play } from "lucide-react";
+import { User, Lock, Mail, Bell, Camera, Edit3, Sparkles, PlayCircle, Play, Loader2 } from "lucide-react";
 import StudentTopbar from "@/components/dashboard/StudentTopbar";
 import Link from "next/link";
 import { useDashboardOverview } from "@/hooks/use-dashboard";
@@ -11,6 +11,7 @@ export default function StudentSettingsPage() {
     const {
         loading,
         saving,
+        uploading,
         formData,
         isDirty,
         fileInputRef,
@@ -57,9 +58,15 @@ export default function StudentSettingsPage() {
                                         ) : (
                                             <User className="w-12 h-12 text-[#8B7AFF]/50" />
                                         )}
-                                        <div className="absolute inset-0 bg-indigo-900/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
-                                            <Camera className="w-8 h-8 text-white" />
-                                        </div>
+                                        {uploading ? (
+                                            <div className="absolute inset-0 bg-indigo-900/60 flex items-center justify-center backdrop-blur-sm">
+                                                <Loader2 className="w-8 h-8 text-white animate-spin" />
+                                            </div>
+                                        ) : (
+                                            <div className="absolute inset-0 bg-indigo-900/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
+                                                <Camera className="w-8 h-8 text-white" />
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="absolute bottom-1 right-1 w-8 h-8 border-2 border-white bg-green-500 rounded-full flex items-center justify-center text-white shadow-md transform group-hover:scale-110 transition-transform">
                                         <Edit3 className="w-4 h-4" />

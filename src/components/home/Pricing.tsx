@@ -61,11 +61,10 @@ export default function Pricing() {
           {plans.map((plan, index) => (
             <div
               key={index}
-              className={`flex flex-col px-5 py-3 max-w-80 w-80 shadow-md rounded-2xl justify-between ${
-                plan.highlighted
+              className={`flex flex-col px-5 py-3 max-w-80 w-80 shadow-md rounded-2xl justify-between ${plan.highlighted
                   ? 'max-h-[35rem] h-[35rem] bg-gradient-1 shadow-lg'
                   : 'max-h-[30rem] h-[28rem] bg-white'
-              }`}
+                }`}
             >
               <div className="flex flex-col">
                 <h1 className={`font-bold text-2xl mb-1 ${plan.highlighted ? 'text-white' : 'text-black'}`}>
@@ -80,16 +79,14 @@ export default function Pricing() {
               </div>
 
               <ul
-                className={`font-normal text-base flex flex-col gap-y-2 ${
-                  plan.highlighted ? 'text-white h-80' : 'text-[#101010]'
-                }`}
+                className={`font-normal text-base flex flex-col gap-y-2 ${plan.highlighted ? 'text-white h-80' : 'text-[#101010]'
+                  }`}
               >
                 {plan.features.map((feature, featureIndex) => (
                   <li
                     key={featureIndex}
-                    className={`flex items-center gap-x-2 ${
-                      !feature.available ? (plan.highlighted ? 'opacity-40' : 'text-gray-400') : ''
-                    }`}
+                    className={`flex items-center gap-x-2 ${!feature.available ? (plan.highlighted ? 'opacity-40' : 'text-gray-400') : ''
+                      }`}
                   >
                     <i className="fa-solid fa-check"></i>
                     <p className={!feature.available ? 'line-through decoration-1' : ''}>
@@ -100,11 +97,10 @@ export default function Pricing() {
               </ul>
 
               <button
-                className={`w-full rounded-lg font-semibold flex items-center justify-center h-11 mb-2 ${
-                  plan.highlighted
+                className={`w-full rounded-lg font-semibold flex items-center justify-center h-11 mb-2 ${plan.highlighted
                     ? 'bg-white text-gradient-1'
                     : 'bg-gradient-1 text-white'
-                }`}
+                  }`}
               >
                 Pilih
               </button>

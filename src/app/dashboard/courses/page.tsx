@@ -426,7 +426,11 @@ export default function MyCoursesPage() {
                     <div className="w-px h-8 bg-gray-200"></div>
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm bg-gray-100 flex items-center justify-center">
-                            <User className="w-5 h-5 text-gray-400" />
+                            {profile?.avatarUrl ? (
+                                <img src={profile.avatarUrl} alt={profile.name} className="w-full h-full object-cover" />
+                            ) : (
+                                <User className="w-5 h-5 text-gray-400" />
+                            )}
                         </div>
                         <div className="flex flex-col">
                             <span className="font-semibold text-gray-800 text-sm">{profile?.name ? profile.name.split(' ')[0] : '...'}</span>

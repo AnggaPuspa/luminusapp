@@ -3,15 +3,18 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-    BarChart3,
+    Home,
     BookOpen,
     Users,
     ShoppingCart,
-    Activity,
-    LogOut,
-    Ticket,
+    CreditCard,
     Award,
-    CreditCard
+    Ticket,
+    Webhook,
+    LogOut,
+    Search,
+    Menu,
+    ChevronDown
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -27,53 +30,104 @@ export default function Sidebar() {
             console.error("Failed to sign out:", error);
         }
     };
-    const navItems = [
-        { label: "Dashboard", href: "/admin", icon: BarChart3 },
-        { label: "Courses", href: "/admin/courses", icon: BookOpen },
-        { label: "Users", href: "/admin/users", icon: Users },
-        { label: "Subscribers", href: "/admin/subscribers", icon: CreditCard },
-        { label: "Orders", href: "/admin/orders", icon: ShoppingCart },
-        { label: "Plans", href: "/admin/plans", icon: Award },
-        { label: "Coupons", href: "/admin/coupons", icon: Ticket },
-        { label: "Webhooks", href: "/admin/webhooks", icon: Activity },
+
+    // ONLY REAL DATA/LINKS THAT EXIST IN THE SYSTEM
+    const sidebarGroups = [
+        {
+            title: "MAIN MENU",
+            items: [
+                { label: "Dashboard", href: "/admin", icon: Home, exact: true },
+                { label: "Courses", href: "/admin/courses", icon: BookOpen },
+                { label: "Users", href: "/admin/users", icon: Users },
+            ]
+        },
+        {
+            title: "SALES & TRANSACTIONS",
+            items: [
+                { label: "Orders", href: "/admin/orders", icon: ShoppingCart },
+                { label: "Subscribers", href: "/admin/subscribers", icon: CreditCard },
+                { label: "Plans", href: "/admin/plans", icon: Award },
+                { label: "Coupons", href: "/admin/coupons", icon: Ticket },
+            ]
+        },
+        {
+            title: "SETTINGS",
+            items: [
+                { label: "Webhooks", href: "/admin/webhooks", icon: Webhook },
+            ]
+        }
     ];
 
     return (
-        <aside className="w-64 bg-white border-r h-full flex flex-col hidden md:flex">
-            <div className="h-16 flex items-center px-6 border-b">
-                <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
-                    Luminus Admin
-                </span>
-            </div>
-
-            <nav className="flex-1 px-4 py-6 space-y-2">
-                {navItems.map((item) => {
-                    const isActive = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isActive
-                                ? "bg-blue-50 text-blue-700 font-medium"
-                                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                                }`}
-                        >
-                            <item.icon className="w-5 h-5" />
-                            <span>{item.label}</span>
-                        </Link>
-                    );
-                })}
-            </nav>
-
-            <div className="p-4 border-t">
-                <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-                >
-                    <LogOut className="w-5 h-5" />
-                    <span className="font-medium">Logout</span>
+        <aside className="w-[280px] bg-white border-r border-gray-100 flex flex-col hidden md:flex shrink-0 z-20">
+            {/* Header / Logo */}
+            <div className="h-[84px] flex items-center justify-between px-7 shrink-0 border-b border-gray-50">
+                <div className="flex items-center gap-3">
+                    <img src="/images/logo2.png" alt="Luminus Logo" className="h-[36px] object-contain" />
+                    <span className="text-[22px] font-extrabold text-[#1a1a1a] tracking-tight">Luminus</span>
+                </div>
+                <button className="text-gray-500 hover:text-gray-900 transition-colors">
+                    <Menu className="w-6 h-6" strokeWidth={2} />
                 </button>
             </div>
+
+            {/* Navigation Lists */}
+            <nav className="flex-1 overflow-y-auto px-5 py-5 pb-4 flex flex-col gap-4 custom-scrollbar">
+                {sidebarGroups.map((group, index) => (
+                    <div key={index}>
+                        <p className="text-[10.5px] font-bold tracking-widest text-gray-400 mb-2 px-2 uppercase">
+                            {group.title}
+                        </p>
+                        <ul className="space-y-1">
+                            {group.items.map((item) => {
+                                const isActive = item.exact
+                                    ? pathname === item.href
+                                    : pathname.startsWith(item.href) && item.href !== "/admin";
+
+                                return (
+                                    <li key={item.href}>
+                                        <Link
+                                            href={item.href}
+                                            className={`flex items-center justify-between px-3.5 py-[9px] rounded-xl transition-all group overflow-hidden ${isActive
+                                                ? "bg-[#5552E9] text-white shadow-sm font-medium"
+                                                : "text-gray-500 font-medium hover:bg-gray-50 hover:text-gray-900"
+                                                }`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <item.icon
+                                                    className={`w-5 h-5 ${isActive ? "text-white" : "text-gray-400 group-hover:text-gray-600"} transition-colors`}
+                                                    strokeWidth={1.5}
+                                                />
+                                                <span className="text-[14px] truncate">{item.label}</span>
+                                            </div>
+                                        </Link>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>
+                ))}
+
+                {/* Adding the Log Out button directly into the Settings section styling to match reference image */}
+                <div className="mt-auto pt-2">
+                    <ul className="space-y-1">
+                        <li>
+                            <button
+                                onClick={handleLogout}
+                                className="w-full flex items-center justify-between px-3.5 py-[9px] rounded-xl transition-all group overflow-hidden text-[#6B7280] font-medium hover:bg-red-50 hover:text-red-600"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <LogOut
+                                        className="w-5 h-5 text-gray-400 group-hover:text-red-500 transition-colors"
+                                        strokeWidth={1.5}
+                                    />
+                                    <span className="text-[14px]">Log Out</span>
+                                </div>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
         </aside>
     );
 }

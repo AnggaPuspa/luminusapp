@@ -2,10 +2,32 @@
 
 import Navbar from "@/components/common/Navbar";
 import Footer from "@/components/common/Footer";
+import CTA from "@/components/home/CTA";
+import FAQ from "@/components/home/FAQ";
 import Link from "next/link";
 import "@/styles/common.css";
+import "@/styles/home.css";
 import { usePricingPlans } from "@/hooks/use-dashboard";
 import { useSubscribe } from "@/hooks/use-subscribe";
+
+const pricingFaqs = [
+    {
+        question: 'Apakah saya bisa membatalkan langganan kapan saja?',
+        answer: 'Ya, Anda memiliki kendali penuh. Anda bisa membatalkan perpanjangan otomatis kapan saja dengan mudah melalui menu Pengaturan Langganan di dashboard akun Anda.',
+    },
+    {
+        question: 'Apa bedanya beli kelas satuan dengan berlangganan?',
+        answer: 'Berlangganan (Pro/Murid) memberi Anda kebebasan mengakses *semua* kelas di platform kami selama masa aktif. Beli satuan dikhususkan untuk akses permanen seumur hidup pada satu kelas spesifik tanpa perlu berlangganan.',
+    },
+    {
+        question: 'Apakah ada biaya tambahan atau tersembunyi?',
+        answer: 'Tidak ada. Harga yang tertera adalah harga final. Semua materi video, modul, kode sumber, dan ujian kelulusan sudah termasuk dalam paket.',
+    },
+    {
+        question: 'Metode pembayaran apa saja yang didukung?',
+        answer: 'Kami menerima semua metode pembayaran utama, termasuk Bank Transfer (Virtual Account semua bank), e-Wallet (GoPay, OVO, Dana, ShopeePay), dan Kartu Kredit/Debit melalui payment gateway tersertifikasi.',
+    },
+];
 
 export default function PricingPage() {
     const { plans: rawPlans, isLoading: loading } = usePricingPlans();
@@ -29,13 +51,9 @@ export default function PricingPage() {
 
                     {/* Header Group */}
                     <div className="flex flex-col text-center items-center justify-center">
-                        <span className="text-gradient-1 text-lg font-medium">Berlangganan</span>
-                        <h1 className="text-black text-2xl md:text-3xl font-semibold mt-2">
-                            Langkah Terbaik untuk <br className="hidden md:block" /> Memaksimalkan Potensi Belajarmu.
+                        <h1 className="text-[30px] font-semibold text-[#101010]">
+                            Berlangganan
                         </h1>
-                        <p className="text-[#101010] opacity-60 mt-4 max-w-2xl text-center">
-                            Investasi terbaik untuk karir kodemu. Pilih langganan fleksibel atau beli kelas satuan.
-                        </p>
                     </div>
 
                     {/* Billing Toggle Indicator */}
@@ -141,25 +159,23 @@ export default function PricingPage() {
                             })
                         )}
                     </div>
-
-                    {/* Pay Per Course Alternative */}
-                    {!loading && (
-                        <div className="w-full max-w-4xl mx-auto mt-20 bg-white rounded-2xl shadow-sm border border-gray-100 p-8 md:p-10 flex flex-col md:flex-row items-center justify-between text-center md:text-left gap-6">
-                            <div>
-                                <h2 className="text-xl font-bold text-black mb-2">Tertarik belajar satu kelas saja?</h2>
-                                <p className="text-gray-500 max-w-lg">Beli kelas favoritmu secara satuan dengan akses berlaku seumur hidup (lifetime) tanpa perlu berlangganan.</p>
-                            </div>
-                            <Link
-                                href="/kursus"
-                                className="shrink-0 px-8 py-3.5 border-2 border-[#696EFF] text-[#696EFF] font-semibold rounded-lg hover:bg-[#696EFF] hover:text-white transition-all"
-                            >
-                                Lihat Katalog Kelas
-                            </Link>
-                        </div>
-                    )}
-
                 </div>
             </div>
+
+            {/* Custom Full Width FAQ from Home Component */}
+            {!loading && (
+                <FAQ faqsData={pricingFaqs} />
+            )}
+
+            {/* CTA Component full width above Footer */}
+            {!loading && (
+                <CTA
+                    title="Siap Mulai Belajar Sekarang? ✨"
+                    description="Pilih paket langganan yang sesuai dengan kebutuhanmu dan akses semua materi premium kami tanpa batas."
+                    buttonText="Mulai Langganan"
+                />
+            )}
+
             <Footer />
         </div>
     );

@@ -83,7 +83,11 @@ export default function StudentTransactionsPage() {
                         <div className="w-px h-8 bg-gray-200"></div>
                         <div className="flex items-center gap-3 cursor-pointer group">
                             <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm bg-gradient-to-r from-[#696EFF] to-indigo-500 flex items-center justify-center text-white group-hover:scale-105 transition-transform">
-                                <User className="w-5 h-5" />
+                                {profile?.avatarUrl ? (
+                                    <img src={profile.avatarUrl} alt={profile.name} className="w-full h-full object-cover" />
+                                ) : (
+                                    <User className="w-5 h-5" />
+                                )}
                             </div>
                             <div className="flex flex-col">
                                 <span className="font-semibold text-gray-800 text-sm group-hover:text-[#696EFF] transition-colors">{profile?.name ? profile.name.split(' ')[0] : '...'}</span>
