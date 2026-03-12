@@ -25,7 +25,7 @@ export default function PaymentSuccessTemplate({ name, courseTitle, amount }: Pa
                         Anda sekarang memiliki akses penuh ke kursus <strong>{courseTitle}</strong>.
                     </Text>
                     <Section style={btnContainer}>
-                        <Link href="https://luminus.id/dashboard/courses" style={button}>
+                        <Link href="https://luminusapp.vercel.app/dashboard/courses" style={button}>
                             Buka Kelas Saya
                         </Link>
                     </Section>

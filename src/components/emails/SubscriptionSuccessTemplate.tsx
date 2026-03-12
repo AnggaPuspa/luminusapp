@@ -26,7 +26,7 @@ export default function SubscriptionSuccessTemplate({ name, planName, amount, bi
                         Paket <strong>{planName} ({billingCycle})</strong> Anda sekarang sudah aktif. Anda dapat mengakses semua fitur premium dan kursus eksklusif yang tersedia dalam paket ini.
                     </Text>
                     <Section style={btnContainer}>
-                        <Link href="https://luminus.id/dashboard" style={button}>
+                        <Link href="https://luminusapp.vercel.app/dashboard" style={button}>
                             Masuk ke Dashboard
                         </Link>
                     </Section>

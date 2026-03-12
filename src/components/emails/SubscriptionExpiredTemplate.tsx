@@ -20,7 +20,7 @@ export default function SubscriptionExpiredTemplate({ name, planName }: Subscrip
                         Akses ke fitur premium dan kursus berbayar telah dihentikan. Anda dapat berlangganan kembali kapan saja untuk melanjutkan proses belajar Anda.
                     </Text>
                     <Section style={btnContainer}>
-                        <Link href="https://luminus.id/pricing" style={button}>
+                        <Link href="https://luminusapp.vercel.app/pricing" style={button}>
                             Perbarui Langganan
                         </Link>
                     </Section>

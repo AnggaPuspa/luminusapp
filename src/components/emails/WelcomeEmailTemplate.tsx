@@ -17,7 +17,7 @@ export default function WelcomeEmailTemplate({ name }: WelcomeEmailProps) {
                         dan mulai perjalanan belajar Anda bersama mentor-mentor terbaik.
                     </Text>
                     <Section style={btnContainer}>
-                        <Link href="https://luminus.id/kursus" style={button}>
+                        <Link href="https://luminusapp.vercel.app/kursus" style={button}>
                             Mulai Belajar Sekarang
                         </Link>
                     </Section>

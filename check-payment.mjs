@@ -5,8 +5,8 @@ const prisma = new PrismaClient();
 async function checkWebhooksAndTransactions() {
     try {
         const webhooks = await prisma.webhookLog.findMany({
-            orderBy: { createdAt: 'desc' },
-            take: 5
+            orderBy: { receivedAt: 'desc' },
+            take: 18
         });
         console.log("Recent Webhooks:", JSON.stringify(webhooks, null, 2));
 
