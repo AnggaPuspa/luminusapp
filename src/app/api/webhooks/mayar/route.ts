@@ -38,8 +38,12 @@ export async function POST(request: Request) {
 
         // 2. We only care about payment.received for now
         if (eventName === "payment.received") {
-            const transactionStr = eventData?.transaction?.id || eventData?.id;
+            // FIX: Mayar sends our invoice ID in `productId` (e.g. 781e813e-f10c-4d65-b984-27708a9820db)
+            // The `id` field is just Mayar's internal payment UUID.
+            const transactionStr = eventData?.productId || eventData?.transaction?.id || eventData?.id;
             const refId = eventData?.referenceId;
+
+            console.log(`[Webhook] Looking up invoice ID: ${transactionStr} or refId: ${refId}`);
 
             // FIRST: Check if this payment is for a Subscription Invoice
             let subInvoice = await prisma.subscriptionInvoice.findFirst({
