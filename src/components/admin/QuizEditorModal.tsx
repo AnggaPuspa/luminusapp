@@ -61,7 +61,7 @@ export default function QuizEditorModal({
             }
         } catch (error) {
             console.error(error);
-            toast.error("Failed to load quiz");
+            toast.error("Gagal memuat kuis");
         } finally {
             setLoading(false);
         }
@@ -87,16 +87,16 @@ export default function QuizEditorModal({
                 if (res.ok) {
                     const data = await res.json();
                     setQuiz(data);
-                    toast.success("Quiz created");
+                    toast.success("Kuis dibuat");
                 } else {
-                    toast.error("Failed to create quiz");
+                    toast.error("Gagal membuat kuis");
                 }
             } else {
                 // Future: Update quiz title API if needed
                 setQuiz({ ...quiz, title });
             }
         } catch (error) {
-            toast.error("Error creating quiz");
+            toast.error("Gagal membuat kuis");
         } finally {
             setIsSaving(false);
         }
@@ -104,16 +104,16 @@ export default function QuizEditorModal({
 
     const handleDeleteQuiz = async () => {
         if (!quiz || quiz.id === "NEW") return;
-        if (!confirm("Delete this entire quiz?")) return;
+        if (!confirm("Hapus seluruh kuis ini?")) return;
         setIsSaving(true);
         try {
             const res = await fetch(`/api/admin/quizzes/${quiz.id}`, { method: "DELETE" });
             if (res.ok) {
-                toast.success("Quiz deleted");
+                toast.success("Kuis dihapus");
                 onClose();
                 onSaved();
             } else {
-                toast.error("Failed to delete quiz");
+                toast.error("Gagal menghapus kuis");
             }
         } finally {
             setIsSaving(false);
@@ -133,7 +133,7 @@ export default function QuizEditorModal({
 
     const removeOption = (index: number) => {
         if (qOptions.length <= 2) {
-            return toast.error("Minimum 2 options required");
+            return toast.error("Minimal 2 opsi jawaban");
         }
         const newer = qOptions.filter((_, i) => i !== index);
         setQOptions(newer);
@@ -163,15 +163,15 @@ export default function QuizEditorModal({
                     setQuiz(data);
                     currentQuizId = data.id;
                 } else {
-                    return toast.error("Failed to create parent quiz");
+                    return toast.error("Gagal membuat kuis induk");
                 }
             } catch (error) {
-                return toast.error("Error creating parent quiz");
+                return toast.error("Gagal membuat kuis induk");
             }
         }
 
-        if (!qText.trim()) return toast.error("Question text is required");
-        if (qOptions.some(o => !o.trim())) return toast.error("All options must have text");
+        if (!qText.trim()) return toast.error("Teks pertanyaan wajib diisi");
+        if (qOptions.some(o => !o.trim())) return toast.error("Semua opsi harus diisi");
 
         setIsSaving(true);
         try {
@@ -195,14 +195,14 @@ export default function QuizEditorModal({
             });
 
             if (res.ok) {
-                toast.success(activeQuestionId ? "Question updated" : "Question added");
+                toast.success(activeQuestionId ? "Pertanyaan diperbarui" : "Pertanyaan ditambahkan");
                 resetForm();
                 fetchQuiz(); // Refresh the list
             } else {
-                toast.error("Failed to save question");
+                toast.error("Gagal menyimpan pertanyaan");
             }
         } catch (error) {
-            toast.error("Error saving question");
+            toast.error("Gagal menyimpan pertanyaan");
         } finally {
             setIsSaving(false);
         }
@@ -217,15 +217,15 @@ export default function QuizEditorModal({
     };
 
     const handleDeleteQuestion = async (qId: string) => {
-        if (!confirm("Delete this question?")) return;
+        if (!confirm("Hapus pertanyaan ini?")) return;
         setIsSaving(true);
         try {
             const res = await fetch(`/api/admin/questions/${qId}`, { method: "DELETE" });
             if (res.ok) {
-                toast.success("Question deleted");
+                toast.success("Pertanyaan dihapus");
                 fetchQuiz();
             } else {
-                toast.error("Failed to delete question");
+                toast.error("Gagal menghapus pertanyaan");
             }
         } finally {
             setIsSaving(false);
@@ -240,15 +240,15 @@ export default function QuizEditorModal({
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b">
                     <div>
-                        <h2 className="text-lg font-bold text-gray-900">Quiz Editor</h2>
+                        <h2 className="text-lg font-bold text-gray-900">Editor Kuis</h2>
                         <input
                             type="text"
-                            value={quiz?.title || "Loading..."}
+                            value={quiz?.title || "Memuat..."}
                             disabled={loading || !quiz}
                             onChange={(e) => quiz && setQuiz({ ...quiz, title: e.target.value })}
                             onBlur={() => handleSaveQuizTitle(quiz?.title || "Quiz")}
                             className="text-sm font-medium text-blue-600 bg-transparent border-b border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none transition-colors w-full cursor-text"
-                            placeholder="Quiz Title"
+                            placeholder="Judul Kuis"
                         />
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors">
@@ -259,7 +259,7 @@ export default function QuizEditorModal({
                 {/* Body */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-6">
                     {loading && !quiz ? (
-                        <div className="text-center py-10 text-gray-500">Loading quiz data...</div>
+                        <div className="text-center py-10 text-gray-500">Memuat data kuis...</div>
                     ) : (
                         <>
                             {/* Question List */}
@@ -267,7 +267,7 @@ export default function QuizEditorModal({
                                 <div className="space-y-4">
                                     {quiz?.questions?.length === 0 ? (
                                         <div className="text-center py-8 border-2 border-dashed rounded-lg text-gray-500 bg-gray-50">
-                                            No questions yet. Add one to start building the quiz!
+                                            Belum ada pertanyaan. Tambahkan untuk mulai membuat kuis!
                                         </div>
                                     ) : (
                                         quiz?.questions.map((q, idx) => (
@@ -297,7 +297,7 @@ export default function QuizEditorModal({
                                         onClick={() => setIsEditingQuestion(true)}
                                         className="w-full py-3 flex items-center justify-center gap-2 border-2 border-dashed border-blue-300 text-blue-600 font-medium rounded-lg hover:bg-blue-50 transition-colors"
                                     >
-                                        <Plus className="w-5 h-5" /> Add Question
+                                        <Plus className="w-5 h-5" /> Tambah Pertanyaan
                                     </button>
                                 </div>
                             )}
@@ -306,22 +306,22 @@ export default function QuizEditorModal({
                             {isEditingQuestion && (
                                 <div className="bg-gray-50 p-5 rounded-lg border border-gray-200 space-y-4">
                                     <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                                        <Edit2 className="w-4 h-4" /> {activeQuestionId ? "Edit Question" : "New Question"}
+                                        <Edit2 className="w-4 h-4" /> {activeQuestionId ? "Edit Pertanyaan" : "Pertanyaan Baru"}
                                     </h3>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Question Text</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Teks Pertanyaan</label>
                                         <textarea
                                             value={qText}
                                             onChange={e => setQText(e.target.value)}
                                             rows={3}
                                             className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                                            placeholder="e.g. What does API stand for?"
+                                            placeholder="contoh: Apa kepanjangan dari API?"
                                         />
                                     </div>
 
                                     <div className="space-y-3">
-                                        <label className="block text-sm font-medium text-gray-700">Answers (Select the correct one)</label>
+                                        <label className="block text-sm font-medium text-gray-700">Jawaban (Pilih yang benar)</label>
                                         {qOptions.map((opt, idx) => (
                                             <div key={idx} className={`flex items-center gap-3 p-2 rounded-lg border ${qCorrectIndex === idx ? 'bg-blue-50 border-blue-300' : 'bg-white'}`}>
                                                 <input
@@ -337,7 +337,7 @@ export default function QuizEditorModal({
                                                     value={opt}
                                                     onChange={e => updateOption(idx, e.target.value)}
                                                     className="flex-1 px-2 py-1 outline-none font-medium"
-                                                    placeholder={`Option ${idx + 1}`}
+                                                    placeholder={`Opsi ${idx + 1}`}
                                                 />
                                                 <button onClick={() => removeOption(idx)} className="text-gray-400 hover:text-red-500 p-1">
                                                     <Trash2 className="w-4 h-4" />
@@ -346,7 +346,7 @@ export default function QuizEditorModal({
                                         ))}
 
                                         <button onClick={addOption} className="text-sm font-medium text-blue-600 hover:text-blue-800 flex items-center gap-1">
-                                            <Plus className="w-4 h-4" /> Add another option
+                                            <Plus className="w-4 h-4" /> Tambah opsi lain
                                         </button>
                                     </div>
 
@@ -356,13 +356,13 @@ export default function QuizEditorModal({
                                             disabled={isSaving}
                                             className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
                                         >
-                                            <Save className="w-4 h-4" /> {isSaving ? "Saving..." : "Save Question"}
+                                            <Save className="w-4 h-4" /> {isSaving ? "Menyimpan..." : "Simpan Pertanyaan"}
                                         </button>
                                         <button
                                             onClick={resetForm}
                                             className="flex-1 bg-white border border-gray-300 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-50"
                                         >
-                                            Cancel
+                                            Batal
                                         </button>
                                     </div>
                                 </div>
@@ -376,11 +376,11 @@ export default function QuizEditorModal({
                     <div className="p-4 border-t bg-gray-50 flex items-center justify-between">
                         {quiz && quiz.id !== "NEW" && (
                             <button onClick={handleDeleteQuiz} className="text-sm font-medium text-red-600 hover:text-red-800 px-3 py-2 rounded-lg hover:bg-red-50 transition-colors">
-                                Delete Entire Quiz
+                                Hapus Seluruh Kuis
                             </button>
                         )}
                         <button onClick={onClose} className="ml-auto bg-gray-900 text-white px-5 py-2 rounded-lg font-medium hover:bg-black transition-colors">
-                            Done
+                            Selesai
                         </button>
                     </div>
                 )}

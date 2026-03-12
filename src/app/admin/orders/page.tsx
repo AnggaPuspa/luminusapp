@@ -5,6 +5,18 @@ import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { ArrowUpRight, ArrowDownRight, MoreHorizontal, Calendar, TrendingUp, Search, Filter, Download } from "lucide-react";
+import { BarChart, Bar, AreaChart, Area, ResponsiveContainer, XAxis, Tooltip, YAxis } from "recharts";
+
+const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-[#1a1a1a] text-white text-[12px] font-semibold px-3 py-1.5 rounded-lg shadow-xl">
+                {payload[0].value} penjualan
+            </div>
+        );
+    }
+    return null;
+};
 
 export default function OrdersPage() {
     const router = useRouter();
@@ -13,7 +25,7 @@ export default function OrdersPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 10;
-    
+
     const [stats, setStats] = useState<any>(null);
     const [statsLoading, setStatsLoading] = useState(true);
 
@@ -93,8 +105,8 @@ export default function OrdersPage() {
     };
 
     const MONTH_NAMES = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
     ];
 
     const earningsChange = stats ? calcChange(stats.stats.totalEarnings, stats.stats.prevEarnings) : { value: 0, isPositive: true };
@@ -102,8 +114,20 @@ export default function OrdersPage() {
     const ordersChange = stats ? calcChange(stats.stats.totalOrders, stats.stats.prevTotalOrders) : { value: 0, isPositive: true };
     const completedChange = stats ? calcChange(stats.stats.completedOrders, stats.stats.prevCompleted) : { value: 0, isPositive: true };
 
-    // Calculate max chart height to scale bars
-    const maxChartValue = stats ? Math.max(...stats.dailyChart.map((d: any) => d.count), 1) : 1;
+    const sparklineData = (() => {
+        if (!stats?.dailyChart) return [];
+        const now = new Date();
+        if (selectedMonth === "all") {
+            if (selectedYear === now.getFullYear()) {
+                return stats.dailyChart.filter((d: any) => d.day <= now.getMonth() + 1);
+            }
+        } else {
+            if (selectedYear === now.getFullYear() && selectedMonth === now.getMonth()) {
+                return stats.dailyChart.filter((d: any) => d.day <= now.getDate());
+            }
+        }
+        return stats.dailyChart;
+    })();
 
     return (
         <div className="space-y-6 max-w-[1600px] mx-auto pb-10">
@@ -112,7 +136,7 @@ export default function OrdersPage() {
                 {/* Sales Overview Chart */}
                 <div className="xl:col-span-7 bg-white rounded-2xl p-7 shadow-sm">
                     <div className="flex justify-between items-start mb-6">
-                        <h2 className="text-[17px] font-bold text-[#1a1a1a]">Sales Overview</h2>
+                        <h2 className="text-[17px] font-bold text-[#1a1a1a]">Ringkasan Penjualan</h2>
                         <div className="flex gap-2 relative">
                             <button
                                 onClick={() => setShowDatePicker(!showDatePicker)}
@@ -120,19 +144,19 @@ export default function OrdersPage() {
                             >
                                 <Calendar className="w-[18px] h-[18px]" strokeWidth={2} />
                             </button>
-                            
+
                             {/* Date Picker Popover */}
                             {showDatePicker && (
                                 <>
                                     <div className="fixed inset-0 z-10" onClick={() => setShowDatePicker(false)} />
                                     <div className="absolute top-full right-0 mt-2 z-20 bg-white rounded-xl shadow-xl border border-gray-100 p-4 w-[280px]">
                                         <div className="flex justify-between items-center mb-4">
-                                            <button 
+                                            <button
                                                 onClick={() => setSelectedYear(prev => prev - 1)}
                                                 className="p-1 hover:bg-gray-100 rounded text-gray-500"
                                             >&lt;</button>
                                             <span className="font-semibold text-[15px]">{selectedYear}</span>
-                                            <button 
+                                            <button
                                                 onClick={() => setSelectedYear(prev => prev + 1)}
                                                 className="p-1 hover:bg-gray-100 rounded text-gray-500"
                                             >&gt;</button>
@@ -143,13 +167,12 @@ export default function OrdersPage() {
                                                     setSelectedMonth("all");
                                                     setShowDatePicker(false);
                                                 }}
-                                                className={`py-2 text-[13px] col-span-3 rounded-lg transition-colors ${
-                                                    selectedMonth === "all"
-                                                        ? "bg-[#4F46E5] text-white font-medium shadow-sm"
-                                                        : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                                                }`}
+                                                className={`py-2 text-[13px] col-span-3 rounded-lg transition-colors ${selectedMonth === "all"
+                                                    ? "bg-[#4F46E5] text-white font-medium shadow-sm"
+                                                    : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                                                    }`}
                                             >
-                                                Entire Year ({selectedYear})
+                                                Sepanjang Tahun ({selectedYear})
                                             </button>
                                             {MONTH_NAMES.map((m, i) => (
                                                 <button
@@ -158,11 +181,10 @@ export default function OrdersPage() {
                                                         setSelectedMonth(i);
                                                         setShowDatePicker(false);
                                                     }}
-                                                    className={`py-2 text-[13px] rounded-lg transition-colors ${
-                                                        selectedMonth === i
-                                                            ? "bg-[#4F46E5] text-white font-medium shadow-sm"
-                                                            : "text-gray-600 hover:bg-gray-50"
-                                                    }`}
+                                                    className={`py-2 text-[13px] rounded-lg transition-colors ${selectedMonth === i
+                                                        ? "bg-[#4F46E5] text-white font-medium shadow-sm"
+                                                        : "text-gray-600 hover:bg-gray-50"
+                                                        }`}
                                                 >
                                                     {m.substring(0, 3)}
                                                 </button>
@@ -171,7 +193,7 @@ export default function OrdersPage() {
                                     </div>
                                 </>
                             )}
-                            
+
                             <button className="p-2 bg-gray-50 border border-gray-100 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors cursor-pointer">
                                 <MoreHorizontal className="w-[18px] h-[18px]" strokeWidth={2} />
                             </button>
@@ -191,116 +213,221 @@ export default function OrdersPage() {
                                         <TrendingUp className="w-5 h-5 text-red-500 scale-y-[-1]" strokeWidth={2.5} />
                                     )}
                                     <span className="text-[13px] font-medium text-[#8e95a5]">
-                                        Last {selectedMonth === "all" ? "year" : "month"} Rp {stats?.stats.prevEarnings.toLocaleString("id-ID")}
+                                        {selectedMonth === "all" ? "Tahun" : "Bulan"} lalu Rp {stats?.stats.prevEarnings.toLocaleString("id-ID")}
                                     </span>
                                 </div>
                             )}
                         </div>
                         <span className="text-[13px] font-medium text-[#4F46E5] bg-[#EEEDFA] px-3 py-1 rounded-full">
-                            {selectedMonth === "all" ? `Entire Year ${selectedYear}` : `${MONTH_NAMES[selectedMonth as number]} ${selectedYear}`}
+                            {selectedMonth === "all" ? `Sepanjang Tahun ${selectedYear}` : `${MONTH_NAMES[selectedMonth as number]} ${selectedYear}`}
                         </span>
                     </div>
 
                     {/* Dynamic Bar Chart */}
-                    <div className="h-[140px] flex items-end justify-between gap-1 overflow-hidden px-2">
+                    <div className="h-[140px] overflow-hidden px-2 mt-4">
                         {statsLoading ? (
-                            <div className="w-full h-full flex items-center justify-center text-sm text-gray-400">Loading chart...</div>
-                        ) : stats?.dailyChart.map((bar: any, i: number) => {
-                            // Hitung tinggi dalam persentase, min 4% biar kelihatan buletannya
-                            const heightPercent = Math.max((bar.count / maxChartValue) * 100, 4);
-                            return (
-                                <div key={i} className="flex flex-col items-center gap-3 flex-1 group" title={`${bar.count} sales`}>
-                                    <div className={`${selectedMonth === "all" ? "w-4 md:w-6" : "w-2.5 md:w-3.5"} h-[100px] bg-gray-50 rounded-full relative overflow-hidden transition-all delay-75`}>
-                                        <div
-                                            className="absolute bottom-0 inset-x-0 bg-[#4F46E5] rounded-full transition-all duration-500 group-hover:bg-[#4338CA] group-hover:shadow-[0_0_10px_rgba(79,70,229,0.5)]"
-                                            style={{ height: `${bar.count === 0 ? 0 : heightPercent}%` }}
-                                        ></div>
-                                    </div>
-                                    {/* Only show dates logic: every other day or similar to fit */}
-                                    <span className={`text-[11px] font-medium ${selectedMonth === "all" || bar.day % 2 !== 0 ? 'text-[#8e95a5]' : 'text-transparent'}`}>
-                                        {selectedMonth === "all" ? MONTH_NAMES[bar.day - 1]?.substring(0, 3) : bar.day.toString().padStart(2, '0')}
-                                    </span>
-                                </div>
-                            );
-                        })}
+                            <div className="w-full h-full flex items-center justify-center text-sm text-gray-400">Memuat grafik...</div>
+                        ) : (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart
+                                    data={stats?.dailyChart?.map((d: any) => ({
+                                        ...d,
+                                        name: selectedMonth === "all" ? MONTH_NAMES[d.day - 1]?.substring(0, 3) : d.day.toString().padStart(2, '0')
+                                    })) || []}
+                                    margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+                                >
+                                    <Tooltip
+                                        content={<CustomTooltip />}
+                                        cursor={{ fill: '#f3f4f6', radius: 8 }}
+                                    />
+                                    <XAxis
+                                        dataKey="name"
+                                        tick={{ fill: '#8e95a5', fontSize: 11, fontWeight: 500 }}
+                                        axisLine={false}
+                                        tickLine={false}
+                                        interval={0}
+                                        dy={10}
+                                    />
+                                    <YAxis
+                                        hide
+                                        domain={[0, (dataMax: number) => Math.max(dataMax, 4)]}
+                                    />
+                                    <Bar
+                                        dataKey="count"
+                                        fill="#4F46E5"
+                                        radius={[50, 50, 50, 50]}
+                                        maxBarSize={selectedMonth === "all" ? 24 : 14}
+                                        activeBar={{ fill: '#4338CA' }}
+                                    />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        )}
                     </div>
                 </div>
 
                 {/* 4 Small Cards */}
                 <div className="xl:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
                     {/* Card 1: Earnings */}
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
+                    <div className="bg-white rounded-2xl p-5 shadow-sm border border-transparent hover:border-gray-50 transition-colors flex flex-col justify-between">
+                        <div className="flex justify-between items-start mb-2">
                             <div>
-                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Earnings</p>
-                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">
+                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Pendapatan</p>
+                                <p className="text-[20px] sm:text-[22px] font-bold text-[#1a1a1a]">
                                     {statsLoading ? "..." : `Rp ${stats?.stats.totalEarnings.toLocaleString('id-ID')}`}
                                 </p>
-                                {!statsLoading && (
-                                    <p className={`${earningsChange.isPositive ? 'text-[#84C529]' : 'text-[#ef4444]'} font-medium text-[12px] flex items-center mt-1`}>
-                                        {earningsChange.isPositive ? <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> : <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} />}
-                                        {earningsChange.isPositive ? '+' : ''}{earningsChange.value}%
-                                    </p>
-                                )}
                             </div>
-                            <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-t-gray-100 border-l-gray-100 rotate-45 shrink-0"></div>
+                            {!statsLoading && (
+                                <span className={`${earningsChange.isPositive ? 'text-[#84C529] bg-[#84C529]/10' : 'text-[#ef4444] bg-[#ef4444]/10'} font-bold text-[12px] px-2 py-1 rounded-md flex items-center`}>
+                                    {earningsChange.isPositive ? <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> : <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} />}
+                                    {earningsChange.isPositive ? '+' : ''}{earningsChange.value}%
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-[45px] w-full mt-auto -mx-1">
+                            {!statsLoading && sparklineData.length > 0 ? (
+                                (() => {
+                                    const color = earningsChange.isPositive ? '#84C529' : '#ef4444';
+                                    return (
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <AreaChart data={sparklineData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+                                                <defs>
+                                                    <linearGradient id="colorEarn" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor={color} stopOpacity={0.2} />
+                                                        <stop offset="95%" stopColor={color} stopOpacity={0} />
+                                                    </linearGradient>
+                                                </defs>
+                                                <Tooltip cursor={{ stroke: color, strokeWidth: 1, strokeDasharray: "3 3" }} content={() => null} />
+                                                <Area type="monotone" dataKey="count" stroke={color} strokeWidth={2.5} fillOpacity={1} fill="url(#colorEarn)" isAnimationActive={false} />
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+                                    );
+                                })()
+                            ) : (
+                                <div className="w-full h-full bg-gray-50 rounded-md animate-pulse"></div>
+                            )}
                         </div>
                     </div>
 
                     {/* Card 2: Number of Sales */}
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
+                    <div className="bg-white rounded-2xl p-5 shadow-sm border border-transparent hover:border-gray-50 transition-colors flex flex-col justify-between">
+                        <div className="flex justify-between items-start mb-2">
                             <div>
-                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Number of Sales</p>
-                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">
+                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Jumlah Penjualan</p>
+                                <p className="text-[20px] sm:text-[22px] font-bold text-[#1a1a1a]">
                                     {statsLoading ? "..." : stats?.stats.totalSales.toLocaleString('id-ID')}
                                 </p>
-                                {!statsLoading && (
-                                    <p className={`${salesChange.isPositive ? 'text-[#84C529]' : 'text-[#ef4444]'} font-medium text-[12px] flex items-center mt-1`}>
-                                        {salesChange.isPositive ? <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> : <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} />}
-                                        {salesChange.isPositive ? '+' : ''}{salesChange.value}%
-                                    </p>
-                                )}
                             </div>
-                            <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-r-gray-100 border-b-gray-100 rotate-[-15deg] shrink-0"></div>
+                            {!statsLoading && (
+                                <span className={`${salesChange.isPositive ? 'text-[#4F46E5] bg-[#4F46E5]/10' : 'text-[#ef4444] bg-[#ef4444]/10'} font-bold text-[12px] px-2 py-1 rounded-md flex items-center`}>
+                                    {salesChange.isPositive ? <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> : <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} />}
+                                    {salesChange.isPositive ? '+' : ''}{salesChange.value}%
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-[45px] w-full mt-auto -mx-1">
+                            {!statsLoading && sparklineData.length > 0 ? (
+                                (() => {
+                                    const color = salesChange.isPositive ? '#4F46E5' : '#ef4444';
+                                    return (
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <AreaChart data={sparklineData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+                                                <defs>
+                                                    <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor={color} stopOpacity={0.2} />
+                                                        <stop offset="95%" stopColor={color} stopOpacity={0} />
+                                                    </linearGradient>
+                                                </defs>
+                                                <Tooltip cursor={{ stroke: color, strokeWidth: 1, strokeDasharray: "3 3" }} content={() => null} />
+                                                <Area type="monotone" dataKey="count" stroke={color} strokeWidth={2.5} fillOpacity={1} fill="url(#colorSales)" isAnimationActive={false} />
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+                                    );
+                                })()
+                            ) : (
+                                <div className="w-full h-full bg-gray-50 rounded-md animate-pulse"></div>
+                            )}
                         </div>
                     </div>
 
                     {/* Card 3: Total Orders */}
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
+                    <div className="bg-white rounded-2xl p-5 shadow-sm border border-transparent hover:border-gray-50 transition-colors flex flex-col justify-between">
+                        <div className="flex justify-between items-start mb-2">
                             <div>
-                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Total Orders</p>
-                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">
+                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Total Pesanan</p>
+                                <p className="text-[20px] sm:text-[22px] font-bold text-[#1a1a1a]">
                                     {statsLoading ? "..." : stats?.stats.totalOrders.toLocaleString('id-ID')}
                                 </p>
-                                {!statsLoading && (
-                                    <p className={`${ordersChange.isPositive ? 'text-[#84C529]' : 'text-[#ef4444]'} font-medium text-[12px] flex items-center mt-1`}>
-                                        {ordersChange.isPositive ? <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> : <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} />}
-                                        {ordersChange.isPositive ? '+' : ''}{ordersChange.value}%
-                                    </p>
-                                )}
                             </div>
-                            <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-l-gray-100 border-r-gray-100 border-t-gray-100 rotate-[40deg] shrink-0"></div>
+                            {!statsLoading && (
+                                <span className={`${ordersChange.isPositive ? 'text-[#0ea5e9] bg-[#0ea5e9]/10' : 'text-[#ef4444] bg-[#ef4444]/10'} font-bold text-[12px] px-2 py-1 rounded-md flex items-center`}>
+                                    {ordersChange.isPositive ? <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> : <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} />}
+                                    {ordersChange.isPositive ? '+' : ''}{ordersChange.value}%
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-[45px] w-full mt-auto -mx-1">
+                            {!statsLoading && sparklineData.length > 0 ? (
+                                (() => {
+                                    const color = ordersChange.isPositive ? '#0ea5e9' : '#ef4444';
+                                    return (
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <AreaChart data={sparklineData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+                                                <defs>
+                                                    <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor={color} stopOpacity={0.2} />
+                                                        <stop offset="95%" stopColor={color} stopOpacity={0} />
+                                                    </linearGradient>
+                                                </defs>
+                                                <Tooltip cursor={{ stroke: color, strokeWidth: 1, strokeDasharray: "3 3" }} content={() => null} />
+                                                <Area type="monotone" dataKey="count" stroke={color} strokeWidth={2.5} fillOpacity={1} fill="url(#colorOrders)" isAnimationActive={false} />
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+                                    );
+                                })()
+                            ) : (
+                                <div className="w-full h-full bg-gray-50 rounded-md animate-pulse"></div>
+                            )}
                         </div>
                     </div>
 
                     {/* Card 4: Completed Orders */}
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
+                    <div className="bg-white rounded-2xl p-5 shadow-sm border border-transparent hover:border-gray-50 transition-colors flex flex-col justify-between">
+                        <div className="flex justify-between items-start mb-2">
                             <div>
-                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Completed Orders</p>
-                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">
+                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Selesai</p>
+                                <p className="text-[20px] sm:text-[22px] font-bold text-[#1a1a1a]">
                                     {statsLoading ? "..." : stats?.stats.completedOrders.toLocaleString('id-ID')}
                                 </p>
-                                {!statsLoading && (
-                                    <p className={`${completedChange.isPositive ? 'text-[#84C529]' : 'text-[#ef4444]'} font-medium text-[12px] flex items-center mt-1`}>
-                                        {completedChange.isPositive ? <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> : <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} />}
-                                        {completedChange.isPositive ? '+' : ''}{completedChange.value}%
-                                    </p>
-                                )}
                             </div>
-                            <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-b-gray-100 rotate-[20deg] shrink-0"></div>
+                            {!statsLoading && (
+                                <span className={`${completedChange.isPositive ? 'text-[#10b981] bg-[#10b981]/10' : 'text-[#ef4444] bg-[#ef4444]/10'} font-bold text-[12px] px-2 py-1 rounded-md flex items-center`}>
+                                    {completedChange.isPositive ? <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> : <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} />}
+                                    {completedChange.isPositive ? '+' : ''}{completedChange.value}%
+                                </span>
+                            )}
+                        </div>
+                        <div className="h-[45px] w-full mt-auto -mx-1">
+                            {!statsLoading && sparklineData.length > 0 ? (
+                                (() => {
+                                    const color = completedChange.isPositive ? '#10b981' : '#ef4444';
+                                    return (
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <AreaChart data={sparklineData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+                                                <defs>
+                                                    <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor={color} stopOpacity={0.2} />
+                                                        <stop offset="95%" stopColor={color} stopOpacity={0} />
+                                                    </linearGradient>
+                                                </defs>
+                                                <Tooltip cursor={{ stroke: color, strokeWidth: 1, strokeDasharray: "3 3" }} content={() => null} />
+                                                <Area type="monotone" dataKey="count" stroke={color} strokeWidth={2.5} fillOpacity={1} fill="url(#colorCompleted)" isAnimationActive={false} />
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+                                    );
+                                })()
+                            ) : (
+                                <div className="w-full h-full bg-gray-50 rounded-md animate-pulse"></div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -309,13 +436,13 @@ export default function OrdersPage() {
             {/* Orders Data Table */}
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-transparent">
                 <div className="p-5 md:p-6 pb-4 md:pb-5 flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-gray-100">
-                    <h2 className="text-[17px] font-bold text-[#1a1a1a]">Recent Orders</h2>
+                    <h2 className="text-[17px] font-bold text-[#1a1a1a]">Pesanan Terbaru</h2>
                     <div className="flex gap-2">
                         <div className="relative hidden md:block">
                             <Search className="w-[18px] h-[18px] absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                             <input
                                 type="text"
-                                placeholder="Search orders..."
+                                placeholder="Cari pesanan..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="pl-10 pr-4 py-2 border border-gray-100 bg-gray-50 rounded-lg text-[13px] font-medium focus:outline-none focus:ring-1 focus:ring-[#4F46E5] transition-colors w-64 hover:bg-gray-100"
@@ -331,10 +458,10 @@ export default function OrdersPage() {
                         <thead className="text-[12px] text-gray-400 font-medium border-b border-gray-50 whitespace-nowrap">
                             <tr>
                                 <th className="px-4 py-4 font-normal w-[16%]">Mayar Invoice ID</th>
-                                <th className="px-4 py-4 font-normal w-[20%]">Customer</th>
-                                <th className="px-4 py-4 font-normal w-[24%]">Course</th>
-                                <th className="px-4 py-4 font-normal w-[14%]">Date</th>
-                                <th className="px-4 py-4 font-normal w-[12%]">Amount</th>
+                                <th className="px-4 py-4 font-normal w-[20%]">Pelanggan</th>
+                                <th className="px-4 py-4 font-normal w-[24%]">Kursus</th>
+                                <th className="px-4 py-4 font-normal w-[14%]">Tanggal</th>
+                                <th className="px-4 py-4 font-normal w-[12%]">Jumlah</th>
                                 <th className="px-4 py-4 font-normal w-[10%]">Status</th>
                                 <th className="px-4 py-4 w-[4%]"></th>
                             </tr>
@@ -343,13 +470,13 @@ export default function OrdersPage() {
                             {loading ? (
                                 <tr>
                                     <td colSpan={7} className="px-6 py-8 text-center text-gray-400 text-[13px] font-medium">
-                                        Loading orders...
+                                        Memuat pesanan...
                                     </td>
                                 </tr>
                             ) : paginatedOrders.length === 0 ? (
                                 <tr>
                                     <td colSpan={7} className="px-6 py-8 text-center text-gray-400 text-[13px] font-medium">
-                                        No orders found.
+                                        Belum ada pesanan.
                                     </td>
                                 </tr>
                             ) : (
@@ -389,7 +516,7 @@ export default function OrdersPage() {
                                         </td>
                                         <td className="p-0">
                                             <div className="h-[64px] flex items-center px-4 font-semibold text-[#1a1a1a] text-[13.5px] whitespace-nowrap overflow-hidden">
-                                                <span className="truncate block w-full">{order.amount === 0 ? "Free" : `Rp ${order.amount.toLocaleString("id-ID")}`}</span>
+                                                <span className="truncate block w-full">{order.amount === 0 ? "Gratis" : `Rp ${order.amount.toLocaleString("id-ID")}`}</span>
                                             </div>
                                         </td>
                                         <td className="p-0">
@@ -415,7 +542,7 @@ export default function OrdersPage() {
 
                 {/* Pagination */}
                 <div className="p-5 px-6 pt-4 flex items-center justify-between text-[13px] text-gray-500 border-t border-gray-50">
-                    <p>Showing <span className="font-semibold text-[#1a1a1a]">{totalItems > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + pageSize, totalItems)}</span> from <span className="font-semibold text-[#1a1a1a]">{totalItems}</span> data</p>
+                    <p>Menampilkan <span className="font-semibold text-[#1a1a1a]">{totalItems > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + pageSize, totalItems)}</span> dari <span className="font-semibold text-[#1a1a1a]">{totalItems}</span> data</p>
                     <div className="flex gap-1 items-center">
                         <button
                             disabled={currentPage === 1}

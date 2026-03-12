@@ -26,9 +26,9 @@ export async function PUT(request: Request) {
         }
 
         const body = await request.json();
-        const { name, email, password } = body;
+        const { name, email, password, phoneNumber } = body;
 
-        const updatedUser = await updateStudentProfile(session.user.id, { name, email, password });
+        const updatedUser = await updateStudentProfile(session.user.id, { name, email, password, phoneNumber });
         return NextResponse.json({ message: "Profile updated successfully", user: updatedUser }, { status: 200 });
 
     } catch (error: any) {

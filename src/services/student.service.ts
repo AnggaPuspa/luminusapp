@@ -329,14 +329,15 @@ export async function getStudentAnalytics(userId: string) {
 export async function getStudentProfile(userId: string) {
     return prisma.user.findUnique({
         where: { id: userId },
-        select: { id: true, name: true, email: true, avatarUrl: true, role: true, createdAt: true }
+        select: { id: true, name: true, email: true, phoneNumber: true, avatarUrl: true, role: true, createdAt: true }
     });
 }
 
-export async function updateStudentProfile(userId: string, data: { name?: string; email?: string; password?: string }) {
+export async function updateStudentProfile(userId: string, data: { name?: string; email?: string; password?: string; phoneNumber?: string }) {
     const updatedData: any = {};
     if (data.name) updatedData.name = data.name;
     if (data.email) updatedData.email = data.email;
+    if (data.phoneNumber !== undefined) updatedData.phoneNumber = data.phoneNumber;
     if (data.password) {
         updatedData.password = await bcrypt.hash(data.password, 10);
     }

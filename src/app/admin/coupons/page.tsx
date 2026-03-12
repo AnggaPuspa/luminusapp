@@ -135,7 +135,7 @@ export default function AdminCouponsPage() {
                 {/* Left: Coupon Overview */}
                 <div className="xl:col-span-7 bg-white rounded-2xl p-7 shadow-sm">
                     <div className="flex justify-between items-start mb-6">
-                        <h2 className="text-[17px] font-bold text-[#1a1a1a]">Coupon Overview</h2>
+                        <h2 className="text-[17px] font-bold text-[#1a1a1a]">Ringkasan Kupon</h2>
                         <div className="flex gap-2">
                             <button
                                 onClick={() => handleOpenModal()}
@@ -273,7 +273,7 @@ export default function AdminCouponsPage() {
                                 onChange={(e) => setStatusFilter(e.target.value)}
                                 className="appearance-none pl-4 pr-10 py-2 border border-gray-100 bg-gray-50 rounded-lg text-[13px] font-medium focus:outline-none focus:ring-1 focus:ring-[#4F46E5] transition-colors cursor-pointer hover:bg-gray-100 text-gray-600"
                             >
-                                <option value="ALL">All Status</option>
+                                <option value="ALL">Semua Status</option>
                                 <option value="ACTIVE">Aktif</option>
                                 <option value="INACTIVE">Nonaktif</option>
                             </select>
@@ -406,7 +406,7 @@ export default function AdminCouponsPage() {
 
                 {/* Pagination */}
                 <div className="p-5 px-6 pt-4 flex items-center justify-between text-[13px] text-gray-500 border-t border-gray-50">
-                    <p>Showing <span className="font-semibold text-[#1a1a1a]">{totalItems > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + pageSize, totalItems)}</span> from <span className="font-semibold text-[#1a1a1a]">{totalItems}</span> data</p>
+                    <p>Menampilkan <span className="font-semibold text-[#1a1a1a]">{totalItems > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + pageSize, totalItems)}</span> dari <span className="font-semibold text-[#1a1a1a]">{totalItems}</span> data</p>
                     <div className="flex gap-1 items-center">
                         <button
                             disabled={currentPage === 1}

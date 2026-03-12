@@ -39,7 +39,7 @@ export default function CoursesPage() {
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure you want to delete this course?")) return;
+        if (!confirm("Apakah Anda yakin ingin menghapus kursus ini?")) return;
 
         try {
             const res = await fetch(`/api/admin/courses/${id}`, {
@@ -47,13 +47,13 @@ export default function CoursesPage() {
             });
             if (res.ok) {
                 setCourses(courses.filter((course) => course.id !== id));
-                toast.success("Course deleted successfully");
+                toast.success("Kursus berhasil dihapus");
             } else {
-                toast.error("Failed to delete course");
+                toast.error("Gagal menghapus kursus");
             }
         } catch (error) {
             console.error("Failed to delete course", error);
-            toast.error("An error occurred while deleting the course");
+            toast.error("Terjadi kesalahan saat menghapus kursus");
         }
     };
 
@@ -65,7 +65,7 @@ export default function CoursesPage() {
         <div className="bg-white rounded-[20px] shadow-[0_2px_10px_rgb(0,0,0,0.02)] border border-gray-100/50 flex flex-col min-h-[calc(100vh-120px)] mx-auto max-w-[1600px]">
             {/* Header Area */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between px-7 py-5 border-b border-gray-100 gap-4">
-                <h1 className="text-[17px] font-extrabold text-[#1a1a1a]">All Courses</h1>
+                <h1 className="text-[17px] font-extrabold text-[#1a1a1a]">Semua Kursus</h1>
 
                 <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
                     {/* Search Bar */}
@@ -73,7 +73,7 @@ export default function CoursesPage() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" strokeWidth={2.5} />
                         <input
                             type="text"
-                            placeholder="Search course..."
+                            placeholder="Cari kursus..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-[#4F46E5] focus:border-[#4F46E5] transition-all"
@@ -102,7 +102,7 @@ export default function CoursesPage() {
                         className="bg-[#4F46E5] hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-[13px] font-semibold inline-flex items-center gap-2 transition-colors ml-1 shadow-sm"
                     >
                         <Plus className="w-4 h-4" strokeWidth={3} />
-                        Add New Course
+                        Tambah Kursus
                     </Link>
                 </div>
             </div>
@@ -112,11 +112,11 @@ export default function CoursesPage() {
                 {loading ? (
                     <div className="h-full flex items-center justify-center text-gray-400 font-medium pt-20">
                         <RefreshCw className="w-6 h-6 animate-spin mr-2" />
-                        Loading courses...
+                        Memuat kursus...
                     </div>
                 ) : filteredCourses.length === 0 ? (
                     <div className="h-full flex items-center justify-center text-gray-400 font-medium pt-20">
-                        {searchQuery ? "No courses found matching your search." : "No courses found. Add a new course to get started!"}
+                        {searchQuery ? "Tidak ada kursus yang sesuai pencarian." : "Belum ada kursus. Tambahkan kursus baru untuk memulai!"}
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -162,7 +162,7 @@ export default function CoursesPage() {
                                         <div className="flex-1">
                                             <h3 className="font-bold text-[#1a1a1a] text-[15px] mb-2 line-clamp-1">{course.title}</h3>
                                             <p className="text-[13px] text-gray-400 font-medium leading-relaxed line-clamp-2 min-h-[40px]">
-                                                {course.description || "No description provided for this course. Click edit to add more details about the curriculum."}
+                                                {course.description || "Belum ada deskripsi untuk kursus ini. Klik edit untuk menambahkan detail kurikulum."}
                                             </p>
                                         </div>
 
@@ -183,14 +183,14 @@ export default function CoursesPage() {
                                                 <button
                                                     onClick={() => handleDelete(course.id)}
                                                     className="w-8 h-8 rounded-lg flex items-center justify-center border border-red-100 text-red-500 hover:bg-red-50 hover:border-red-200 transition-colors"
-                                                    title="Delete Course"
+                                                    title="Hapus Kursus"
                                                 >
                                                     <Trash2 className="w-[14px] h-[14px]" strokeWidth={2.5} />
                                                 </button>
                                                 <Link
                                                     href={`/admin/courses/${course.id}`}
                                                     className="w-8 h-8 rounded-lg flex items-center justify-center border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-[#1a1a1a] transition-colors"
-                                                    title="Edit Course"
+                                                    title="Edit Kursus"
                                                 >
                                                     <Pencil className="w-[14px] h-[14px]" strokeWidth={2.5} />
                                                 </Link>
@@ -209,7 +209,7 @@ export default function CoursesPage() {
             {courses.length > 0 && (
                 <div className="px-7 py-5 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between gap-4 bg-white rounded-b-[20px]">
                     <p className="text-[13px] text-gray-500 font-medium">
-                        Showing <span className="font-bold text-[#1a1a1a]">1-{filteredCourses.length}</span> from <span className="font-bold text-[#1a1a1a]">{courses.length}</span> data
+                        Menampilkan <span className="font-bold text-[#1a1a1a]">1-{filteredCourses.length}</span> dari <span className="font-bold text-[#1a1a1a]">{courses.length}</span> data
                     </p>
 
                     <div className="flex items-center gap-1">

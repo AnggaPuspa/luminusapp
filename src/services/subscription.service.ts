@@ -18,6 +18,14 @@ export interface SubscriptionResult {
 export async function processSubscriptionCheckout(input: SubscriptionInput): Promise<SubscriptionResult> {
     const { userId, userEmail, userName, planId, cycle } = input;
 
+    // 0. Fetch User to get phone number
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { phoneNumber: true }
+    });
+    
+    const mobileNumber = user?.phoneNumber || "0000000000";
+
     // 1. Validate Plan
     const plan = await prisma.subscriptionPlan.findUnique({
         where: { id: planId }
@@ -86,7 +94,7 @@ export async function processSubscriptionCheckout(input: SubscriptionInput): Pro
         email: userEmail,
         amount: amount,
         description: `Langganan Luminus - ${plan.name} (${cycle})`,
-        mobile: "081234567890"
+        mobile: mobileNumber
     };
 
     let mayarResp;
@@ -180,7 +188,7 @@ export async function processSubscriptionRenewal(): Promise<{ success: boolean; 
                 email: sub.user.email,
                 amount: amount,
                 description: `Perpanjangan Luminus - ${sub.plan.name} (${sub.billingCycle})`,
-                mobile: "081234567890"
+                mobile: sub.user.phoneNumber || "0000000000"
             };
 
             const mayarResp = await createMayarInvoice(payloadToMayar);

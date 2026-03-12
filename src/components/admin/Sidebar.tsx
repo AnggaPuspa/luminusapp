@@ -14,7 +14,8 @@ import {
     LogOut,
     Search,
     Menu,
-    ChevronDown
+    ChevronDown,
+    BarChart3
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -34,24 +35,25 @@ export default function Sidebar() {
     // ONLY REAL DATA/LINKS THAT EXIST IN THE SYSTEM
     const sidebarGroups = [
         {
-            title: "MAIN MENU",
+            title: "MENU UTAMA",
             items: [
                 { label: "Dashboard", href: "/admin", icon: Home, exact: true },
-                { label: "Courses", href: "/admin/courses", icon: BookOpen },
-                { label: "Users", href: "/admin/users", icon: Users },
+                { label: "Kursus", href: "/admin/courses", icon: BookOpen },
+                { label: "Pengguna", href: "/admin/users", icon: Users },
             ]
         },
         {
-            title: "SALES & TRANSACTIONS",
+            title: "PENJUALAN & TRANSAKSI",
             items: [
-                { label: "Orders", href: "/admin/orders", icon: ShoppingCart },
-                { label: "Subscribers", href: "/admin/subscribers", icon: CreditCard },
-                { label: "Plans", href: "/admin/plans", icon: Award },
-                { label: "Coupons", href: "/admin/coupons", icon: Ticket },
+                { label: "Pesanan", href: "/admin/orders", icon: ShoppingCart },
+                { label: "Pelanggan", href: "/admin/subscribers", icon: CreditCard },
+                { label: "Paket", href: "/admin/plans", icon: Award },
+                { label: "Kupon", href: "/admin/coupons", icon: Ticket },
+                { label: "Keuangan", href: "/admin/finance", icon: BarChart3 },
             ]
         },
         {
-            title: "SETTINGS",
+            title: "PENGATURAN",
             items: [
                 { label: "Webhooks", href: "/admin/webhooks", icon: Webhook },
             ]

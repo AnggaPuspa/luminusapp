@@ -1,6 +1,6 @@
 "use client";
 
-import { User, Mail, Bell, Camera, Edit3, Loader2, Play, PlayCircle, MessageCircle } from "lucide-react";
+import { User, Mail, Bell, Camera, Edit3, Loader2, Play, PlayCircle, MessageCircle, Lock } from "lucide-react";
 import StudentTopbar from "@/components/dashboard/StudentTopbar";
 import Link from "next/link";
 import { useDashboardOverview } from "@/hooks/use-dashboard";
@@ -9,7 +9,7 @@ import { useSettings } from "@/hooks/use-settings";
 export default function StudentSettingsPage() {
     const { stats } = useDashboardOverview();
     const {
-        loading, saving, uploading, formData, isDirty,
+        loading, saving, uploading, formData, originalData, isDirty,
         fileInputRef, handleChange, handleAvatarChange, handleSubmit, resetForm,
     } = useSettings();
 
@@ -122,15 +122,39 @@ export default function StudentSettingsPage() {
                         {/* ── EMAIL ── */}
                         <div className="px-6 py-5 border-b border-gray-50">
                             <label className="block text-sm font-semibold text-gray-700 mb-3">E-mail</label>
-                            <input
-                                type="email"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                required
-                                placeholder="email@contoh.com"
-                                className="w-full max-w-xl bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-gray-900 outline-none hover:border-gray-300 focus:border-[#696EFF] focus:ring-4 focus:ring-[#696EFF]/10 transition-all placeholder-gray-400"
-                            />
+                            <div className="relative max-w-xl">
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    readOnly
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 pr-11 text-sm font-medium text-gray-500 outline-none cursor-not-allowed"
+                                />
+                                <Lock className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2" />
+                            </div>
+                        </div>
+
+                        {/* ── NOMOR HANDPHONE ── */}
+                        <div className="px-6 py-5 border-b border-gray-50">
+                            <label className="block text-sm font-semibold text-gray-700 mb-3">Nomor Handphone</label>
+                            <div className="relative max-w-xl">
+                                <input
+                                    type="text"
+                                    name="phoneNumber"
+                                    value={formData.phoneNumber}
+                                    onChange={handleChange}
+                                    readOnly={!!originalData.phoneNumber}
+                                    placeholder={originalData.phoneNumber ? "" : "Masukkan nomor HP"}
+                                    className={`w-full border rounded-xl px-4 py-3 pr-11 text-sm font-medium outline-none transition-all ${
+                                        originalData.phoneNumber
+                                            ? "bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed"
+                                            : "bg-white border-gray-200 text-gray-900 hover:border-gray-300 focus:border-[#696EFF] focus:ring-4 focus:ring-[#696EFF]/10 placeholder-gray-400"
+                                    }`}
+                                />
+                                {originalData.phoneNumber && (
+                                    <Lock className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2" />
+                                )}
+                            </div>
                         </div>
 
                         {/* ── PASSWORD ── */}

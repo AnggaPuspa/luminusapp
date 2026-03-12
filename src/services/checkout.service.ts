@@ -52,6 +52,15 @@ export async function applyCoupon(couponCode: string, courseId: string, basePric
 export async function processCourseCheckout(input: CheckoutInput): Promise<CheckoutResult> {
     const { userId, userEmail, userName, courseId, couponCode } = input;
 
+    // 0. Fetch User to get phone number
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { phoneNumber: true }
+    });
+    
+    // Fallback if somehow not found or null
+    const mobileNumber = user?.phoneNumber || "0000000000";
+
     // 1. Validate Course
     const course = await prisma.course.findUnique({
         where: { id: courseId },
@@ -149,7 +158,7 @@ export async function processCourseCheckout(input: CheckoutInput): Promise<Check
         email: userEmail,
         amount: finalPrice,
         description: `Pembelian Kursus: ${course.title}`,
-        mobile: "081234567890" // Mandatory for Mayar Hosted Checkout
+        mobile: mobileNumber // Mandatory for Mayar Hosted Checkout
     };
 
     let mayarResp;

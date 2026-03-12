@@ -6,11 +6,11 @@ import { sendWelcomeEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
     try {
-        const { name, email, password } = await request.json();
+        const { name, email, phoneNumber, password } = await request.json();
 
-        if (!name || !email || !password) {
+        if (!name || !email || !password || !phoneNumber) {
             return NextResponse.json(
-                { message: "Name, email, and password are required" },
+                { message: "Name, email, phone number, and password are required" },
                 { status: 400 }
             );
         }
@@ -32,6 +32,7 @@ export async function POST(request: Request) {
             data: {
                 name,
                 email,
+                phoneNumber,
                 password: hashedPassword,
                 // Role defaults to STUDENT per Prisma schema
             },

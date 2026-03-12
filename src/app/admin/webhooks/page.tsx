@@ -63,7 +63,7 @@ export default function WebhooksPage() {
                             <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Total Logs</p>
                             <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">{loading ? "—" : webhooks.length}</p>
                             <p className="text-[#84C529] font-medium text-[12px] flex items-center mt-1">
-                                <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> Latest 100
+                                <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> 100 terbaru
                             </p>
                         </div>
                         <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-t-gray-100 border-l-gray-100 rotate-45 shrink-0"></div>
@@ -73,7 +73,7 @@ export default function WebhooksPage() {
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors">
                     <div className="flex justify-between items-start">
                         <div>
-                            <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Success</p>
+                            <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Sukses</p>
                             <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">{loading ? "—" : totalSuccess}</p>
                             <p className="text-[#22C55E] font-medium text-[12px] flex items-center mt-1">
                                 <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> 2xx status
@@ -86,7 +86,7 @@ export default function WebhooksPage() {
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors">
                     <div className="flex justify-between items-start">
                         <div>
-                            <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Failed</p>
+                            <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Gagal</p>
                             <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">{loading ? "—" : totalFailed}</p>
                             <p className="text-[#EF4444] font-medium text-[12px] flex items-center mt-1">
                                 <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> Error status
@@ -99,10 +99,10 @@ export default function WebhooksPage() {
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors">
                     <div className="flex justify-between items-start">
                         <div>
-                            <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Event Types</p>
+                            <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Jenis Event</p>
                             <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">{loading ? "—" : uniqueEvents}</p>
                             <p className="text-[#84C529] font-medium text-[12px] flex items-center mt-1">
-                                <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> Unique events
+                                <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> Event unik
                             </p>
                         </div>
                         <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-b-gray-100 rotate-[90deg] shrink-0"></div>
@@ -134,9 +134,9 @@ export default function WebhooksPage() {
                                 onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
                                 className="appearance-none pl-4 pr-10 py-2 border border-gray-100 bg-gray-50 rounded-lg text-[13px] font-medium focus:outline-none focus:ring-1 focus:ring-[#4F46E5] transition-colors cursor-pointer hover:bg-gray-100 text-gray-600"
                             >
-                                <option value="ALL">All Status</option>
-                                <option value="SUCCESS">Success</option>
-                                <option value="FAILED">Failed</option>
+                                <option value="ALL">Semua Status</option>
+                                <option value="SUCCESS">Sukses</option>
+                                <option value="FAILED">Gagal</option>
                             </select>
                             <Filter className="w-[14px] h-[14px] absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                         </div>
@@ -154,10 +154,10 @@ export default function WebhooksPage() {
                     <table className="w-full text-left table-fixed">
                         <thead className="text-[12px] text-gray-400 font-medium border-b border-gray-50 whitespace-nowrap">
                             <tr>
-                                <th className="px-4 py-4 font-normal w-[28%]">Event Type</th>
+                                <th className="px-4 py-4 font-normal w-[28%]">Tipe Event</th>
                                 <th className="px-4 py-4 font-normal w-[10%]">HTTP</th>
-                                <th className="px-4 py-4 font-normal w-[28%]">Transaction Ref</th>
-                                <th className="px-4 py-4 font-normal w-[22%]">Time Received</th>
+                                <th className="px-4 py-4 font-normal w-[28%]">Ref. Transaksi</th>
+                                <th className="px-4 py-4 font-normal w-[22%]">Waktu Diterima</th>
                                 <th className="px-4 py-4 font-normal w-[12%] text-right">Payload</th>
                             </tr>
                         </thead>
@@ -231,7 +231,7 @@ export default function WebhooksPage() {
                                                     onClick={() => setSelectedPayload(log.payload)}
                                                     className="text-[12px] font-semibold text-[#4F46E5] bg-[#EEEDFA] hover:bg-[#E0DEFB] px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap"
                                                 >
-                                                    View JSON
+                                                    Lihat JSON
                                                 </button>
                                             </div>
                                         </td>
@@ -244,7 +244,7 @@ export default function WebhooksPage() {
 
                 {/* Pagination */}
                 <div className="p-5 px-6 pt-4 flex items-center justify-between text-[13px] text-gray-500 border-t border-gray-50">
-                    <p>Showing <span className="font-semibold text-[#1a1a1a]">{totalItems > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + pageSize, totalItems)}</span> from <span className="font-semibold text-[#1a1a1a]">{totalItems}</span> data</p>
+                    <p>Menampilkan <span className="font-semibold text-[#1a1a1a]">{totalItems > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + pageSize, totalItems)}</span> dari <span className="font-semibold text-[#1a1a1a]">{totalItems}</span> data</p>
                     <div className="flex gap-1 items-center">
                         <button
                             disabled={currentPage === 1}

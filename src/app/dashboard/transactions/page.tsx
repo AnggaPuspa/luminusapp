@@ -253,7 +253,7 @@ export default function StudentTransactionsPage() {
                                             </td>
                                             <td className="py-5 px-4">
                                                 <div className="flex items-center gap-3">
-                                                    <button className="text-gray-400 hover:text-[#696EFF] transition-colors p-2" title="Print Invoice">
+                                                    <button onClick={() => window.print()} className="text-gray-400 hover:text-[#696EFF] transition-colors p-2" title="Print Invoice">
                                                         <Printer className="w-4 h-4" />
                                                     </button>
                                                     {tx.mayarInvoiceUrl ? (

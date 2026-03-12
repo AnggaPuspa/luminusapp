@@ -4,6 +4,18 @@ import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { Users, ArrowUpRight, MoreHorizontal, Search, Filter, TrendingUp, ShieldCheck, GraduationCap, Calendar } from "lucide-react";
+import { BarChart, Bar, ResponsiveContainer, XAxis, Tooltip, YAxis } from "recharts";
+
+const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-[#1a1a1a] text-white text-[12px] font-semibold px-3 py-1.5 rounded-lg shadow-xl">
+                {payload[0].value} pengguna
+            </div>
+        );
+    }
+    return null;
+};
 
 export default function UsersPage() {
     const [users, setUsers] = useState<any[]>([]);
@@ -79,7 +91,7 @@ export default function UsersPage() {
                 {/* Left: User Growth Chart */}
                 <div className="xl:col-span-7 bg-white rounded-2xl p-7 shadow-sm">
                     <div className="flex justify-between items-start mb-6">
-                        <h2 className="text-[17px] font-bold text-[#1a1a1a]">User Growth</h2>
+                        <h2 className="text-[17px] font-bold text-[#1a1a1a]">Pertumbuhan Pengguna</h2>
                         <div className="flex gap-2">
                             <button className="p-2 bg-gray-50 border border-gray-100 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors cursor-pointer">
                                 <Calendar className="w-[18px] h-[18px]" strokeWidth={2} />
@@ -104,81 +116,115 @@ export default function UsersPage() {
                     </div>
 
                     {/* Bar Chart: Daily Registrations */}
-                    <div className="h-[140px] flex items-end justify-between gap-1 overflow-hidden px-2">
+                    <div className="h-[140px] overflow-hidden px-2 mt-4">
                         {loading ? (
-                            Array.from({ length: 15 }, (_, i) => (
-                                <div key={i} className="flex flex-col items-center gap-3 flex-1">
-                                    <div className="w-3 md:w-3.5 h-[100px] bg-gray-100 rounded-full animate-pulse" />
-                                    <span className="text-[11px] font-medium text-[#8e95a5] opacity-0">00</span>
-                                </div>
-                            ))
+                            <div className="w-full h-full flex items-center justify-center text-sm text-gray-400">Memuat grafik...</div>
                         ) : (
-                            chartDays.map((bar, i) => (
-                                <div key={i} className="flex flex-col items-center gap-3 flex-1" title={`${bar.dateStr}: ${bar.count} user`}>
-                                    <div className="w-3 md:w-3.5 h-[100px] bg-gray-50 rounded-full relative overflow-hidden">
-                                        <div
-                                            className="absolute bottom-0 inset-x-0 bg-[#4F46E5] rounded-full transition-all duration-700 hover:opacity-80"
-                                            style={{ height: `${bar.count > 0 ? Math.max((bar.count / maxCount) * 100, 8) : 0}%` }}
-                                        />
-                                    </div>
-                                    <span className="text-[11px] font-medium text-[#8e95a5]">{bar.label}</span>
-                                </div>
-                            ))
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart
+                                    data={chartDays}
+                                    margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+                                >
+                                    <Tooltip
+                                        content={<CustomTooltip />}
+                                        cursor={{ fill: '#f3f4f6', radius: 8 }}
+                                    />
+                                    <XAxis
+                                        dataKey="label"
+                                        tick={{ fill: '#8e95a5', fontSize: 11, fontWeight: 500 }}
+                                        axisLine={false}
+                                        tickLine={false}
+                                        interval={0}
+                                        dy={10}
+                                    />
+                                    <YAxis
+                                        hide
+                                        domain={[0, (dataMax: number) => Math.max(dataMax, 4)]}
+                                    />
+                                    <Bar
+                                        dataKey="count"
+                                        fill="#4F46E5"
+                                        radius={[50, 50, 50, 50]}
+                                        maxBarSize={14}
+                                        activeBar={{ fill: '#4338CA' }}
+                                    />
+                                </BarChart>
+                            </ResponsiveContainer>
                         )}
                     </div>
                 </div>
 
                 {/* Right: 4 Stat Mini Cards */}
                 <div className="xl:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors">
+                        <div className="flex justify-between items-center">
                             <div>
-                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Total Users</p>
-                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">{loading ? "—" : users.length}</p>
-                                <p className="text-[#84C529] font-medium text-[12px] flex items-center mt-1">
-                                    <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> Semua role
+                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1">Total Pengguna</p>
+                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-1.5">{loading ? "..." : users.length}</p>
+                                <p className="text-[#84C529] font-bold text-[13px] flex items-center">
+                                    <ArrowUpRight className="w-4 h-4 mr-0.5" strokeWidth={2.5} /> Semua role
                                 </p>
                             </div>
-                            <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-t-gray-100 border-l-gray-100 rotate-45 shrink-0"></div>
+                            <div className="shrink-0 flex items-center justify-center">
+                                <svg width="72" height="72" viewBox="0 0 100 100" className="-rotate-90">
+                                    <circle cx="50" cy="50" r="36" fill="transparent" stroke="#f4f5f7" strokeWidth="18" />
+                                    <circle cx="50" cy="50" r="36" fill="transparent" stroke="#4F46E5" strokeWidth="18" strokeDasharray="226" strokeDashoffset={226 - (226 * (users.length > 0 ? 100 : 0)) / 100} />
+                                </svg>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors">
+                        <div className="flex justify-between items-center">
                             <div>
-                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Total Students</p>
-                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">{loading ? "—" : totalStudents}</p>
-                                <p className="text-[#84C529] font-medium text-[12px] flex items-center mt-1">
-                                    <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> Role USER
+                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1">Total Siswa</p>
+                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-1.5">{loading ? "..." : totalStudents}</p>
+                                <p className="text-[#84C529] font-bold text-[13px] flex items-center">
+                                    <ArrowUpRight className="w-4 h-4 mr-0.5" strokeWidth={2.5} /> Role USER
                                 </p>
                             </div>
-                            <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-r-gray-100 border-b-gray-100 rotate-[-15deg] shrink-0"></div>
+                            <div className="shrink-0 flex items-center justify-center">
+                                <svg width="72" height="72" viewBox="0 0 100 100" className="-rotate-90">
+                                    <circle cx="50" cy="50" r="36" fill="transparent" stroke="#f4f5f7" strokeWidth="18" />
+                                    <circle cx="50" cy="50" r="36" fill="transparent" stroke="#4F46E5" strokeWidth="18" strokeDasharray="226" strokeDashoffset={226 - (226 * (users.length > 0 ? (totalStudents / users.length) * 100 : 0)) / 100} />
+                                </svg>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors">
+                        <div className="flex justify-between items-center">
                             <div>
-                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Total Enrollment</p>
-                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">{loading ? "—" : totalEnrollments}</p>
-                                <p className="text-[#84C529] font-medium text-[12px] flex items-center mt-1">
-                                    <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> Semua kelas
+                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1">Total Pendaftaran</p>
+                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-1.5">{loading ? "..." : totalEnrollments}</p>
+                                <p className="text-[#84C529] font-bold text-[13px] flex items-center">
+                                    <ArrowUpRight className="w-4 h-4 mr-0.5" strokeWidth={2.5} /> Semua kelas
                                 </p>
                             </div>
-                            <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-l-gray-100 border-r-gray-100 border-t-gray-100 rotate-[40deg] shrink-0"></div>
+                            <div className="shrink-0 flex items-center justify-center">
+                                <svg width="72" height="72" viewBox="0 0 100 100" className="-rotate-90">
+                                    <circle cx="50" cy="50" r="36" fill="transparent" stroke="#f4f5f7" strokeWidth="18" />
+                                    <circle cx="50" cy="50" r="36" fill="transparent" stroke="#4F46E5" strokeWidth="18" strokeDasharray="226" strokeDashoffset={226 - (226 * (totalEnrollments > 0 ? Math.min((totalEnrollments / (totalStudents || 1)) * 50, 100) : 0)) / 100} />
+                                </svg>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors">
+                        <div className="flex justify-between items-center">
                             <div>
-                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Total Transaksi</p>
-                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">{loading ? "—" : totalTransactions}</p>
-                                <p className="text-[#84C529] font-medium text-[12px] flex items-center mt-1">
-                                    <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> Semua users
+                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1">Total Transaksi</p>
+                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-1.5">{loading ? "..." : totalTransactions}</p>
+                                <p className="text-[#84C529] font-bold text-[13px] flex items-center">
+                                    <ArrowUpRight className="w-4 h-4 mr-0.5" strokeWidth={2.5} /> Semua pengguna
                                 </p>
                             </div>
-                            <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-b-gray-100 rotate-[90deg] shrink-0"></div>
+                            <div className="shrink-0 flex items-center justify-center">
+                                <svg width="72" height="72" viewBox="0 0 100 100" className="-rotate-90">
+                                    <circle cx="50" cy="50" r="36" fill="transparent" stroke="#f4f5f7" strokeWidth="18" />
+                                    <circle cx="50" cy="50" r="36" fill="transparent" stroke="#4F46E5" strokeWidth="18" strokeDasharray="226" strokeDashoffset={226 - (226 * (totalTransactions > 0 ? Math.min((totalTransactions / (users.length || 1)) * 50, 100) : 0)) / 100} />
+                                </svg>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -208,8 +254,8 @@ export default function UsersPage() {
                                 onChange={(e) => setRoleFilter(e.target.value)}
                                 className="appearance-none pl-4 pr-10 py-2 border border-gray-100 bg-gray-50 rounded-lg text-[13px] font-medium focus:outline-none focus:ring-1 focus:ring-[#4F46E5] transition-colors cursor-pointer hover:bg-gray-100 text-gray-600"
                             >
-                                <option value="ALL">All Role</option>
-                                <option value="USER">Student</option>
+                                <option value="ALL">Semua Role</option>
+                                <option value="USER">Siswa</option>
                                 <option value="ADMIN">Admin</option>
                             </select>
                             <Filter className="w-[14px] h-[14px] absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
@@ -224,7 +270,7 @@ export default function UsersPage() {
                                 <th className="px-4 py-4 font-normal w-[22%]">Nama</th>
                                 <th className="px-4 py-4 font-normal w-[25%]">Email</th>
                                 <th className="px-4 py-4 font-normal w-[11%]">Role</th>
-                                <th className="px-4 py-4 font-normal w-[14%]">Enrollments</th>
+                                <th className="px-4 py-4 font-normal w-[14%]">Pendaftaran</th>
                                 <th className="px-4 py-4 font-normal w-[14%]">Transaksi</th>
                                 <th className="px-4 py-4 font-normal w-[14%]">Bergabung</th>
                             </tr>
@@ -274,7 +320,7 @@ export default function UsersPage() {
                                                     </span>
                                                 ) : (
                                                     <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] whitespace-nowrap font-semibold bg-[#EEEDFA] text-[#4F46E5]">
-                                                        <GraduationCap className="w-3 h-3" /> Student
+                                                        <GraduationCap className="w-3 h-3" /> Siswa
                                                     </span>
                                                 )}
                                             </div>
@@ -306,7 +352,7 @@ export default function UsersPage() {
 
                 {/* Pagination */}
                 <div className="p-5 px-6 pt-4 flex items-center justify-between text-[13px] text-gray-500 border-t border-gray-50">
-                    <p>Showing <span className="font-semibold text-[#1a1a1a]">{totalItems > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + pageSize, totalItems)}</span> from <span className="font-semibold text-[#1a1a1a]">{totalItems}</span> data</p>
+                    <p>Menampilkan <span className="font-semibold text-[#1a1a1a]">{totalItems > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + pageSize, totalItems)}</span> dari <span className="font-semibold text-[#1a1a1a]">{totalItems}</span> data</p>
                     <div className="flex gap-1 items-center">
                         <button
                             disabled={currentPage === 1}
