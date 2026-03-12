@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { Users, ArrowUpRight, MoreHorizontal, Search, Filter, TrendingUp, ShieldCheck, GraduationCap, Calendar } from "lucide-react";
-import { BarChart, Bar, ResponsiveContainer, XAxis, Tooltip, YAxis } from "recharts";
+import { BarChart, Bar, ResponsiveContainer, XAxis, Tooltip, YAxis, PieChart, Pie, Cell } from "recharts";
 
 const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -156,77 +156,96 @@ export default function UsersPage() {
 
                 {/* Right: 4 Stat Mini Cards */}
                 <div className="xl:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors">
-                        <div className="flex justify-between items-center">
-                            <div>
-                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1">Total Pengguna</p>
-                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-1.5">{loading ? "..." : users.length}</p>
-                                <p className="text-[#84C529] font-bold text-[13px] flex items-center">
-                                    <ArrowUpRight className="w-4 h-4 mr-0.5" strokeWidth={2.5} /> Semua role
-                                </p>
-                            </div>
-                            <div className="shrink-0 flex items-center justify-center">
-                                <svg width="72" height="72" viewBox="0 0 100 100" className="-rotate-90">
-                                    <circle cx="50" cy="50" r="36" fill="transparent" stroke="#f4f5f7" strokeWidth="18" />
-                                    <circle cx="50" cy="50" r="36" fill="transparent" stroke="#4F46E5" strokeWidth="18" strokeDasharray="226" strokeDashoffset={226 - (226 * (users.length > 0 ? 100 : 0)) / 100} />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
+                    {(() => {
+                        const renderMiniChart = (value: number, total: number, color: string = "#4F46E5") => {
+                            const safeValue = isNaN(value) ? 0 : value;
+                            const safeTotal = isNaN(total) || total === 0 ? 1 : total;
+                            const percentage = loading ? 0 : Math.min(Math.max((safeValue / safeTotal) * 100, 0), 100);
+                            
+                            const data = [
+                                { name: "Value", value: percentage },
+                                { name: "Remainder", value: 100 - percentage }
+                            ];
 
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors">
-                        <div className="flex justify-between items-center">
-                            <div>
-                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1">Total Siswa</p>
-                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-1.5">{loading ? "..." : totalStudents}</p>
-                                <p className="text-[#84C529] font-bold text-[13px] flex items-center">
-                                    <ArrowUpRight className="w-4 h-4 mr-0.5" strokeWidth={2.5} /> Role USER
-                                </p>
-                            </div>
-                            <div className="shrink-0 flex items-center justify-center">
-                                <svg width="72" height="72" viewBox="0 0 100 100" className="-rotate-90">
-                                    <circle cx="50" cy="50" r="36" fill="transparent" stroke="#f4f5f7" strokeWidth="18" />
-                                    <circle cx="50" cy="50" r="36" fill="transparent" stroke="#4F46E5" strokeWidth="18" strokeDasharray="226" strokeDashoffset={226 - (226 * (users.length > 0 ? (totalStudents / users.length) * 100 : 0)) / 100} />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
+                            return (
+                                <div className="w-[72px] h-[72px] shrink-0">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie
+                                                data={data}
+                                                innerRadius={22}
+                                                outerRadius={32}
+                                                startAngle={90}
+                                                endAngle={-270}
+                                                dataKey="value"
+                                                stroke="none"
+                                                isAnimationActive={true}
+                                            >
+                                                <Cell fill={color} />
+                                                <Cell fill="#f4f5f7" />
+                                            </Pie>
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            );
+                        };
 
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors">
-                        <div className="flex justify-between items-center">
-                            <div>
-                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1">Total Pendaftaran</p>
-                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-1.5">{loading ? "..." : totalEnrollments}</p>
-                                <p className="text-[#84C529] font-bold text-[13px] flex items-center">
-                                    <ArrowUpRight className="w-4 h-4 mr-0.5" strokeWidth={2.5} /> Semua kelas
-                                </p>
-                            </div>
-                            <div className="shrink-0 flex items-center justify-center">
-                                <svg width="72" height="72" viewBox="0 0 100 100" className="-rotate-90">
-                                    <circle cx="50" cy="50" r="36" fill="transparent" stroke="#f4f5f7" strokeWidth="18" />
-                                    <circle cx="50" cy="50" r="36" fill="transparent" stroke="#4F46E5" strokeWidth="18" strokeDasharray="226" strokeDashoffset={226 - (226 * (totalEnrollments > 0 ? Math.min((totalEnrollments / (totalStudents || 1)) * 50, 100) : 0)) / 100} />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
+                        return (
+                            <>
+                                <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors">
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <p className="text-[#8e95a5] text-[13px] font-medium mb-1">Total Pengguna</p>
+                                            <p className="text-[24px] font-bold text-[#1a1a1a] mb-1.5">{loading ? "..." : users.length}</p>
+                                            <p className="text-[#84C529] font-bold text-[13px] flex items-center">
+                                                <ArrowUpRight className="w-4 h-4 mr-0.5" strokeWidth={2.5} /> Semua role
+                                            </p>
+                                        </div>
+                                        {renderMiniChart(users.length > 0 ? 100 : 0, 100, "#4F46E5")}
+                                    </div>
+                                </div>
 
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors">
-                        <div className="flex justify-between items-center">
-                            <div>
-                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1">Total Transaksi</p>
-                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-1.5">{loading ? "..." : totalTransactions}</p>
-                                <p className="text-[#84C529] font-bold text-[13px] flex items-center">
-                                    <ArrowUpRight className="w-4 h-4 mr-0.5" strokeWidth={2.5} /> Semua pengguna
-                                </p>
-                            </div>
-                            <div className="shrink-0 flex items-center justify-center">
-                                <svg width="72" height="72" viewBox="0 0 100 100" className="-rotate-90">
-                                    <circle cx="50" cy="50" r="36" fill="transparent" stroke="#f4f5f7" strokeWidth="18" />
-                                    <circle cx="50" cy="50" r="36" fill="transparent" stroke="#4F46E5" strokeWidth="18" strokeDasharray="226" strokeDashoffset={226 - (226 * (totalTransactions > 0 ? Math.min((totalTransactions / (users.length || 1)) * 50, 100) : 0)) / 100} />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
+                                <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors">
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <p className="text-[#8e95a5] text-[13px] font-medium mb-1">Total Siswa</p>
+                                            <p className="text-[24px] font-bold text-[#1a1a1a] mb-1.5">{loading ? "..." : totalStudents}</p>
+                                            <p className="text-[#84C529] font-bold text-[13px] flex items-center">
+                                                <ArrowUpRight className="w-4 h-4 mr-0.5" strokeWidth={2.5} /> Role USER
+                                            </p>
+                                        </div>
+                                        {renderMiniChart(totalStudents, users.length, "#4F46E5")}
+                                    </div>
+                                </div>
+
+                                <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors">
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <p className="text-[#8e95a5] text-[13px] font-medium mb-1">Total Pendaftaran</p>
+                                            <p className="text-[24px] font-bold text-[#1a1a1a] mb-1.5">{loading ? "..." : totalEnrollments}</p>
+                                            <p className="text-[#84C529] font-bold text-[13px] flex items-center">
+                                                <ArrowUpRight className="w-4 h-4 mr-0.5" strokeWidth={2.5} /> Semua kelas
+                                            </p>
+                                        </div>
+                                        {renderMiniChart(totalEnrollments, totalStudents || 1, "#4F46E5")}
+                                    </div>
+                                </div>
+
+                                <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors">
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <p className="text-[#8e95a5] text-[13px] font-medium mb-1">Total Transaksi</p>
+                                            <p className="text-[24px] font-bold text-[#1a1a1a] mb-1.5">{loading ? "..." : totalTransactions}</p>
+                                            <p className="text-[#84C529] font-bold text-[13px] flex items-center">
+                                                <ArrowUpRight className="w-4 h-4 mr-0.5" strokeWidth={2.5} /> Semua pengguna
+                                            </p>
+                                        </div>
+                                        {renderMiniChart(totalTransactions, users.length || 1, "#4F46E5")}
+                                    </div>
+                                </div>
+                            </>
+                        );
+                    })()}
                 </div>
             </div>
 

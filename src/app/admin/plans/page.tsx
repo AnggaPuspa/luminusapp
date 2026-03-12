@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Edit2, Trash2, ArrowUpRight, MoreHorizontal, Users, BookOpen, CheckCircle2, XCircle, Award, TrendingUp, Search, Filter } from "lucide-react";
 import { toast } from "sonner";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import PlanFormModal from "@/components/admin/PlanFormModal";
 
 interface Plan {
@@ -99,6 +100,40 @@ export default function AdminPlansPage() {
         return matchSearch && matchStatus;
     });
 
+    // Helper for rendering Real-Time Pie Chart on Mini Cards
+    const renderMiniChart = (value: number, total: number, color: string = "#4F46E5") => {
+        const safeValue = isNaN(value) ? 0 : value;
+        const safeTotal = isNaN(total) || total === 0 ? 1 : total;
+        const percentage = loading ? 0 : Math.min(Math.max((safeValue / safeTotal) * 100, 0), 100);
+        
+        const data = [
+            { name: "Value", value: percentage },
+            { name: "Remainder", value: 100 - percentage }
+        ];
+
+        return (
+            <div className="w-[72px] h-[72px] shrink-0">
+                <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                        <Pie
+                            data={data}
+                            innerRadius={22}
+                            outerRadius={32}
+                            startAngle={90}
+                            endAngle={-270}
+                            dataKey="value"
+                            stroke="none"
+                            isAnimationActive={true}
+                        >
+                            <Cell fill={color} />
+                            <Cell fill="#f4f5f7" />
+                        </Pie>
+                    </PieChart>
+                </ResponsiveContainer>
+            </div>
+        );
+    };
+
     return (
         <div className="space-y-6 max-w-[1600px] mx-auto pb-10">
 
@@ -184,7 +219,9 @@ export default function AdminPlansPage() {
                                     <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> Semua paket
                                 </p>
                             </div>
-                            <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-t-gray-100 border-l-gray-100 rotate-45 shrink-0"></div>
+                            <div className="flex justify-center items-center shrink-0">
+                                {renderMiniChart(totalSubscribers > 0 ? 100 : 0, 100, "#4F46E5")}
+                            </div>
                         </div>
                     </div>
 
@@ -198,7 +235,9 @@ export default function AdminPlansPage() {
                                     <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> dari {plans.length} total
                                 </p>
                             </div>
-                            <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-r-gray-100 border-b-gray-100 rotate-[-15deg] shrink-0"></div>
+                            <div className="flex justify-center items-center shrink-0">
+                                {renderMiniChart(activePlans, plans.length, "#4F46E5")}
+                            </div>
                         </div>
                     </div>
 
@@ -212,7 +251,9 @@ export default function AdminPlansPage() {
                                     <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> {mostPopularPlan?._count.subscriptions || 0} pelanggan
                                 </p>
                             </div>
-                            <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-l-gray-100 border-r-gray-100 border-t-gray-100 rotate-[40deg] shrink-0"></div>
+                            <div className="flex justify-center items-center shrink-0">
+                                {renderMiniChart(mostPopularPlan?._count.subscriptions || 0, totalSubscribers, "#4F46E5")}
+                            </div>
                         </div>
                     </div>
 
@@ -226,7 +267,9 @@ export default function AdminPlansPage() {
                                     <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> Tier tersedia
                                 </p>
                             </div>
-                            <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-b-gray-100 rotate-[90deg] shrink-0"></div>
+                            <div className="flex justify-center items-center shrink-0">
+                                {renderMiniChart(plans.length > 0 ? 100 : 0, 100, "#4F46E5")}
+                            </div>
                         </div>
                     </div>
                 </div>
