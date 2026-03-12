@@ -47,8 +47,8 @@ export default function Footer() {
         <div className="footer-content">
           <p className="website-name">Kontak</p>
           <div className="footer-links">
-            <a href="mailto:info@luminus.id">
-              <p>info@luminus.id</p>
+            <a href="mailto:luminus.student@gmail.com">
+              <p>luminus.student@gmail.com</p>
             </a>
             <p>+62 813 4482 9209</p>
             <p>Jln. Gajah Mada, Bandung</p>

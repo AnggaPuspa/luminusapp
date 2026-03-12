@@ -21,7 +21,7 @@ export default function CourseCompletionTemplate({ name, courseTitle }: CourseCo
                         Jangan lupa bagikan sertifikat Anda di LinkedIn!
                     </Text>
                     <Section style={btnContainer}>
-                        <Link href="https://luminus.id/dashboard/courses" style={button}>
+                        <Link href="https://luminusapp.vercel.app/dashboard/courses" style={button}>
                             Unduh Sertifikat Saya
                         </Link>
                     </Section>
