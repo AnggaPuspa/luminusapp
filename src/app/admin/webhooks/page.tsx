@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { Webhook, CheckCircle2, XCircle, ArrowUpRight, MoreHorizontal, Search, Filter, X, TrendingUp, RefreshCw } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 
 export default function WebhooksPage() {
     const [webhooks, setWebhooks] = useState<any[]>([]);
@@ -52,6 +53,40 @@ export default function WebhooksPage() {
 
     const isSuccess = (status: number) => status >= 200 && status < 300;
 
+    // Helper for rendering Real-Time Pie Chart on Mini Cards
+    const renderMiniChart = (value: number, total: number, color: string = "#4F46E5") => {
+        const safeValue = isNaN(value) ? 0 : value;
+        const safeTotal = isNaN(total) || total === 0 ? 1 : total;
+        const percentage = loading ? 0 : Math.min(Math.max((safeValue / safeTotal) * 100, 0), 100);
+        
+        const data = [
+            { name: "Value", value: percentage },
+            { name: "Remainder", value: 100 - percentage }
+        ];
+
+        return (
+            <div className="w-[72px] h-[72px] shrink-0">
+                <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                        <Pie
+                            data={data}
+                            innerRadius={22}
+                            outerRadius={32}
+                            startAngle={90}
+                            endAngle={-270}
+                            dataKey="value"
+                            stroke="none"
+                            isAnimationActive={true}
+                        >
+                            <Cell fill={color} />
+                            <Cell fill="#f4f5f7" />
+                        </Pie>
+                    </PieChart>
+                </ResponsiveContainer>
+            </div>
+        );
+    };
+
     return (
         <div className="space-y-6 max-w-[1600px] mx-auto pb-10">
 
@@ -66,7 +101,9 @@ export default function WebhooksPage() {
                                 <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> 100 terbaru
                             </p>
                         </div>
-                        <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-t-gray-100 border-l-gray-100 rotate-45 shrink-0"></div>
+                        <div className="flex justify-center items-center shrink-0">
+                            {renderMiniChart(webhooks.length > 0 ? 100 : 0, 100, "#4F46E5")}
+                        </div>
                     </div>
                 </div>
 
@@ -79,7 +116,9 @@ export default function WebhooksPage() {
                                 <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> 2xx status
                             </p>
                         </div>
-                        <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#22C55E] border-r-gray-100 border-b-gray-100 rotate-[-15deg] shrink-0"></div>
+                        <div className="flex justify-center items-center shrink-0">
+                            {renderMiniChart(totalSuccess, webhooks.length || 1, "#22C55E")}
+                        </div>
                     </div>
                 </div>
 
@@ -92,7 +131,9 @@ export default function WebhooksPage() {
                                 <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> Error status
                             </p>
                         </div>
-                        <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#EF4444] border-l-gray-100 border-t-gray-100 rotate-[40deg] shrink-0"></div>
+                        <div className="flex justify-center items-center shrink-0">
+                            {renderMiniChart(totalFailed, webhooks.length || 1, "#EF4444")}
+                        </div>
                     </div>
                 </div>
 
@@ -105,7 +146,9 @@ export default function WebhooksPage() {
                                 <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> Event unik
                             </p>
                         </div>
-                        <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-b-gray-100 rotate-[90deg] shrink-0"></div>
+                        <div className="flex justify-center items-center shrink-0">
+                            {renderMiniChart(uniqueEvents, uniqueEvents > 0 ? 100 : 1, "#4F46E5")}
+                        </div>
                     </div>
                 </div>
             </div>

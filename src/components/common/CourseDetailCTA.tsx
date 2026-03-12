@@ -91,7 +91,7 @@ export default function CourseDetailCTA({
         return (
             <Link
                 href={`/kursus/${courseSlug}/belajar`}
-                className="w-full py-4 bg-[#696EFF] hover:bg-blue-700 text-white font-bold rounded-xl text-lg transition shadow-lg shadow-blue-200 flex justify-center items-center gap-2"
+                className="w-full py-4 bg-gradient-to-r from-gradient-1 to-gradient-2 hover:opacity-90 text-white font-bold rounded-xl text-lg transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 shadow-lg shadow-indigo-500/30 flex justify-center items-center gap-2"
             >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
@@ -110,7 +110,7 @@ export default function CourseDetailCTA({
                 title={courseTitle}
                 originalPrice={originalPrice}
                 discountedPrice={discountedPrice}
-                className="w-full py-4 bg-[#696EFF] hover:bg-blue-700 text-white font-bold rounded-xl text-lg transition shadow-lg shadow-blue-200 flex justify-center items-center"
+                className="w-full py-4 bg-gradient-to-r from-gradient-1 to-gradient-2 hover:opacity-90 text-white font-bold rounded-xl text-lg transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 shadow-lg shadow-indigo-500/30 flex justify-center items-center"
             />
             <p className="text-center text-sm text-gray-500 mt-4">
                 Akses selamanya & update materi gratis

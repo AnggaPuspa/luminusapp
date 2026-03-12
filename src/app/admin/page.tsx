@@ -151,8 +151,8 @@ export default async function AdminDashboardPage({
                                                 </div>
                                             </td>
                                             <td className="p-0">
-                                                <div className={`h-[64px] flex items-center px-3 text-gray-500 font-medium text-[13px] whitespace-nowrap`}>
-                                                    {tx.id.split('-')[0] + '-' + tx.id.substring(0, 4)}...
+                                                <div className={`h-[64px] flex items-center px-3 text-gray-500 font-mono font-medium text-[13px] whitespace-nowrap`}>
+                                                    #{tx.id.substring(0, 8).toUpperCase()}
                                                 </div>
                                             </td>
                                             <td className="p-0">
@@ -181,61 +181,7 @@ export default async function AdminDashboardPage({
                                 </tbody>
                             </table>
                         </div>
-                        {/* Pagination */}
-                        <div className="p-5 px-6 pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-50">
-                            <p className="text-[13px] text-gray-500">
-                                Menampilkan <span className="font-semibold text-[#1a1a1a]">{stats.latestTransactions.length}</span> dari <span className="font-semibold text-[#1a1a1a]">{stats.totalTransactions}</span> data
-                            </p>
-                            
-                            <div className="flex items-center gap-2">
-                                {hasPrevPage ? (
-                                    <Link 
-                                        href={`/admin?page=${page - 1}`}
-                                        className="h-8 px-3 flex items-center justify-center rounded-md border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 hover:text-gray-900 transition-colors text-[13px] font-medium"
-                                    >
-                                        <ChevronLeft className="w-4 h-4 mr-1" /> Prev
-                                    </Link>
-                                ) : (
-                                    <button disabled className="h-8 px-3 flex items-center justify-center rounded-md border border-gray-100 text-gray-300 bg-gray-50 cursor-not-allowed text-[13px] font-medium">
-                                        <ChevronLeft className="w-4 h-4 mr-1" /> Prev
-                                    </button>
-                                )}
-                                
-                                <div className="hidden sm:flex items-center gap-1">
-                                    {[...Array(Math.min(5, totalPages))].map((_, i) => {
-                                        let pageNum = page;
-                                        // Simple logic to show pages around current page
-                                        if (totalPages <= 5) pageNum = i + 1;
-                                        else if (page <= 3) pageNum = i + 1;
-                                        else if (page >= totalPages - 2) pageNum = totalPages - 4 + i;
-                                        else pageNum = page - 2 + i;
 
-                                        return (
-                                            <Link 
-                                                key={pageNum}
-                                                href={`/admin?page=${pageNum}`}
-                                                className={`w-8 h-8 flex items-center justify-center rounded-md text-[13px] font-medium transition-colors ${pageNum === page ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}
-                                            >
-                                                {pageNum}
-                                            </Link>
-                                        );
-                                    })}
-                                </div>
-
-                                {hasNextPage ? (
-                                    <Link 
-                                        href={`/admin?page=${page + 1}`}
-                                        className="h-8 px-3 flex items-center justify-center rounded-md border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 hover:text-gray-900 transition-colors text-[13px] font-medium"
-                                    >
-                                        Next <ChevronRight className="w-4 h-4 ml-1" />
-                                    </Link>
-                                ) : (
-                                    <button disabled className="h-8 px-3 flex items-center justify-center rounded-md border border-gray-100 text-gray-300 bg-gray-50 cursor-not-allowed text-[13px] font-medium">
-                                        Next <ChevronRight className="w-4 h-4 ml-1" />
-                                    </button>
-                                )}
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -286,17 +232,7 @@ export default async function AdminDashboardPage({
                         </div>
                     </div>
 
-                    {/* Popular Tags */}
-                    <div className="mb-9">
-                        <h3 className="text-[17px] font-bold text-[#1a1a1a] mb-5">Topik Trending</h3>
-                        <div className="flex flex-wrap gap-2">
-                            {['#webdevelopment', '#uiux', '#frontend', '#nextjs', '#golang'].map(tag => (
-                                <span key={tag} className="px-3 py-1.5 bg-gray-50/80 text-[#8e95a5] rounded text-[12.5px] font-medium border border-gray-100 hover:bg-gray-100 transition-colors cursor-pointer">
-                                    {tag}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
+
 
                     {/* Recent Messages -> Recent Reviews */}
                     <div>

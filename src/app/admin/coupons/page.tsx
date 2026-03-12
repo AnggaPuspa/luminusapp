@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { Plus, Edit2, Trash2, Tag, ArrowUpRight, MoreHorizontal, CheckCircle2, XCircle, X, TrendingUp, Search, Filter } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 
 export default function AdminCouponsPage() {
     const [coupons, setCoupons] = useState<any[]>([]);
@@ -112,6 +113,7 @@ export default function AdminCouponsPage() {
 
     const activeCoupons = coupons.filter(c => c.isActive).length;
     const totalUsed = coupons.reduce((acc, c) => acc + (c.usedCount || 0), 0);
+    const totalMaxUsesForChart = coupons.reduce((acc, c) => acc + (c.maxUses || Math.max((c.usedCount || 0) * 2, 10)), 0);
     const percentageCoupons = coupons.filter(c => c.discountType === "PERCENTAGE").length;
     const fixedCoupons = coupons.filter(c => c.discountType === "FIXED").length;
 
@@ -125,6 +127,40 @@ export default function AdminCouponsPage() {
     const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
     const startIndex = (currentPage - 1) * pageSize;
     const paginatedCoupons = filteredCoupons.slice(startIndex, startIndex + pageSize);
+
+    // Helper for rendering Real-Time Pie Chart on Mini Cards
+    const renderMiniChart = (value: number, total: number, color: string = "#4F46E5") => {
+        const safeValue = isNaN(value) ? 0 : value;
+        const safeTotal = isNaN(total) || total === 0 ? 1 : total;
+        const percentage = loading ? 0 : Math.min(Math.max((safeValue / safeTotal) * 100, 0), 100);
+        
+        const data = [
+            { name: "Value", value: percentage },
+            { name: "Remainder", value: 100 - percentage }
+        ];
+
+        return (
+            <div className="w-[72px] h-[72px] shrink-0">
+                <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                        <Pie
+                            data={data}
+                            innerRadius={22}
+                            outerRadius={32}
+                            startAngle={90}
+                            endAngle={-270}
+                            dataKey="value"
+                            stroke="none"
+                            isAnimationActive={true}
+                        >
+                            <Cell fill={color} />
+                            <Cell fill="#f4f5f7" />
+                        </Pie>
+                    </PieChart>
+                </ResponsiveContainer>
+            </div>
+        );
+    };
 
     return (
         <div className="space-y-6 max-w-[1600px] mx-auto pb-10">
@@ -204,7 +240,9 @@ export default function AdminCouponsPage() {
                                     <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> {activeCoupons} aktif
                                 </p>
                             </div>
-                            <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-t-gray-100 border-l-gray-100 rotate-45 shrink-0"></div>
+                            <div className="flex justify-center items-center shrink-0">
+                                {renderMiniChart(activeCoupons, coupons.length, "#4F46E5")}
+                            </div>
                         </div>
                     </div>
 
@@ -217,7 +255,9 @@ export default function AdminCouponsPage() {
                                     <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> Kali dipakai
                                 </p>
                             </div>
-                            <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-r-gray-100 border-b-gray-100 rotate-[-15deg] shrink-0"></div>
+                            <div className="flex justify-center items-center shrink-0">
+                                {renderMiniChart(totalUsed, totalMaxUsesForChart, "#4F46E5")}
+                            </div>
                         </div>
                     </div>
 
@@ -230,7 +270,9 @@ export default function AdminCouponsPage() {
                                     <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> Kupon % off
                                 </p>
                             </div>
-                            <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-l-gray-100 border-r-gray-100 border-t-gray-100 rotate-[40deg] shrink-0"></div>
+                            <div className="flex justify-center items-center shrink-0">
+                                {renderMiniChart(percentageCoupons, coupons.length, "#4F46E5")}
+                            </div>
                         </div>
                     </div>
 
@@ -243,7 +285,9 @@ export default function AdminCouponsPage() {
                                     <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> Kupon potongan Rp
                                 </p>
                             </div>
-                            <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-b-gray-100 rotate-[90deg] shrink-0"></div>
+                            <div className="flex justify-center items-center shrink-0">
+                                {renderMiniChart(fixedCoupons, coupons.length, "#4F46E5")}
+                            </div>
                         </div>
                     </div>
                 </div>
