@@ -13,14 +13,62 @@ export default function OrdersPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 10;
+    
+    const [stats, setStats] = useState<any>(null);
+    const [statsLoading, setStatsLoading] = useState(true);
+
+    // Date Picker state
+    const [selectedMonth, setSelectedMonth] = useState<number | "all">(new Date().getMonth());
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [showDatePicker, setShowDatePicker] = useState(false);
 
     useEffect(() => {
         fetchOrders();
     }, []);
 
     useEffect(() => {
+        fetchStats();
+    }, [selectedMonth, selectedYear]);
+
+    useEffect(() => {
         setCurrentPage(1);
     }, [searchTerm]);
+
+    const fetchStats = async () => {
+        setStatsLoading(true);
+        try {
+            const res = await fetch(`/api/admin/orders/stats?month=${selectedMonth}&year=${selectedYear}`);
+            if (res.ok) {
+                const data = await res.json();
+                setStats(data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch order stats", error);
+        } finally {
+            setStatsLoading(false);
+        }
+    };
+
+    const fetchOrders = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch("/api/admin/orders");
+            if (res.ok) {
+                const data = await res.json();
+                setOrders(data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch orders", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const calcChange = (current: number, prev: number) => {
+        if (prev === 0) return { value: current > 0 ? 100 : 0, isPositive: current >= 0 };
+        const change = ((current - prev) / prev) * 100;
+        return { value: Math.round(change * 10) / 10, isPositive: change >= 0 };
+    };
 
     const filteredOrders = orders.filter(o =>
         (o.mayarInvoiceId || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -34,22 +82,6 @@ export default function OrdersPage() {
     const startIndex = (currentPage - 1) * pageSize;
     const paginatedOrders = filteredOrders.slice(startIndex, startIndex + pageSize);
 
-    const fetchOrders = async () => {
-        try {
-            const res = await fetch("/api/admin/orders");
-            if (res.ok) {
-                const data = await res.json();
-                setOrders(data);
-            } else {
-                console.error("Failed to fetch orders");
-            }
-        } catch (error) {
-            console.error("Failed to fetch orders", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const getStatusBadgeColor = (status: string) => {
         switch (status) {
             case "PAID": return "bg-[#F0FDF4] text-[#22C55E]";
@@ -60,6 +92,19 @@ export default function OrdersPage() {
         }
     };
 
+    const MONTH_NAMES = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    const earningsChange = stats ? calcChange(stats.stats.totalEarnings, stats.stats.prevEarnings) : { value: 0, isPositive: true };
+    const salesChange = stats ? calcChange(stats.stats.totalSales, stats.stats.prevSales) : { value: 0, isPositive: true };
+    const ordersChange = stats ? calcChange(stats.stats.totalOrders, stats.stats.prevTotalOrders) : { value: 0, isPositive: true };
+    const completedChange = stats ? calcChange(stats.stats.completedOrders, stats.stats.prevCompleted) : { value: 0, isPositive: true };
+
+    // Calculate max chart height to scale bars
+    const maxChartValue = stats ? Math.max(...stats.dailyChart.map((d: any) => d.count), 1) : 1;
+
     return (
         <div className="space-y-6 max-w-[1600px] mx-auto pb-10">
             {/* Top Overview Section */}
@@ -68,10 +113,65 @@ export default function OrdersPage() {
                 <div className="xl:col-span-7 bg-white rounded-2xl p-7 shadow-sm">
                     <div className="flex justify-between items-start mb-6">
                         <h2 className="text-[17px] font-bold text-[#1a1a1a]">Sales Overview</h2>
-                        <div className="flex gap-2">
-                            <button className="p-2 bg-gray-50 border border-gray-100 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors cursor-pointer">
+                        <div className="flex gap-2 relative">
+                            <button
+                                onClick={() => setShowDatePicker(!showDatePicker)}
+                                className={`p-2 border rounded-lg transition-colors cursor-pointer ${showDatePicker ? 'bg-gray-100 border-gray-200 text-gray-900' : 'bg-gray-50 border-gray-100 text-gray-400 hover:bg-gray-100 hover:text-gray-900'}`}
+                            >
                                 <Calendar className="w-[18px] h-[18px]" strokeWidth={2} />
                             </button>
+                            
+                            {/* Date Picker Popover */}
+                            {showDatePicker && (
+                                <>
+                                    <div className="fixed inset-0 z-10" onClick={() => setShowDatePicker(false)} />
+                                    <div className="absolute top-full right-0 mt-2 z-20 bg-white rounded-xl shadow-xl border border-gray-100 p-4 w-[280px]">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <button 
+                                                onClick={() => setSelectedYear(prev => prev - 1)}
+                                                className="p-1 hover:bg-gray-100 rounded text-gray-500"
+                                            >&lt;</button>
+                                            <span className="font-semibold text-[15px]">{selectedYear}</span>
+                                            <button 
+                                                onClick={() => setSelectedYear(prev => prev + 1)}
+                                                className="p-1 hover:bg-gray-100 rounded text-gray-500"
+                                            >&gt;</button>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedMonth("all");
+                                                    setShowDatePicker(false);
+                                                }}
+                                                className={`py-2 text-[13px] col-span-3 rounded-lg transition-colors ${
+                                                    selectedMonth === "all"
+                                                        ? "bg-[#4F46E5] text-white font-medium shadow-sm"
+                                                        : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                                                }`}
+                                            >
+                                                Entire Year ({selectedYear})
+                                            </button>
+                                            {MONTH_NAMES.map((m, i) => (
+                                                <button
+                                                    key={m}
+                                                    onClick={() => {
+                                                        setSelectedMonth(i);
+                                                        setShowDatePicker(false);
+                                                    }}
+                                                    className={`py-2 text-[13px] rounded-lg transition-colors ${
+                                                        selectedMonth === i
+                                                            ? "bg-[#4F46E5] text-white font-medium shadow-sm"
+                                                            : "text-gray-600 hover:bg-gray-50"
+                                                    }`}
+                                                >
+                                                    {m.substring(0, 3)}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                            
                             <button className="p-2 bg-gray-50 border border-gray-100 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors cursor-pointer">
                                 <MoreHorizontal className="w-[18px] h-[18px]" strokeWidth={2} />
                             </button>
@@ -80,89 +180,125 @@ export default function OrdersPage() {
 
                     <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
                         <div className="flex items-baseline gap-4">
-                            <h3 className="text-[34px] font-bold text-[#1a1a1a] leading-none">35%</h3>
-                            <div className="flex items-center gap-2">
-                                <TrendingUp className="w-5 h-5 text-[#84C529]" strokeWidth={2.5} />
-                                <span className="text-[13px] font-medium text-[#8e95a5]">Last month $56,443.00</span>
-                            </div>
+                            <h3 className="text-[34px] font-bold text-[#1a1a1a] leading-none">
+                                {statsLoading ? "..." : (earningsChange.isPositive ? "+" : "") + earningsChange.value + "%"}
+                            </h3>
+                            {!statsLoading && (
+                                <div className="flex items-center gap-2">
+                                    {earningsChange.isPositive ? (
+                                        <TrendingUp className="w-5 h-5 text-[#84C529]" strokeWidth={2.5} />
+                                    ) : (
+                                        <TrendingUp className="w-5 h-5 text-red-500 scale-y-[-1]" strokeWidth={2.5} />
+                                    )}
+                                    <span className="text-[13px] font-medium text-[#8e95a5]">
+                                        Last {selectedMonth === "all" ? "year" : "month"} Rp {stats?.stats.prevEarnings.toLocaleString("id-ID")}
+                                    </span>
+                                </div>
+                            )}
                         </div>
-                        <span className="text-[13px] font-medium text-[#8e95a5]">December 2023</span>
+                        <span className="text-[13px] font-medium text-[#4F46E5] bg-[#EEEDFA] px-3 py-1 rounded-full">
+                            {selectedMonth === "all" ? `Entire Year ${selectedYear}` : `${MONTH_NAMES[selectedMonth as number]} ${selectedYear}`}
+                        </span>
                     </div>
 
-                    {/* Dummy Bar Chart */}
+                    {/* Dynamic Bar Chart */}
                     <div className="h-[140px] flex items-end justify-between gap-1 overflow-hidden px-2">
-                        {[
-                            { h: 30, t: '06' }, { h: 50, t: '07' }, { h: 90, t: '08' }, { h: 40, t: '09' },
-                            { h: 60, t: '10' }, { h: 55, t: '11' }, { h: 35, t: '12' }, { h: 45, t: '13' },
-                            { h: 30, t: '14' }, { h: 65, t: '15' }, { h: 75, t: '16' }, { h: 95, t: '17' },
-                            { h: 40, t: '18' }, { h: 80, t: '19' }, { h: 90, t: '20' }
-                        ].map((bar, i) => (
-                            <div key={i} className="flex flex-col items-center gap-3 flex-1">
-                                <div className="w-3 md:w-3.5 h-[100px] bg-gray-50 rounded-full relative overflow-hidden">
-                                    <div
-                                        className="absolute bottom-0 inset-x-0 bg-[#4F46E5] rounded-full transition-all duration-500 hover:opacity-80"
-                                        style={{ height: `${bar.h}%` }}
-                                    ></div>
+                        {statsLoading ? (
+                            <div className="w-full h-full flex items-center justify-center text-sm text-gray-400">Loading chart...</div>
+                        ) : stats?.dailyChart.map((bar: any, i: number) => {
+                            // Hitung tinggi dalam persentase, min 4% biar kelihatan buletannya
+                            const heightPercent = Math.max((bar.count / maxChartValue) * 100, 4);
+                            return (
+                                <div key={i} className="flex flex-col items-center gap-3 flex-1 group" title={`${bar.count} sales`}>
+                                    <div className={`${selectedMonth === "all" ? "w-4 md:w-6" : "w-2.5 md:w-3.5"} h-[100px] bg-gray-50 rounded-full relative overflow-hidden transition-all delay-75`}>
+                                        <div
+                                            className="absolute bottom-0 inset-x-0 bg-[#4F46E5] rounded-full transition-all duration-500 group-hover:bg-[#4338CA] group-hover:shadow-[0_0_10px_rgba(79,70,229,0.5)]"
+                                            style={{ height: `${bar.count === 0 ? 0 : heightPercent}%` }}
+                                        ></div>
+                                    </div>
+                                    {/* Only show dates logic: every other day or similar to fit */}
+                                    <span className={`text-[11px] font-medium ${selectedMonth === "all" || bar.day % 2 !== 0 ? 'text-[#8e95a5]' : 'text-transparent'}`}>
+                                        {selectedMonth === "all" ? MONTH_NAMES[bar.day - 1]?.substring(0, 3) : bar.day.toString().padStart(2, '0')}
+                                    </span>
                                 </div>
-                                <span className="text-[11px] font-medium text-[#8e95a5]">{bar.t}</span>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
 
                 {/* 4 Small Cards */}
                 <div className="xl:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
-                    {/* Card 1 */}
+                    {/* Card 1: Earnings */}
                     <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors flex flex-col justify-between">
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Earnings</p>
-                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">$12,234.99</p>
-                                <p className="text-[#84C529] font-medium text-[12px] flex items-center mt-1">
-                                    <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> +15%
+                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">
+                                    {statsLoading ? "..." : `Rp ${stats?.stats.totalEarnings.toLocaleString('id-ID')}`}
                                 </p>
+                                {!statsLoading && (
+                                    <p className={`${earningsChange.isPositive ? 'text-[#84C529]' : 'text-[#ef4444]'} font-medium text-[12px] flex items-center mt-1`}>
+                                        {earningsChange.isPositive ? <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> : <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} />}
+                                        {earningsChange.isPositive ? '+' : ''}{earningsChange.value}%
+                                    </p>
+                                )}
                             </div>
                             <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-t-gray-100 border-l-gray-100 rotate-45 shrink-0"></div>
                         </div>
                     </div>
 
-                    {/* Card 2 */}
+                    {/* Card 2: Number of Sales */}
                     <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors flex flex-col justify-between">
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Number of Sales</p>
-                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">3,847</p>
-                                <p className="text-[#ef4444] font-medium text-[12px] flex items-center mt-1">
-                                    <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> -5%
+                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">
+                                    {statsLoading ? "..." : stats?.stats.totalSales.toLocaleString('id-ID')}
                                 </p>
+                                {!statsLoading && (
+                                    <p className={`${salesChange.isPositive ? 'text-[#84C529]' : 'text-[#ef4444]'} font-medium text-[12px] flex items-center mt-1`}>
+                                        {salesChange.isPositive ? <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> : <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} />}
+                                        {salesChange.isPositive ? '+' : ''}{salesChange.value}%
+                                    </p>
+                                )}
                             </div>
                             <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-r-gray-100 border-b-gray-100 rotate-[-15deg] shrink-0"></div>
                         </div>
                     </div>
 
-                    {/* Card 3 */}
+                    {/* Card 3: Total Orders */}
                     <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors flex flex-col justify-between">
                         <div className="flex justify-between items-start">
                             <div>
-                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Product Views</p>
-                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">312,234</p>
-                                <p className="text-[#ef4444] font-medium text-[12px] flex items-center mt-1">
-                                    <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> -2%
+                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Total Orders</p>
+                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">
+                                    {statsLoading ? "..." : stats?.stats.totalOrders.toLocaleString('id-ID')}
                                 </p>
+                                {!statsLoading && (
+                                    <p className={`${ordersChange.isPositive ? 'text-[#84C529]' : 'text-[#ef4444]'} font-medium text-[12px] flex items-center mt-1`}>
+                                        {ordersChange.isPositive ? <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> : <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} />}
+                                        {ordersChange.isPositive ? '+' : ''}{ordersChange.value}%
+                                    </p>
+                                )}
                             </div>
                             <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-l-gray-100 border-r-gray-100 border-t-gray-100 rotate-[40deg] shrink-0"></div>
                         </div>
                     </div>
 
-                    {/* Card 4 */}
+                    {/* Card 4: Completed Orders */}
                     <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors flex flex-col justify-between">
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Completed Orders</p>
-                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">10,847</p>
-                                <p className="text-[#84C529] font-medium text-[12px] flex items-center mt-1">
-                                    <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> +7%
+                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">
+                                    {statsLoading ? "..." : stats?.stats.completedOrders.toLocaleString('id-ID')}
                                 </p>
+                                {!statsLoading && (
+                                    <p className={`${completedChange.isPositive ? 'text-[#84C529]' : 'text-[#ef4444]'} font-medium text-[12px] flex items-center mt-1`}>
+                                        {completedChange.isPositive ? <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> : <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} />}
+                                        {completedChange.isPositive ? '+' : ''}{completedChange.value}%
+                                    </p>
+                                )}
                             </div>
                             <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-b-gray-100 rotate-[20deg] shrink-0"></div>
                         </div>

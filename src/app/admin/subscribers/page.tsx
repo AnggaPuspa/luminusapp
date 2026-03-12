@@ -32,12 +32,35 @@ export default function AdminSubscribersPage() {
     const [loading, setLoading] = useState(true);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+    const [stats, setStats] = useState<any>(null);
+    const [statsLoading, setStatsLoading] = useState(true);
+
+    // Date Picker state
+    const [selectedMonth, setSelectedMonth] = useState<number | "all">(new Date().getMonth());
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [showDatePicker, setShowDatePicker] = useState(false);
+
     // Filters
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("ALL");
     const [tierFilter, setTierFilter] = useState("ALL");
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 10;
+
+    const fetchStats = async () => {
+        setStatsLoading(true);
+        try {
+            const res = await fetch(`/api/admin/subscribers/stats?month=${selectedMonth}&year=${selectedYear}`);
+            if (res.ok) {
+                const data = await res.json();
+                setStats(data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch subscriber stats", error);
+        } finally {
+            setStatsLoading(false);
+        }
+    };
 
     const fetchSubscribers = async () => {
         setLoading(true);
@@ -59,6 +82,10 @@ export default function AdminSubscribersPage() {
         fetchSubscribers();
     }, []);
 
+    useEffect(() => {
+        fetchStats();
+    }, [selectedMonth, selectedYear]);
+
     const handleSuspend = async (subId: string) => {
         if (!confirm("Suspend (tangguhkan) akses user ini? Status akan menjadi EXPIRED.")) return;
 
@@ -67,6 +94,7 @@ export default function AdminSubscribersPage() {
             if (res.ok) {
                 toast.success("Subscription berhasil ditangguhkan");
                 fetchSubscribers();
+                fetchStats();
             } else {
                 toast.error("Gagal menangguhkan subscription");
             }
@@ -83,6 +111,7 @@ export default function AdminSubscribersPage() {
             if (res.ok) {
                 toast.success("Subscription berhasil di-Acc Manual");
                 fetchSubscribers();
+                fetchStats();
             } else {
                 toast.error("Gagal Acc subscription");
             }
@@ -129,6 +158,24 @@ export default function AdminSubscribersPage() {
         }
     };
 
+    const MONTH_NAMES = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    const calcChange = (current: number, prev: number) => {
+        if (prev === 0) return { value: current > 0 ? 100 : 0, isPositive: current >= 0 };
+        const change = ((current - prev) / prev) * 100;
+        return { value: Math.round(change * 10) / 10, isPositive: change >= 0 };
+    };
+
+    const activeChange = stats ? calcChange(stats.stats.totalActive, stats.stats.prevActiveApprox) : { value: 0, isPositive: true };
+    const signupsChange = stats ? calcChange(stats.stats.newSignups, stats.stats.prevSignups) : { value: 0, isPositive: true };
+    const churnRateDiff = stats ? Math.round((stats.stats.churnRate - stats.stats.prevChurnRate) * 100) / 100 : 0;
+    const aiChatsChange = stats ? calcChange(stats.stats.totalAiChats, stats.stats.prevAiChats) : { value: 0, isPositive: true };
+
+    const maxChartValue = stats ? Math.max(...stats.dailyChart.map((d: any) => d.count), 1) : 1;
+
     return (
         <div className="space-y-6 max-w-[1600px] mx-auto pb-10">
             {/* Top Overview Section */}
@@ -137,10 +184,65 @@ export default function AdminSubscribersPage() {
                 <div className="xl:col-span-7 bg-white rounded-2xl p-7 shadow-sm">
                     <div className="flex justify-between items-start mb-6">
                         <h2 className="text-[17px] font-bold text-[#1a1a1a]">Subscriptions Overview</h2>
-                        <div className="flex gap-2">
-                            <button className="p-2 bg-gray-50 border border-gray-100 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors cursor-pointer">
+                        <div className="flex gap-2 relative">
+                            <button
+                                onClick={() => setShowDatePicker(!showDatePicker)}
+                                className={`p-2 border rounded-lg transition-colors cursor-pointer ${showDatePicker ? 'bg-gray-100 border-gray-200 text-gray-900' : 'bg-gray-50 border-gray-100 text-gray-400 hover:bg-gray-100 hover:text-gray-900'}`}
+                            >
                                 <Calendar className="w-[18px] h-[18px]" strokeWidth={2} />
                             </button>
+                            
+                            {/* Date Picker Popover */}
+                            {showDatePicker && (
+                                <>
+                                    <div className="fixed inset-0 z-10" onClick={() => setShowDatePicker(false)} />
+                                    <div className="absolute top-full right-0 mt-2 z-20 bg-white rounded-xl shadow-xl border border-gray-100 p-4 w-[280px]">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <button 
+                                                onClick={() => setSelectedYear(prev => prev - 1)}
+                                                className="p-1 hover:bg-gray-100 rounded text-gray-500"
+                                            >&lt;</button>
+                                            <span className="font-semibold text-[15px]">{selectedYear}</span>
+                                            <button 
+                                                onClick={() => setSelectedYear(prev => prev + 1)}
+                                                className="p-1 hover:bg-gray-100 rounded text-gray-500"
+                                            >&gt;</button>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedMonth("all");
+                                                    setShowDatePicker(false);
+                                                }}
+                                                className={`py-2 text-[13px] col-span-3 rounded-lg transition-colors ${
+                                                    selectedMonth === "all"
+                                                        ? "bg-[#4F46E5] text-white font-medium shadow-sm"
+                                                        : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                                                }`}
+                                            >
+                                                Entire Year ({selectedYear})
+                                            </button>
+                                            {MONTH_NAMES.map((m, i) => (
+                                                <button
+                                                    key={m}
+                                                    onClick={() => {
+                                                        setSelectedMonth(i);
+                                                        setShowDatePicker(false);
+                                                    }}
+                                                    className={`py-2 text-[13px] rounded-lg transition-colors ${
+                                                        selectedMonth === i
+                                                            ? "bg-[#4F46E5] text-white font-medium shadow-sm"
+                                                            : "text-gray-600 hover:bg-gray-50"
+                                                    }`}
+                                                >
+                                                    {m.substring(0, 3)}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                            
                             <button className="p-2 bg-gray-50 border border-gray-100 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors cursor-pointer">
                                 <MoreHorizontal className="w-[18px] h-[18px]" strokeWidth={2} />
                             </button>
@@ -149,89 +251,122 @@ export default function AdminSubscribersPage() {
 
                     <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
                         <div className="flex items-baseline gap-4">
-                            <h3 className="text-[34px] font-bold text-[#1a1a1a] leading-none">24%</h3>
-                            <div className="flex items-center gap-2">
-                                <TrendingUp className="w-5 h-5 text-[#84C529]" strokeWidth={2.5} />
-                                <span className="text-[13px] font-medium text-[#8e95a5]">Growth rate M-o-M</span>
-                            </div>
+                            <h3 className="text-[34px] font-bold text-[#1a1a1a] leading-none">
+                                {statsLoading ? "..." : (signupsChange.isPositive ? "+" : "") + signupsChange.value + "%"}
+                            </h3>
+                            {!statsLoading && (
+                                <div className="flex items-center gap-2">
+                                    {signupsChange.isPositive ? (
+                                        <TrendingUp className="w-5 h-5 text-[#84C529]" strokeWidth={2.5} />
+                                    ) : (
+                                        <TrendingUp className="w-5 h-5 text-red-500 scale-y-[-1]" strokeWidth={2.5} />
+                                    )}
+                                    <span className="text-[13px] font-medium text-[#8e95a5]">Growth rate M-o-M</span>
+                                </div>
+                            )}
                         </div>
-                        <span className="text-[13px] font-medium text-[#8e95a5]">December 2023</span>
+                        <span className="text-[13px] font-medium text-[#4F46E5] bg-[#EEEDFA] px-3 py-1 rounded-full">
+                            {selectedMonth === "all" ? `Entire Year ${selectedYear}` : `${MONTH_NAMES[selectedMonth as number]} ${selectedYear}`}
+                        </span>
                     </div>
 
-                    {/* Dummy Bar Chart */}
+                    {/* Dynamic Bar Chart */}
                     <div className="h-[140px] flex items-end justify-between gap-1 overflow-hidden px-2">
-                        {[
-                            { h: 40, t: '06' }, { h: 60, t: '07' }, { h: 30, t: '08' }, { h: 90, t: '09' },
-                            { h: 70, t: '10' }, { h: 85, t: '11' }, { h: 45, t: '12' }, { h: 65, t: '13' },
-                            { h: 50, t: '14' }, { h: 35, t: '15' }, { h: 85, t: '16' }, { h: 100, t: '17' },
-                            { h: 30, t: '18' }, { h: 70, t: '19' }, { h: 95, t: '20' }
-                        ].map((bar, i) => (
-                            <div key={i} className="flex flex-col items-center gap-3 flex-1">
-                                <div className="w-3 md:w-3.5 h-[100px] bg-gray-50 rounded-full relative overflow-hidden">
-                                    <div
-                                        className="absolute bottom-0 inset-x-0 bg-[#4F46E5] rounded-full transition-all duration-500 hover:opacity-80"
-                                        style={{ height: `${bar.h}%` }}
-                                    ></div>
+                        {statsLoading ? (
+                            <div className="w-full h-full flex items-center justify-center text-sm text-gray-400">Loading chart...</div>
+                        ) : stats?.dailyChart.map((bar: any, i: number) => {
+                            // Hitung tinggi dalam persentase, min 4% biar kelihatan buletannya
+                            const heightPercent = Math.max((bar.count / maxChartValue) * 100, 4);
+                            return (
+                                <div key={i} className="flex flex-col items-center gap-3 flex-1 group" title={`${bar.count} signups`}>
+                                    <div className={`${selectedMonth === "all" ? "w-4 md:w-6" : "w-2.5 md:w-3.5"} h-[100px] bg-gray-50 rounded-full relative overflow-hidden transition-all delay-75`}>
+                                        <div
+                                            className="absolute bottom-0 inset-x-0 bg-[#4F46E5] rounded-full transition-all duration-500 group-hover:bg-[#4338CA] group-hover:shadow-[0_0_10px_rgba(79,70,229,0.5)]"
+                                            style={{ height: `${bar.count === 0 ? 0 : heightPercent}%` }}
+                                        ></div>
+                                    </div>
+                                    <span className={`text-[11px] font-medium ${selectedMonth === "all" || bar.day % 2 !== 0 ? 'text-[#8e95a5]' : 'text-transparent'}`}>
+                                        {selectedMonth === "all" ? MONTH_NAMES[bar.day - 1]?.substring(0, 3) : bar.day.toString().padStart(2, '0')}
+                                    </span>
                                 </div>
-                                <span className="text-[11px] font-medium text-[#8e95a5]">{bar.t}</span>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
 
                 {/* 4 Small Cards */}
                 <div className="xl:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
-                    {/* Card 1 */}
+                    {/* Card 1: Total Subscribers */}
                     <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors flex flex-col justify-between">
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Total Subscribers</p>
-                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">{subscribers.filter(s => s.status === 'ACTIVE').length + 845}</p>
-                                <p className="text-[#84C529] font-medium text-[12px] flex items-center mt-1">
-                                    <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> +12%
+                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">
+                                    {statsLoading ? "..." : stats?.stats.totalActive.toLocaleString('id-ID')}
                                 </p>
+                                {!statsLoading && (
+                                    <p className={`${activeChange.isPositive ? 'text-[#84C529]' : 'text-[#ef4444]'} font-medium text-[12px] flex items-center mt-1`}>
+                                        {activeChange.isPositive ? <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> : <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} />}
+                                        {activeChange.isPositive ? '+' : ''}{activeChange.value}%
+                                    </p>
+                                )}
                             </div>
                             <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-t-gray-100 border-l-gray-100 rotate-[60deg] shrink-0"></div>
                         </div>
                     </div>
 
-                    {/* Card 2 */}
+                    {/* Card 2: New Signups */}
                     <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors flex flex-col justify-between">
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">New Signups</p>
-                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">247</p>
-                                <p className="text-[#84C529] font-medium text-[12px] flex items-center mt-1">
-                                    <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> +8%
+                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">
+                                    {statsLoading ? "..." : stats?.stats.newSignups.toLocaleString('id-ID')}
                                 </p>
+                                {!statsLoading && (
+                                    <p className={`${signupsChange.isPositive ? 'text-[#84C529]' : 'text-[#ef4444]'} font-medium text-[12px] flex items-center mt-1`}>
+                                        {signupsChange.isPositive ? <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> : <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} />}
+                                        {signupsChange.isPositive ? '+' : ''}{signupsChange.value}%
+                                    </p>
+                                )}
                             </div>
                             <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-r-gray-100 border-b-gray-100 rotate-[10deg] shrink-0"></div>
                         </div>
                     </div>
 
-                    {/* Card 3 */}
+                    {/* Card 3: Churn Rate */}
                     <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors flex flex-col justify-between">
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Churn Rate</p>
-                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">1.2%</p>
-                                <p className="text-[#ef4444] font-medium text-[12px] flex items-center mt-1">
-                                    <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> -0.3%
+                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">
+                                    {statsLoading ? "..." : `${stats?.stats.churnRate}%`}
                                 </p>
+                                {!statsLoading && (
+                                    <p className={`${churnRateDiff <= 0 ? 'text-[#84C529]' : 'text-[#ef4444]'} font-medium text-[12px] flex items-center mt-1`}>
+                                        {churnRateDiff <= 0 ? <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> : <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} />}
+                                        {churnRateDiff > 0 ? '+' : ''}{churnRateDiff}%
+                                    </p>
+                                )}
                             </div>
                             <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-l-gray-100 border-r-gray-100 border-t-gray-100 rotate-[40deg] shrink-0"></div>
                         </div>
                     </div>
 
-                    {/* Card 4 */}
+                    {/* Card 4: AI Chats Synced */}
                     <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors flex flex-col justify-between">
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">AI Chats Synced</p>
-                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">14,289</p>
-                                <p className="text-[#84C529] font-medium text-[12px] flex items-center mt-1">
-                                    <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> +22%
+                                <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">
+                                    {statsLoading ? "..." : stats?.stats.totalAiChats.toLocaleString('id-ID')}
                                 </p>
+                                {!statsLoading && (
+                                    <p className={`${aiChatsChange.isPositive ? 'text-[#84C529]' : 'text-[#ef4444]'} font-medium text-[12px] flex items-center mt-1`}>
+                                        {aiChatsChange.isPositive ? <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> : <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} />}
+                                        {aiChatsChange.isPositive ? '+' : ''}{aiChatsChange.value}%
+                                    </p>
+                                )}
                             </div>
                             <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-b-gray-100 rotate-[90deg] shrink-0"></div>
                         </div>
