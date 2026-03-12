@@ -62,7 +62,7 @@ export default function LessonFormModal({ isOpen, onClose, onSubmit, initialData
             onClose();
         } catch (error) {
             console.error("Failed to submit lesson", error);
-            alert("Failed to save lesson.");
+            alert("Gagal menyimpan materi.");
         } finally {
             setLoading(false);
         }
@@ -73,7 +73,7 @@ export default function LessonFormModal({ isOpen, onClose, onSubmit, initialData
             <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 md:p-8">
                 <div className="flex justify-between items-center mb-6 border-b pb-4">
                     <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
-                        {initialData ? "Edit Lesson" : "Add New Lesson"}
+                        {initialData ? "Edit Materi" : "Tambah Materi Baru"}
                     </h2>
                     <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors">
                         <X className="w-5 h-5" />
@@ -82,10 +82,10 @@ export default function LessonFormModal({ isOpen, onClose, onSubmit, initialData
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Lesson Title</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Judul Materi</label>
                         <Input
                             required
-                            placeholder="e.g. Introduction to Next.js"
+                            placeholder="contoh: Pengenalan Next.js"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             className="bg-white"
@@ -96,7 +96,7 @@ export default function LessonFormModal({ isOpen, onClose, onSubmit, initialData
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Video URL (Embed)
                         </label>
-                        <p className="text-xs text-gray-500 mb-2">Provide a YouTube or Vimeo embed URL if available.</p>
+                        <p className="text-xs text-gray-500 mb-2">Masukkan URL embed YouTube atau Vimeo jika tersedia.</p>
                         <Input
                             placeholder="https://www.youtube.com/embed/..."
                             value={videoUrl}
@@ -107,7 +107,7 @@ export default function LessonFormModal({ isOpen, onClose, onSubmit, initialData
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Duration (minutes)
+                            Durasi (menit)
                         </label>
                         <Input
                             type="number"
@@ -121,12 +121,12 @@ export default function LessonFormModal({ isOpen, onClose, onSubmit, initialData
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Content (Markdown)
+                            Konten (Markdown)
                         </label>
                         <textarea
                             rows={8}
                             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white resize-y"
-                            placeholder="Write your lesson content here using Markdown formatting..."
+                            placeholder="Tulis konten materi di sini menggunakan format Markdown..."
                             value={content}
                             onChange={(e) => setContent(e.target.value)}
                         />
@@ -136,7 +136,7 @@ export default function LessonFormModal({ isOpen, onClose, onSubmit, initialData
                     <div className="border border-gray-200 rounded-lg p-4 bg-gray-50/50">
                         <div className="flex items-center justify-between mb-3">
                             <div>
-                                <h3 className="text-sm font-semibold text-gray-900">Premium Resources</h3>
+                                <h3 className="text-sm font-semibold text-gray-900">Resource Premium</h3>
                                 <p className="text-xs text-gray-500">File download atau link yang hanya bisa diakses oleh Subscriber.</p>
                             </div>
                             <Button
@@ -146,7 +146,7 @@ export default function LessonFormModal({ isOpen, onClose, onSubmit, initialData
                                 onClick={() => setResources([...resources, { title: "", url: "" }])}
                                 className="h-8 text-xs bg-white"
                             >
-                                <Plus className="w-3 h-3 mr-1" /> Add Link
+                                <Plus className="w-3 h-3 mr-1" /> Tambah Link
                             </Button>
                         </div>
 
@@ -160,7 +160,7 @@ export default function LessonFormModal({ isOpen, onClose, onSubmit, initialData
                                     <div key={index} className="flex items-start gap-2 bg-white p-2 border rounded-md">
                                         <div className="flex-1 space-y-2">
                                             <Input
-                                                placeholder="Nama File/Link (e.g. Source Code Starter)"
+                                                placeholder="Nama File/Link (contoh: Source Code Starter)"
                                                 value={res.title}
                                                 onChange={(e) => {
                                                     const newRes = [...resources];
@@ -199,10 +199,10 @@ export default function LessonFormModal({ isOpen, onClose, onSubmit, initialData
 
                     <div className="flex justify-end gap-3 pt-4 border-t">
                         <Button type="button" variant="outline" onClick={onClose}>
-                            Cancel
+                            Batal
                         </Button>
                         <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700">
-                            {loading ? "Saving..." : "Save Lesson"}
+                            {loading ? "Menyimpan..." : "Simpan Materi"}
                         </Button>
                     </div>
                 </form>

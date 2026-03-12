@@ -15,6 +15,7 @@ export function useSettings() {
     const [formData, setFormData] = useState({
         name: "",
         email: "",
+        phoneNumber: "",
         password: "",
         role: "STUDENT",
         createdAt: "",
@@ -24,9 +25,10 @@ export function useSettings() {
     const [originalData, setOriginalData] = useState({
         name: "",
         email: "",
+        phoneNumber: "",
     });
 
-    const isDirty = formData.name !== originalData.name || formData.email !== originalData.email || formData.password.trim() !== "";
+    const isDirty = formData.name !== originalData.name || formData.email !== originalData.email || formData.phoneNumber !== originalData.phoneNumber || formData.password.trim() !== "";
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -37,6 +39,7 @@ export function useSettings() {
                     setFormData({
                         name: data.name || "",
                         email: data.email || "",
+                        phoneNumber: data.phoneNumber || "",
                         password: "",
                         role: data.role || "STUDENT",
                         createdAt: data.createdAt ? format(new Date(data.createdAt), "MMMM yyyy", { locale: localeId }) : "",
@@ -45,6 +48,7 @@ export function useSettings() {
                     setOriginalData({
                         name: data.name || "",
                         email: data.email || "",
+                        phoneNumber: data.phoneNumber || "",
                     });
                 }
             } catch (error) {
@@ -118,6 +122,9 @@ export function useSettings() {
             if (formData.password.trim() !== "") {
                 payload.password = formData.password;
             }
+            if (formData.phoneNumber !== originalData.phoneNumber) {
+                payload.phoneNumber = formData.phoneNumber;
+            }
 
             const res = await fetch("/api/student/profile", {
                 method: "PUT",
@@ -128,7 +135,7 @@ export function useSettings() {
             if (res.ok) {
                 toast.success("Profil berhasil diperbarui!");
                 setFormData(prev => ({ ...prev, password: "" }));
-                setOriginalData({ name: formData.name, email: formData.email });
+                setOriginalData({ name: formData.name, email: formData.email, phoneNumber: formData.phoneNumber });
                 invalidateProfile();
                 invalidateDashboard();
             } else {
@@ -144,7 +151,7 @@ export function useSettings() {
     };
 
     const resetForm = () => {
-        setFormData({ ...formData, name: originalData.name, email: originalData.email, password: "" });
+        setFormData({ ...formData, name: originalData.name, email: originalData.email, phoneNumber: originalData.phoneNumber, password: "" });
     };
 
     return {

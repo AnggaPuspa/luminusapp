@@ -41,6 +41,29 @@ export default async function Home() {
     take: 6, // Show latest 6 on home
   }) as any;
 
+  const topReviews = await prisma.courseReview.findMany({
+    where: {
+        rating: { gte: 4 }, // Only fetch 4 or 5 star reviews
+        comment: { not: "" }
+    },
+    select: {
+        id: true,
+        rating: true,
+        comment: true,
+        createdAt: true,
+        user: {
+            select: {
+                name: true,
+                avatarUrl: true
+            }
+        }
+    },
+    orderBy: {
+        createdAt: 'desc'
+    },
+    take: 6 // Show latest 6 top reviews
+  });
+
   return (
     <>
       <ScrollButton />
@@ -52,7 +75,7 @@ export default async function Home() {
       <Testimonials />
       <Pricing />
       <FAQ />
-      <Forum />
+      <Forum reviews={topReviews} />
       <CTA />
       <Footer />
     </>

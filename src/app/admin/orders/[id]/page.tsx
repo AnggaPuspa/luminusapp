@@ -28,7 +28,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             setOrder(data);
         } catch (error) {
             console.error(error);
-            toast.error("Failed to load order details");
+            toast.error("Gagal memuat detail order");
             router.push("/admin/orders");
         } finally {
             setLoading(false);
@@ -36,7 +36,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     };
 
     const handleUpdateStatus = async (newStatus: "PAID" | "FAILED" | "EXPIRED") => {
-        if (!confirm(`Are you sure you want to change the status to ${newStatus}?`)) return;
+        if (!confirm(`Apakah Anda yakin ingin mengubah status menjadi ${newStatus}?`)) return;
 
         setUpdating(true);
         try {
@@ -48,14 +48,14 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
             if (!res.ok) {
                 const errData = await res.json();
-                throw new Error(errData.error || "Failed to update status");
+                throw new Error(errData.error || "Gagal mengubah status");
             }
 
-            toast.success(`Order status updated to ${newStatus}`);
+            toast.success(`Status order diperbarui ke ${newStatus}`);
             fetchOrder(); // Refresh data
         } catch (error: any) {
             console.error(error);
-            toast.error(error.message || "An error occurred");
+            toast.error(error.message || "Terjadi kesalahan");
         } finally {
             setUpdating(false);
         }
@@ -82,7 +82,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     };
 
     if (loading) {
-        return <div className="p-8 text-center text-gray-500">Loading order details...</div>;
+        return <div className="p-8 text-center text-gray-500">Memuat detail order...</div>;
     }
 
     if (!order) return null;
@@ -96,7 +96,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                     </Link>
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Order #{order.id.slice(-8)}</h1>
-                        <p className="text-gray-500 mt-1">Transaction details and manual overrides</p>
+                        <p className="text-gray-500 mt-1">Detail transaksi dan pengelolaan manual</p>
                     </div>
                 </div>
 
@@ -108,7 +108,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                             disabled={updating}
                             className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50 transition-colors"
                         >
-                            Mark as PAID
+                            Tandai LUNAS
                         </button>
                     )}
                     {order.status === "PENDING" && (
@@ -117,7 +117,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                             disabled={updating}
                             className="px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 disabled:opacity-50 transition-colors border border-red-200"
                         >
-                            Mark as FAILED
+                            Tandai GAGAL
                         </button>
                     )}
                 </div>
@@ -129,14 +129,14 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                     <div>
                         <h2 className="text-lg font-bold">Status: {order.status}</h2>
                         <p className="text-sm opacity-80">
-                            {order.status === "PAID" ? `Paid on ${format(new Date(order.paidAt || order.updatedAt), "PPP p", { locale: localeId })}` : `Created on ${format(new Date(order.createdAt), "PPP p", { locale: localeId })}`}
+                            {order.status === "PAID" ? `Dibayar pada ${format(new Date(order.paidAt || order.updatedAt), "PPP p", { locale: localeId })}` : `Dibuat pada ${format(new Date(order.createdAt), "PPP p", { locale: localeId })}`}
                         </p>
                     </div>
                 </div>
                 <div className="text-right">
-                    <p className="text-sm opacity-80 uppercase tracking-wider font-semibold">Total Amount</p>
+                    <p className="text-sm opacity-80 uppercase tracking-wider font-semibold">Total Pembayaran</p>
                     <p className="text-3xl font-bold font-mono">
-                        {order.amount === 0 ? "FREE" : `Rp ${order.amount.toLocaleString("id-ID")}`}
+                        {order.amount === 0 ? "GRATIS" : `Rp ${order.amount.toLocaleString("id-ID")}`}
                     </p>
                 </div>
             </div>
@@ -144,10 +144,10 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Customer Info */}
                 <div className="bg-white border rounded-xl p-6 shadow-sm">
-                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">Customer Details</h3>
+                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">Detail Pelanggan</h3>
                     <div className="space-y-3">
                         <div>
-                            <p className="text-xs text-gray-500 font-medium">Name</p>
+                            <p className="text-xs text-gray-500 font-medium">Nama</p>
                             <p className="text-sm font-medium text-gray-900">{order.user.name}</p>
                         </div>
                         <div>
@@ -163,7 +163,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
                 {/* Course Info */}
                 <div className="bg-white border rounded-xl p-6 shadow-sm">
-                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">Course Details</h3>
+                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">Detail Kursus</h3>
                     <div className="flex gap-4">
                         {order.course.thumbnailUrl && (
                             <img src={order.course.thumbnailUrl} alt={order.course.title} className="w-24 h-16 object-cover rounded-md border" />
@@ -171,7 +171,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                         <div className="space-y-1">
                             <p className="font-medium text-gray-900 line-clamp-2">{order.course.title}</p>
                             <Link href={`/admin/courses/${order.course.id}`} className="text-xs text-blue-600 hover:underline inline-block mt-1">
-                                View Course &rarr;
+                                Lihat Kursus &rarr;
                             </Link>
                         </div>
                     </div>
@@ -186,18 +186,18 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                             <p className="text-sm font-mono text-gray-900">{order.mayarInvoiceId || "N/A"}</p>
                         </div>
                         <div>
-                            <p className="text-xs text-gray-500 font-medium">Payment Method</p>
+                            <p className="text-xs text-gray-500 font-medium">Metode Pembayaran</p>
                             <p className="text-sm text-gray-900">{order.paymentMethod || "N/A"}</p>
                         </div>
                         <div>
-                            <p className="text-xs text-gray-500 font-medium">Payment Channel</p>
+                            <p className="text-xs text-gray-500 font-medium">Channel Pembayaran</p>
                             <p className="text-sm text-gray-900 uppercase">{order.paymentChannel || "N/A"}</p>
                         </div>
                         {order.mayarInvoiceUrl && (
                             <div>
-                                <p className="text-xs text-gray-500 font-medium mb-1">Invoice Link</p>
+                                <p className="text-xs text-gray-500 font-medium mb-1">Link Invoice</p>
                                 <a href={order.mayarInvoiceUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">
-                                    Open in Mayar &nearr;
+                                    Buka di Mayar &nearr;
                                 </a>
                             </div>
                         )}
@@ -208,7 +208,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                 <div className="bg-white border rounded-xl p-6 shadow-sm md:col-span-2">
                     <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 border-b pb-2 flex justify-between items-center">
                         Webhook Logs
-                        <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">{order.webhookLogs?.length || 0} events</span>
+                        <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">{order.webhookLogs?.length || 0} event</span>
                     </h3>
 
                     {order.webhookLogs && order.webhookLogs.length > 0 ? (
@@ -230,7 +230,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                                     </div>
 
                                     <details className="mt-3 cursor-pointer group">
-                                        <summary className="text-xs font-medium text-blue-600 group-hover:underline">View Payload</summary>
+                                        <summary className="text-xs font-medium text-blue-600 group-hover:underline">Lihat Payload</summary>
                                         <pre className="mt-2 text-xs text-gray-600 bg-gray-800 text-gray-200 p-3 rounded-lg overflow-x-auto">
                                             {JSON.stringify(log.payload, null, 2)}
                                         </pre>
@@ -239,7 +239,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                             ))}
                         </div>
                     ) : (
-                        <p className="text-sm text-gray-500 text-center py-4">No webhook logs received for this order yet.</p>
+                        <p className="text-sm text-gray-500 text-center py-4">Belum ada webhook log untuk order ini.</p>
                     )}
                 </div>
             </div>

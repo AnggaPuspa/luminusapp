@@ -108,13 +108,13 @@ export default function AdminPlansPage() {
                 {/* Left: Plan Overview Panel (replaces chart) */}
                 <div className="xl:col-span-7 bg-white rounded-2xl p-7 shadow-sm">
                     <div className="flex justify-between items-start mb-6">
-                        <h2 className="text-[17px] font-bold text-[#1a1a1a]">Plan Overview</h2>
+                        <h2 className="text-[17px] font-bold text-[#1a1a1a]">Ringkasan Paket</h2>
                         <div className="flex gap-2">
                             <button
                                 onClick={handleCreateNew}
                                 className="flex items-center gap-1.5 bg-[#4F46E5] text-white px-4 py-2 rounded-lg text-[13px] font-semibold hover:bg-[#4338CA] transition-colors"
                             >
-                                <Plus className="w-4 h-4" strokeWidth={2.5} /> Buat Plan
+                                <Plus className="w-4 h-4" strokeWidth={2.5} /> Buat Paket
                             </button>
                             <button className="p-2 bg-gray-50 border border-gray-100 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors cursor-pointer">
                                 <MoreHorizontal className="w-[18px] h-[18px]" strokeWidth={2} />
@@ -128,10 +128,10 @@ export default function AdminPlansPage() {
                             <h3 className="text-[34px] font-bold text-[#1a1a1a] leading-none">{activePlans} Aktif</h3>
                             <div className="flex items-center gap-2">
                                 <TrendingUp className="w-5 h-5 text-[#84C529]" strokeWidth={2.5} />
-                                <span className="text-[13px] font-medium text-[#8e95a5]">{plans.length} total plan terdaftar</span>
+                                <span className="text-[13px] font-medium text-[#8e95a5]">{plans.length} total paket terdaftar</span>
                             </div>
                         </div>
-                        <span className="text-[13px] font-medium text-[#8e95a5]">{totalSubscribers} total subscribers</span>
+                        <span className="text-[13px] font-medium text-[#8e95a5]">{totalSubscribers} total pelanggan</span>
                     </div>
 
                     {/* Plan Tier Distribution Bar */}
@@ -143,7 +143,7 @@ export default function AdminPlansPage() {
                                 ))}
                             </div>
                         ) : plans.length === 0 ? (
-                            <div className="py-8 text-center text-[13px] text-[#8e95a5] font-medium">Belum ada plan. Buat plan pertama Anda.</div>
+                            <div className="py-8 text-center text-[13px] text-[#8e95a5] font-medium">Belum ada paket. Buat paket pertama Anda.</div>
                         ) : (
                             plans.map((plan) => {
                                 const pct = totalSubscribers > 0 ? Math.round((plan._count.subscriptions / totalSubscribers) * 100) : 0;
@@ -156,7 +156,7 @@ export default function AdminPlansPage() {
                                             </div>
                                             <div className="flex items-center gap-3">
                                                 <span className="text-[13px] font-semibold text-[#1a1a1a]">{formatCurrency(plan.monthlyPrice).replace(',00', '')}</span>
-                                                <span className="text-[12px] text-[#8e95a5] font-medium">{plan._count.subscriptions} subs ({pct}%)</span>
+                                                <span className="text-[12px] text-[#8e95a5] font-medium">{plan._count.subscriptions} pelanggan ({pct}%)</span>
                                             </div>
                                         </div>
                                         <div className="w-full bg-gray-100 rounded-full h-[7px] overflow-hidden">
@@ -178,10 +178,10 @@ export default function AdminPlansPage() {
                     <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors flex flex-col justify-between">
                         <div className="flex justify-between items-start">
                             <div>
-                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Total Subscribers</p>
+                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Total Pelanggan</p>
                                 <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">{loading ? "—" : totalSubscribers.toLocaleString("id-ID")}</p>
                                 <p className="text-[#84C529] font-medium text-[12px] flex items-center mt-1">
-                                    <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> All plans
+                                    <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> Semua paket
                                 </p>
                             </div>
                             <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-t-gray-100 border-l-gray-100 rotate-45 shrink-0"></div>
@@ -192,7 +192,7 @@ export default function AdminPlansPage() {
                     <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors flex flex-col justify-between">
                         <div className="flex justify-between items-start">
                             <div>
-                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Plan Aktif</p>
+                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Paket Aktif</p>
                                 <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">{loading ? "—" : activePlans}</p>
                                 <p className="text-[#84C529] font-medium text-[12px] flex items-center mt-1">
                                     <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> dari {plans.length} total
@@ -209,7 +209,7 @@ export default function AdminPlansPage() {
                                 <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Plan Terpopuler</p>
                                 <p className="text-[24px] font-bold text-[#1a1a1a] mb-2 truncate max-w-[120px]">{loading ? "—" : (mostPopularPlan?.name || "—")}</p>
                                 <p className="text-[#84C529] font-medium text-[12px] flex items-center mt-1">
-                                    <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> {mostPopularPlan?._count.subscriptions || 0} subs
+                                    <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> {mostPopularPlan?._count.subscriptions || 0} pelanggan
                                 </p>
                             </div>
                             <div className="relative w-[50px] h-[50px] rounded-full border-[6px] border-[#4F46E5] border-l-gray-100 border-r-gray-100 border-t-gray-100 rotate-[40deg] shrink-0"></div>
@@ -220,7 +220,7 @@ export default function AdminPlansPage() {
                     <div className="bg-white rounded-2xl p-6 shadow-sm border border-transparent hover:border-gray-50 transition-colors flex flex-col justify-between">
                         <div className="flex justify-between items-start">
                             <div>
-                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Total Plans</p>
+                                <p className="text-[#8e95a5] text-[13px] font-medium mb-1.5">Total Paket</p>
                                 <p className="text-[24px] font-bold text-[#1a1a1a] mb-2">{loading ? "—" : plans.length}</p>
                                 <p className="text-[#84C529] font-medium text-[12px] flex items-center mt-1">
                                     <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" strokeWidth={3} /> Tier tersedia
@@ -256,7 +256,7 @@ export default function AdminPlansPage() {
                                 onChange={(e) => setStatusFilter(e.target.value)}
                                 className="appearance-none pl-4 pr-10 py-2 border border-gray-100 bg-gray-50 rounded-lg text-[13px] font-medium focus:outline-none focus:ring-1 focus:ring-[#4F46E5] transition-colors cursor-pointer hover:bg-gray-100 text-gray-600"
                             >
-                                <option value="ALL">All Status</option>
+                                <option value="ALL">Semua Status</option>
                                 <option value="ACTIVE">Aktif</option>
                                 <option value="INACTIVE">Draft</option>
                             </select>
@@ -276,8 +276,8 @@ export default function AdminPlansPage() {
                 ) : filteredPlans.length === 0 ? (
                     <div className="py-16 text-center flex flex-col items-center gap-3">
                         <Award className="w-10 h-10 text-gray-300" />
-                        <p className="text-[14px] font-semibold text-[#1a1a1a]">{searchTerm || statusFilter !== 'ALL' ? 'Tidak ada plan ditemukan' : 'Belum ada paket'}</p>
-                        <p className="text-[13px] text-[#8e95a5] font-medium">{searchTerm || statusFilter !== 'ALL' ? 'Coba ubah filter pencarian' : "Klik 'Buat Plan' untuk memulai"}</p>
+                        <p className="text-[14px] font-semibold text-[#1a1a1a]">{searchTerm || statusFilter !== 'ALL' ? 'Tidak ada paket ditemukan' : 'Belum ada paket'}</p>
+                        <p className="text-[13px] text-[#8e95a5] font-medium">{searchTerm || statusFilter !== 'ALL' ? 'Coba ubah filter pencarian' : "Klik 'Buat Paket' untuk memulai"}</p>
                     </div>
                 ) : (
                     <div className="p-6">
@@ -328,11 +328,11 @@ export default function AdminPlansPage() {
                                     <div className="flex items-center gap-4 mb-4 text-[12px] font-medium text-[#8e95a5]">
                                         <div className="flex items-center gap-1.5">
                                             <Users className="w-3.5 h-3.5" />
-                                            <span>{plan._count.subscriptions} subscribers</span>
+                                            <span>{plan._count.subscriptions} pelanggan</span>
                                         </div>
                                         <div className="flex items-center gap-1.5">
                                             <BookOpen className="w-3.5 h-3.5" />
-                                            <span>{plan.allCoursesIncluded ? "Full Access" : `${plan._count.includedCourses} kelas`}</span>
+                                            <span>{plan.allCoursesIncluded ? "Akses Penuh" : `${plan._count.includedCourses} kelas`}</span>
                                         </div>
                                     </div>
 
@@ -342,12 +342,12 @@ export default function AdminPlansPage() {
                                             onClick={() => handleEdit(plan.id)}
                                             className="flex-1 flex items-center justify-center gap-1.5 py-2 border border-gray-200 rounded-lg text-[12px] font-semibold text-gray-600 hover:bg-gray-50 hover:text-[#4F46E5] hover:border-[#4F46E5]/30 transition-colors"
                                         >
-                                            <Edit2 className="w-3.5 h-3.5" /> Edit Plan
+                                            <Edit2 className="w-3.5 h-3.5" /> Edit Paket
                                         </button>
                                         <button
                                             onClick={() => handleDelete(plan.id)}
                                             disabled={plan._count.subscriptions > 0}
-                                            title={plan._count.subscriptions > 0 ? "Ada subscriber aktif" : "Hapus plan"}
+                                            title={plan._count.subscriptions > 0 ? "Ada pelanggan aktif" : "Hapus paket"}
                                             className="w-10 flex items-center justify-center border border-gray-100 text-gray-400 rounded-lg hover:bg-[#FEF2F2] hover:text-[#EF4444] hover:border-[#EF4444]/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                         >
                                             <Trash2 className="w-3.5 h-3.5" />

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { sendSubscriptionExpiredEmail } from "@/lib/email";
 
 export async function GET(request: Request) {
     try {
@@ -63,7 +64,22 @@ export async function GET(request: Request) {
                 data: { status: "FAILED", failureReason: "Expired before payment", failedAt: now }
             });
 
-            // TODO: Send "Subscription Terminated" email
+            // 4. Send "Subscription Terminated" email
+            for (const expiredSub of expiredSubs) {
+                const subDetail = await prisma.userSubscription.findUnique({
+                    where: { id: expiredSub.id },
+                    include: { user: true, plan: true }
+                });
+
+                if (subDetail?.user && subDetail?.plan) {
+                    sendSubscriptionExpiredEmail(
+                        subDetail.user.name || "Siswa",
+                        subDetail.user.email,
+                        subDetail.plan.name
+                    ).catch((err: any) => console.error("Subscription Expired email error:", err));
+                }
+            }
+
             console.log(`[Cron] Expired ${subIds.length} subscriptions due to non-payment.`);
         }
 

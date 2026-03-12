@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { verifyMayarWebhook } from "@/lib/mayar";
-import { sendPaymentSuccessEmail } from "@/lib/email";
+import { sendPaymentSuccessEmail, sendSubscriptionSuccessEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
     try {
@@ -74,7 +74,20 @@ export async function POST(request: Request) {
                     })
                 ]);
 
-                // TODO: We could send a "Subscription Activated/Renewed" email here
+                // Fetch user data for the email
+                const user = await prisma.user.findUnique({ where: { id: sub.userId } });
+                const plan = await prisma.subscriptionPlan.findUnique({ where: { id: sub.planId } });
+
+                if (user && plan) {
+                    sendSubscriptionSuccessEmail(
+                        user.name || "Siswa",
+                        user.email,
+                        plan.name,
+                        subInvoice.amount,
+                        sub.billingCycle
+                    ).catch((err: any) => console.error("Subscription Success email error:", err));
+                }
+
                 console.log(`[Webhook] Subscription ${sub.id} activated/renewed successfully.`);
             } else {
                 // SECOND: If not a subscription, process as One-Time Transaction

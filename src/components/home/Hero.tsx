@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { HeroVideoModal } from './HeroVideoModal';
 
 export default function Hero() {
   return (
@@ -24,9 +25,7 @@ export default function Hero() {
               >
                 Jelajahi
               </Link>
-              <button className="px-6 py-3 text-white opacity-70">
-                <i className="fa-solid fa-circle-play pr-2"></i>Tonton video
-              </button>
+              <HeroVideoModal />
             </div>
           </div>
           <div className="w-[40%] flex justify-center items-start relative header-right-responsive">

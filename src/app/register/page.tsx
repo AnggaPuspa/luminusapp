@@ -10,7 +10,7 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [gender, setGender] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
   const [error, setError] = useState('');
@@ -36,6 +36,7 @@ export default function RegisterPage() {
         body: JSON.stringify({
           name,
           email,
+          phoneNumber,
           password,
         }),
       });
@@ -116,22 +117,28 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Gender field */}
+            {/* Phone Number field */}
             <div className="auth-input-wrapper">
-              <label htmlFor="gender">Gender</label>
+              <label htmlFor="phoneNumber">Nomor Handphone</label>
               <div className="auth-input-field-wrapper">
-                <i className="fas fa-venus-mars auth-input-icon"></i>
-                <select
-                  id="gender"
-                  value={gender}
-                  onChange={(e) => setGender(e.target.value)}
-                  className="auth-input-field auth-select"
+                <i className="fas fa-phone auth-input-icon"></i>
+                <input
+                  type="text"
+                  id="phoneNumber"
+                  value={phoneNumber}
+                  onChange={(e) => {
+                    // Hanya izinkan input angka
+                    const val = e.target.value;
+                    if (val === '' || /^[0-9\b]+$/.test(val)) {
+                      setPhoneNumber(val);
+                    }
+                  }}
+                  className="auth-input-field"
+                  placeholder="Contoh: 081234567890"
+                  pattern="[0-9]*"
+                  inputMode="numeric"
                   required
-                >
-                  <option value="">Pilih Gender</option>
-                  <option value="L">Laki-laki</option>
-                  <option value="P">Perempuan</option>
-                </select>
+                />
               </div>
             </div>
 

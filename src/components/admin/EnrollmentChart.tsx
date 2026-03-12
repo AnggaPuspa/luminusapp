@@ -60,11 +60,11 @@ export function EnrollmentChart({ availableYears, initialData, initialYear }: En
     return (
         <div className="bg-white rounded-2xl p-7 pt-6 shadow-sm">
             <div className="flex justify-between items-center mb-10">
-                <h2 className="text-[17px] font-bold text-[#1a1a1a]">Enrollment Activity</h2>
+                <h2 className="text-[17px] font-bold text-[#1a1a1a]">Aktivitas Pendaftaran</h2>
                 <div className="flex items-center gap-6">
                     <div className="flex items-center gap-2 hidden sm:flex">
                         <span className="w-2.5 h-2.5 rounded-full bg-[#4F46E5]"></span>
-                        <span className="text-[13px] font-semibold text-gray-500">Paid/Active</span>
+                        <span className="text-[13px] font-semibold text-gray-500">Lunas/Aktif</span>
                     </div>
                     <div className="flex items-center gap-2 hidden sm:flex">
                         <span className="w-2.5 h-2.5 rounded-full bg-[#374151]"></span>
@@ -120,7 +120,7 @@ export function EnrollmentChart({ availableYears, initialData, initialYear }: En
                                 {/* Tooltip on Hover */}
                                 <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute z-30 -top-16 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
                                     <div className="bg-white rounded-xl shadow-[0_4px_20px_rgb(0,0,0,0.1)] px-4 py-3 border border-gray-50 flex flex-col items-center gap-0.5 whitespace-nowrap">
-                                        <span className="text-[14px] font-extrabold text-[#1a1a1a]">{d.paidCount + d.pendingCount} <span className="font-semibold text-gray-600">Enrollments</span></span>
+                                        <span className="text-[14px] font-extrabold text-[#1a1a1a]">{d.paidCount + d.pendingCount} <span className="font-semibold text-gray-600">Pendaftaran</span></span>
                                         <span className="text-[11px] font-medium text-gray-400">{d.monthName}</span>
                                     </div>
                                     <div className="w-3 h-3 bg-white border-b border-r border-gray-50 rotate-45 -mt-1.5 shadow-[2px_2px_4px_rgb(0,0,0,0.02)]"></div>

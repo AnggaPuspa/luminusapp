@@ -42,14 +42,14 @@ export default function Topbar({ adminUser }: { adminUser: AdminUser }) {
     const getPageTitle = () => {
         if (!pathname) return "Dashboard";
         if (pathname === "/admin") return "Dashboard";
-        if (pathname.includes("/admin/courses")) return "Courses Management";
-        if (pathname.includes("/admin/users")) return "User Management";
-        if (pathname.includes("/admin/orders")) return "Orders & Transactions";
-        if (pathname.includes("/admin/subscribers")) return "Subscribers";
-        if (pathname.includes("/admin/plans")) return "Subscription Plans";
-        if (pathname.includes("/admin/coupons")) return "Coupons";
+        if (pathname.includes("/admin/courses")) return "Manajemen Kursus";
+        if (pathname.includes("/admin/users")) return "Manajemen Pengguna";
+        if (pathname.includes("/admin/orders")) return "Pesanan & Transaksi";
+        if (pathname.includes("/admin/subscribers")) return "Pelanggan";
+        if (pathname.includes("/admin/plans")) return "Paket Langganan";
+        if (pathname.includes("/admin/coupons")) return "Kupon";
         if (pathname.includes("/admin/webhooks")) return "Webhooks";
-        return "Admin Area";
+        return "Area Admin";
     };
 
     return (
@@ -58,7 +58,7 @@ export default function Topbar({ adminUser }: { adminUser: AdminUser }) {
                 {/* Left Section: Title */}
                 <div>
                     <h1 className="text-[17px] font-extrabold text-[#1a1a1a]">{getPageTitle()}</h1>
-                    <p className="text-[12px] font-medium text-gray-400 mt-0.5">Welcome back, {adminUser?.name || 'Admin'}</p>
+                    <p className="text-[12px] font-medium text-gray-400 mt-0.5">Selamat datang, {adminUser?.name || 'Admin'}</p>
                 </div>
 
                 {/* Right Section: Tools & Profile */}
@@ -69,7 +69,7 @@ export default function Topbar({ adminUser }: { adminUser: AdminUser }) {
                         <button 
                             onClick={() => window.open("/", "_blank")}
                             className="w-[40px] h-[40px] flex items-center justify-center text-gray-400 hover:text-[#4F46E5] hover:bg-[#4F46E5]/10 rounded-full transition-all duration-300 tooltip-trigger relative group"
-                            title="View Live Website"
+                            title="Lihat Website"
                         >
                             <Globe className="w-5 h-5" strokeWidth={1.75} />
                         </button>
@@ -77,7 +77,7 @@ export default function Topbar({ adminUser }: { adminUser: AdminUser }) {
                         <button 
                             onClick={() => router.push("/admin/courses")}
                             className="w-[40px] h-[40px] flex items-center justify-center text-gray-400 hover:text-[#4F46E5] hover:bg-[#4F46E5]/10 rounded-full transition-all duration-300"
-                            title="Quick Add Course"
+                            title="Tambah Kursus"
                         >
                             <Zap className="w-5 h-5" strokeWidth={1.75} />
                         </button>
@@ -85,7 +85,7 @@ export default function Topbar({ adminUser }: { adminUser: AdminUser }) {
                         <button 
                             onClick={() => router.push("/admin/orders")}
                             className="w-[40px] h-[40px] flex items-center justify-center text-gray-400 hover:text-[#4F46E5] hover:bg-[#4F46E5]/10 rounded-full transition-all duration-300"
-                            title="View Orders"
+                            title="Lihat Pesanan"
                         >
                             <ShoppingBag className="w-5 h-5" strokeWidth={1.75} />
                         </button>
@@ -144,7 +144,7 @@ export default function Topbar({ adminUser }: { adminUser: AdminUser }) {
                                         className="w-full text-left px-3 py-2 text-[13px] font-medium text-gray-600 hover:bg-gray-50 hover:text-[#1a1a1a] rounded-lg transition-colors flex items-center gap-2"
                                     >
                                         <SquareArrowOutUpRight className="w-4 h-4 text-gray-400" />
-                                        View Live Website
+                                        Lihat Website
                                     </button>
                                 </div>
                                 <div className="p-2 border-t border-gray-50">

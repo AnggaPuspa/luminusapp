@@ -134,11 +134,13 @@ function calcChange(current: number, previous: number): PercentageChange {
 
 // ─── Dashboard Stats ─────────────────────────────────────────────
 
-export async function getDashboardStats(): Promise<DashboardStats> {
+export async function getDashboardStats(page: number = 1, limit: number = 5): Promise<DashboardStats> {
     const now = new Date();
     const currentYear = now.getFullYear();
     const thisMonth = getMonthRange(now);
     const lastMonth = getMonthRange(new Date(now.getFullYear(), now.getMonth() - 1, 1));
+
+    const skip = (page - 1) * limit;
 
     const [
         revenueResult,
@@ -182,9 +184,10 @@ export async function getDashboardStats(): Promise<DashboardStats> {
             }
         }),
 
-        // 5. Latest Transactions (5 transaksi terakhir beserta course & user)
+        // 5. Latest Transactions (paginated beserta course & user)
         prisma.transaction.findMany({
-            take: 5,
+            skip: skip,
+            take: limit,
             orderBy: { createdAt: 'desc' },
             include: {
                 course: {

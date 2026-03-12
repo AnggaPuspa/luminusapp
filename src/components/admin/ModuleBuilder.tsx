@@ -58,35 +58,35 @@ export default function ModuleBuilder({ courseId, initialModules, onRefresh }: {
             if (res.ok) {
                 setNewModuleTitle("");
                 setIsAddingModule(false);
-                toast.success("Module added successfully");
+                toast.success("Modul berhasil ditambahkan");
                 onRefresh();
             } else {
-                toast.error("Failed to add module");
+                toast.error("Gagal menambahkan modul");
             }
         } catch (error) {
             console.error(error);
-            toast.error("An error occurred");
+            toast.error("Terjadi kesalahan");
         } finally {
             setLoading(false);
         }
     };
 
     const handleDeleteModule = async (moduleId: string) => {
-        if (!confirm("Are you sure you want to delete this module AND all its lessons?")) return; // Kept confirm as per instruction snippet
+        if (!confirm("Apakah Anda yakin ingin menghapus modul ini BESERTA semua materinya?")) return;
 
         try {
             const res = await fetch(`/api/admin/courses/${courseId}/modules?moduleId=${moduleId}`, { // Updated API endpoint
                 method: "DELETE",
             });
             if (res.ok) {
-                toast.success("Module deleted"); // Replaced alert/console.error
+                toast.success("Modul dihapus");
                 onRefresh();
             } else {
-                toast.error("Failed to delete module"); // Replaced alert/console.error
+                toast.error("Gagal menghapus modul");
             }
         } catch (error) {
             console.error(error);
-            toast.error("An error occurred"); // Replaced alert/console.error
+            toast.error("Terjadi kesalahan");
         }
     };
 
@@ -136,7 +136,7 @@ export default function ModuleBuilder({ courseId, initialModules, onRefresh }: {
     };
 
     const handleDeleteLesson = async (lessonId: string) => {
-        if (!confirm("Are you sure you want to delete this lesson?")) return;
+        if (!confirm("Apakah Anda yakin ingin menghapus materi ini?")) return;
         try {
             await fetch(`/api/admin/lessons/${lessonId}`, { method: "DELETE" });
             onRefresh();
@@ -147,11 +147,11 @@ export default function ModuleBuilder({ courseId, initialModules, onRefresh }: {
 
     return (
         <div className="space-y-4">
-            <h2 className="text-xl font-bold text-gray-900 border-b pb-2 mb-4">Course Curriculum</h2>
+            <h2 className="text-xl font-bold text-gray-900 border-b pb-2 mb-4">Kurikulum Kursus</h2>
 
             {initialModules.length === 0 && (
                 <div className="text-center py-8 bg-gray-50 border border-dashed rounded-lg text-gray-500">
-                    No modules yet. Start building your course!
+                    Belum ada modul. Mulai bangun kursus Anda!
                 </div>
             )}
 
@@ -162,7 +162,7 @@ export default function ModuleBuilder({ courseId, initialModules, onRefresh }: {
                         <div className="flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
                             <div className="flex items-center gap-2 flex-1 cursor-pointer" onClick={() => toggleModule(mod.id)}>
                                 {expandedModules[mod.id] ? <ChevronDown className="w-5 h-5 text-gray-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
-                                <span className="font-semibold text-gray-600 text-sm w-16">Module {idx + 1}:</span>
+                                <span className="font-semibold text-gray-600 text-sm w-16">Modul {idx + 1}:</span>
                                 {editingModuleId === mod.id ? (
                                     <input
                                         autoFocus
@@ -181,13 +181,13 @@ export default function ModuleBuilder({ courseId, initialModules, onRefresh }: {
                                 )}
                             </div>
                             <div className="flex items-center gap-2">
-                                <button onClick={(e) => { e.stopPropagation(); setActiveQuizModuleId(mod.id); setIsQuizModalOpen(true); }} className="p-1.5 text-gray-400 hover:text-indigo-600 rounded transition-colors" title="Manage Quiz">
+                                <button onClick={(e) => { e.stopPropagation(); setActiveQuizModuleId(mod.id); setIsQuizModalOpen(true); }} className="p-1.5 text-gray-400 hover:text-indigo-600 rounded transition-colors" title="Kelola Kuis">
                                     <HelpCircle className="w-4 h-4" />
                                 </button>
-                                <button onClick={(e) => { e.stopPropagation(); setEditingModuleId(mod.id); }} className="p-1.5 text-gray-400 hover:text-blue-600 rounded transition-colors" title="Edit Module Name">
+                                <button onClick={(e) => { e.stopPropagation(); setEditingModuleId(mod.id); }} className="p-1.5 text-gray-400 hover:text-blue-600 rounded transition-colors" title="Ubah Nama Modul">
                                     <Edit2 className="w-4 h-4" />
                                 </button>
-                                <button onClick={(e) => { e.stopPropagation(); handleDeleteModule(mod.id); }} className="p-1.5 text-gray-400 hover:text-red-600 rounded transition-colors" title="Delete Module">
+                                <button onClick={(e) => { e.stopPropagation(); handleDeleteModule(mod.id); }} className="p-1.5 text-gray-400 hover:text-red-600 rounded transition-colors" title="Hapus Modul">
                                     <Trash2 className="w-4 h-4" />
                                 </button>
                             </div>
@@ -207,10 +207,10 @@ export default function ModuleBuilder({ courseId, initialModules, onRefresh }: {
                                                 <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
                                                     <span className="flex items-center gap-1">
                                                         {lesson.videoUrl ? <Video className="w-3 h-3 text-blue-500" /> : <FileText className="w-3 h-3 text-orange-500" />}
-                                                        {lesson.videoUrl ? 'Video' : 'Text'} Lesson
+                                                        {lesson.videoUrl ? 'Video' : 'Teks'}
                                                     </span>
                                                     <span>•</span>
-                                                    <span>{lesson.duration} mins</span>
+                                                    <span>{lesson.duration} menit</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -229,7 +229,7 @@ export default function ModuleBuilder({ courseId, initialModules, onRefresh }: {
                                     onClick={() => openCreateLessonModal(mod.id)}
                                     className="w-full flex items-center justify-center gap-2 p-3 text-sm text-blue-600 hover:bg-blue-50 border border-dashed border-blue-200 rounded-lg transition-colors font-medium mt-2"
                                 >
-                                    <Plus className="w-4 h-4" /> Add Lesson
+                                    <Plus className="w-4 h-4" /> Tambah Materi
                                 </button>
                             </div>
                         )}
@@ -243,21 +243,21 @@ export default function ModuleBuilder({ courseId, initialModules, onRefresh }: {
                     onClick={() => setIsAddingModule(true)}
                     className="w-full flex items-center justify-center gap-2 p-4 text-gray-600 hover:bg-gray-100 border-2 border-dashed border-gray-300 rounded-xl transition-colors font-medium"
                 >
-                    <Plus className="w-5 h-5" /> Add New Module
+                    <Plus className="w-5 h-5" /> Tambah Modul Baru
                 </button>
             ) : (
                 <div className="border border-blue-200 bg-blue-50 p-4 rounded-xl flex items-center gap-3">
                     <input
                         autoFocus
                         type="text"
-                        placeholder="Module Title (e.g. Getting Started)"
+                        placeholder="Judul Modul (contoh: Persiapan Awal)"
                         className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                         value={newModuleTitle}
                         onChange={(e) => setNewModuleTitle(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && handleCreateModule()}
                     />
-                    <button onClick={handleCreateModule} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700">Save</button>
-                    <button onClick={() => setIsAddingModule(false)} className="text-gray-500 px-3 py-2 hover:bg-white rounded-lg">Cancel</button>
+                    <button onClick={handleCreateModule} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700">Simpan</button>
+                    <button onClick={() => setIsAddingModule(false)} className="text-gray-500 px-3 py-2 hover:bg-white rounded-lg">Batal</button>
                 </div>
             )}
 
