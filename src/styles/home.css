@@ -33,28 +33,39 @@
 }
 
 /* Forum Card Animations */
-.cardUp {
-  animation-name: scrollVerticalUp;
-  animation-duration: 6s;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
+.animate-scroll-up {
+  animation: scrollUp 40s linear infinite;
+  display: flex;
+  flex-direction: column;
 }
 
-.cardDown {
-  animation-name: scrollVerticalDown;
-  animation-duration: 6s;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
+.animate-scroll-down {
+  animation: scrollDown 40s linear infinite;
+  display: flex;
+  flex-direction: column;
 }
 
-@keyframes scrollVerticalDown {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-50%); }
+.pause-animation:hover {
+  animation-play-state: paused;
 }
 
-@keyframes scrollVerticalUp {
-  0% { transform: translateY(-50%); }
-  100% { transform: translateY(0); }
+@keyframes scrollUp {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    /* Since we have 3 sets of content, scrolling through 1 set is 33.33% */
+    transform: translateY(-33.333%);
+  }
+}
+
+@keyframes scrollDown {
+  0% {
+    transform: translateY(-33.333%);
+  }
+  100% {
+    transform: translateY(0);
+  }
 }
 
 /* Hero Header Responsive */

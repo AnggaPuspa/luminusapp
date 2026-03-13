@@ -16,7 +16,7 @@ interface CertificateDownloaderProps {
     children?: React.ReactNode;
 }
 
-function generateCertificatePdf(studentName: string, courseTitle: string, completionDate: string, certificateId: string): jsPDF {
+function generateCertificatePdf(studentName: string, courseTitle: string, completionDate: string, certificateId: string, brandLogo: HTMLImageElement | null = null): jsPDF {
     const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
     const w = 297, h = 210;
 
@@ -40,18 +40,24 @@ function generateCertificatePdf(studentName: string, courseTitle: string, comple
     pdf.roundedRect(12, 12, w - 24, h - 24, 4, 4);
 
     // Logo box
-    pdf.setFillColor(37, 99, 235);
-    pdf.roundedRect(w / 2 - 40, 28, 12, 12, 2, 2, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(14);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("L", w / 2 - 37.5, 37);
+    if (brandLogo) {
+        const logoHeight = 14;
+        const logoWidth = logoHeight * (brandLogo.width / brandLogo.height);
+        pdf.addImage(brandLogo, 'PNG', w / 2 - logoWidth / 2, 26, logoWidth, logoHeight);
+    } else {
+        pdf.setFillColor(37, 99, 235);
+        pdf.roundedRect(w / 2 - 40, 28, 12, 12, 2, 2, 'F');
+        pdf.setTextColor(255, 255, 255);
+        pdf.setFontSize(14);
+        pdf.setFont("helvetica", "bold");
+        pdf.text("L", w / 2 - 37.5, 37);
 
-    // Brand name
-    pdf.setTextColor(30, 58, 138); // blue-900
-    pdf.setFontSize(20);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("Luminus Education", w / 2 - 24, 37);
+        // Brand name
+        pdf.setTextColor(30, 58, 138); // blue-900
+        pdf.setFontSize(20);
+        pdf.setFont("helvetica", "bold");
+        pdf.text("Luminus Education", w / 2 - 24, 37);
+    }
 
     // Title
     pdf.setTextColor(31, 41, 55); // gray-800
@@ -104,42 +110,51 @@ function generateCertificatePdf(studentName: string, courseTitle: string, comple
 
     // Footer - Date
     pdf.setTextColor(107, 114, 128);
-    pdf.setFontSize(8);
-    pdf.setFont("helvetica", "normal");
-    pdf.text("TANGGAL PENYELESAIAN", 55, footerY + 10, { align: "center" });
+    pdf.setFontSize(9);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("TANGGAL PENYELESAIAN", 60, footerY + 12, { align: "center" });
+    
     pdf.setTextColor(31, 41, 55);
-    pdf.setFontSize(11);
+    pdf.setFontSize(12);
     pdf.setFont("helvetica", "bold");
-    pdf.text(completionDate || "-", 55, footerY + 16, { align: "center" });
+    pdf.text(completionDate || "-", 60, footerY + 20, { align: "center" });
 
-    // Footer - Seal / Badge
-    pdf.setFillColor(37, 99, 235); // blue-600
-    pdf.circle(w / 2, footerY + 11, 7, 'F');
-    pdf.setDrawColor(255, 255, 255);
+    // Footer - Center Signature (Coding Style)
+    const signY = footerY + 16;
+    
+    // Signature / Brand Name
+    pdf.setTextColor(105, 110, 255); // #696EFF (Luminus Primary)
+    pdf.setFontSize(22);
+    pdf.setFont("courier", "bolditalic");
+    pdf.text("<Luminus/>", w / 2, signY, { align: "center" });
+    
+    // Signature Line
+    pdf.setDrawColor(226, 232, 240); // slate-200
     pdf.setLineWidth(0.5);
-    pdf.circle(w / 2, footerY + 11, 5, 'S');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(8);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("LE", w / 2, footerY + 13.5, { align: "center" });
-    pdf.setTextColor(30, 58, 138);
-    pdf.setFontSize(10);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("Luminus Team", w / 2, footerY + 20, { align: "center" });
+    pdf.line(w / 2 - 25, signY + 3, w / 2 + 25, signY + 3);
+
+    // Label under signature
+    pdf.setTextColor(107, 114, 128); // gray-500
+    pdf.setFontSize(9);
+    pdf.setFont("helvetica", "normal");
+    pdf.text("Tim Resmi Luminus", w / 2, signY + 8, { align: "center" });
 
     // Footer - Certificate ID
     pdf.setTextColor(107, 114, 128);
-    pdf.setFontSize(8);
-    pdf.setFont("helvetica", "normal");
-    pdf.text("ID SERTIFIKAT", w - 55, footerY + 10, { align: "center" });
-    pdf.setFillColor(243, 244, 246); // gray-100
+    pdf.setFontSize(9);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("ID SERTIFIKAT", w - 60, footerY + 12, { align: "center" });
+    
+    // ID Badge Backing
     const idText = certificateId || "LMN-XXXX";
-    const idWidth = pdf.getTextWidth(idText) + 8;
-    pdf.roundedRect(w - 55 - idWidth / 2, footerY + 12, idWidth, 7, 1, 1, 'F');
-    pdf.setTextColor(31, 41, 55);
-    pdf.setFontSize(8);
-    pdf.setFont("courier", "normal");
-    pdf.text(idText, w - 55, footerY + 17, { align: "center" });
+    const idWidth = pdf.getTextWidth(idText) + 16;
+    pdf.setFillColor(248, 250, 252); // slate-50
+    pdf.roundedRect(w - 60 - idWidth / 2, footerY + 15, idWidth, 8, 2, 2, 'F'); // Fill only
+    
+    pdf.setTextColor(71, 85, 105);
+    pdf.setFontSize(9);
+    pdf.setFont("courier", "bold");
+    pdf.text(idText, w - 60, footerY + 20.5, { align: "center" });
 
     return pdf;
 }
@@ -177,11 +192,27 @@ export default function CertificateDownloader({
 
             // Generate PDF directly with jsPDF
             toast.loading("Membuat PDF...", { id: `cert-${courseId}` });
+
+            // Load brand logo
+            let brandLogo: HTMLImageElement | null = null;
+            try {
+                brandLogo = await new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.crossOrigin = "Anonymous";
+                    img.onload = () => resolve(img);
+                    img.onerror = () => resolve(null);
+                    img.src = '/images/logo2.png';
+                });
+            } catch (e) {
+                console.error("Failed to load logo", e);
+            }
+
             const pdf = generateCertificatePdf(
                 data.studentName,
                 data.courseTitle,
                 data.completionDate,
-                data.certificateId
+                data.certificateId,
+                brandLogo
             );
 
             // Download langsung

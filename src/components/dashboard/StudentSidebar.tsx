@@ -46,12 +46,17 @@ export default function StudentSidebar() {
 
     return (
         <aside className="w-64 bg-white h-full hidden md:flex flex-col shadow-sm border-r border-gray-100 z-20 overflow-y-auto">
-            <div className="pt-8 pb-6 px-8 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#696EFF] flex items-center justify-center flex-shrink-0">
-                    <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <Link href="/" className="text-xl font-bold text-[#696EFF] uppercase tracking-wide">
-                    Luminus
+            <div className="pt-8 pb-6 px-8 flex items-center justify-start gap-3">
+                <Link href="/" className="relative w-8 h-8 block hover:opacity-90 transition-opacity flex-shrink-0">
+                    <Image 
+                        src="/images/logo2.png" 
+                        alt="Luminus Logo" 
+                        fill 
+                        className="object-contain"
+                    />
+                </Link>
+                <Link href="/" className="font-semibold text-2xl text-black hover:opacity-90 transition-opacity">
+                    Lu<span className="bg-gradient-to-r from-[#696EFF] to-[#F8ACFF] text-transparent bg-clip-text">minus</span>
                 </Link>
             </div>
 

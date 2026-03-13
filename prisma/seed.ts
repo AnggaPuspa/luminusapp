@@ -25,12 +25,14 @@ async function seedAdmin() {
         update: {
             password: hashedPassword,
             role: 'ADMIN',
+            phoneNumber: '08123456789',
         },
         create: {
             email: adminEmail,
             name: 'Luminus Admin',
             password: hashedPassword,
             role: 'ADMIN',
+            phoneNumber: '08123456789',
         },
     })
 

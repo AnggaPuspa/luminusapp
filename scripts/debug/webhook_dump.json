@@ -1,0 +1,41 @@
+[
+  {
+    "id": "cmmocbs4a0003hhv28vtordx2",
+    "transactionId": null,
+    "event": "payment.received",
+    "payload": {
+      "data": {
+        "id": "9fa02aa1-969b-4777-8f3a-331f1c33fb87",
+        "qty": 1,
+        "amount": 309001,
+        "status": "SUCCESS",
+        "pixelFbc": null,
+        "pixelFbp": null,
+        "createdAt": "2026-03-13T03:30:45.463Z",
+        "productId": "533828e0-e15d-4f85-b7cf-fc9ed7899369",
+        "updatedAt": "2026-03-13T03:31:44.789Z",
+        "couponUsed": null,
+        "customerId": "b22ddef5-f1ea-4c27-85da-b5a519f74761",
+        "merchantId": "d36964b1-3d37-4fdb-bf16-f44c5dbe0f60",
+        "nettAmount": 309001,
+        "productName": "Penagihan",
+        "productType": "payment_request",
+        "customerName": "Angga puspa",
+        "merchantName": "Marketing Campaign",
+        "customerEmail": "lau@gmail.com",
+        "merchantEmail": "dexangga6@gmail.com",
+        "paymentMethod": "QRIS",
+        "transactionId": "9fa02aa1-969b-4777-8f3a-331f1c33fb87",
+        "customerMobile": "09182727162",
+        "paymentLinkAmount": 309001,
+        "transactionStatus": "created",
+        "productDescription": "Pembelian Kursus: full-Stack Next.js 14 & Supabase: Build SaaS App",
+        "isAdminFeeBorneByCustomer": null,
+        "isChannelFeeBorneByCustomer": null
+      },
+      "event": "payment.received"
+    },
+    "httpStatus": 200,
+    "receivedAt": "2026-03-13T03:31:54.778Z"
+  }
+]

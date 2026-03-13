@@ -252,7 +252,11 @@ export default function WebhooksPage() {
                                         <td className="p-0">
                                             <div className="h-[56px] flex items-center px-4 overflow-hidden">
                                                 <span className="text-[12px] font-mono text-[#8e95a5] truncate block w-full" title={log.transactionId || ""}>
-                                                    {log.transactionId || "—"}
+                                                    {log.transactionId ? (
+                                                        <span className="font-bold text-gray-800">
+                                                            INV-{log.transactionId.split('-')[0].toUpperCase()}
+                                                        </span>
+                                                    ) : "—"}
                                                 </span>
                                             </div>
                                         </td>

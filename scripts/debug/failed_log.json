@@ -1,0 +1,32 @@
+{
+  "data": {
+    "id": "c2445069-b28e-433e-9725-18f4da45be4a",
+    "qty": 1,
+    "amount": 399000,
+    "status": "SUCCESS",
+    "pixelFbc": null,
+    "pixelFbp": null,
+    "createdAt": "2026-03-13T04:03:57.070Z",
+    "productId": "269489c0-b403-4bc3-b17f-80b59e550a47",
+    "updatedAt": "2026-03-13T04:04:03.599Z",
+    "couponUsed": null,
+    "customerId": "b22ddef5-f1ea-4c27-85da-b5a519f74761",
+    "merchantId": "d36964b1-3d37-4fdb-bf16-f44c5dbe0f60",
+    "nettAmount": 399000,
+    "productName": "Penagihan",
+    "productType": "payment_request",
+    "customerName": "Angga puspa",
+    "merchantName": "Marketing Campaign",
+    "customerEmail": "lau@gmail.com",
+    "merchantEmail": "dexangga6@gmail.com",
+    "paymentMethod": "QRIS",
+    "transactionId": "c2445069-b28e-433e-9725-18f4da45be4a",
+    "customerMobile": "09182727162",
+    "paymentLinkAmount": 399000,
+    "transactionStatus": "created",
+    "productDescription": "Pembelian Kursus: Scalable Backend with Go & PostgreSQL",
+    "isAdminFeeBorneByCustomer": null,
+    "isChannelFeeBorneByCustomer": null
+  },
+  "event": "payment.received"
+}

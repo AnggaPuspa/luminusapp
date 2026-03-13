@@ -5,12 +5,14 @@ import StudentTopbar from "@/components/dashboard/StudentTopbar";
 import Link from "next/link";
 import { useDashboardOverview } from "@/hooks/use-dashboard";
 import { useSettings } from "@/hooks/use-settings";
+import ImageCropperModal from "@/components/dashboard/ImageCropperModal";
 
 export default function StudentSettingsPage() {
     const { stats } = useDashboardOverview();
     const {
         loading, saving, uploading, formData, originalData, isDirty,
         fileInputRef, handleChange, handleAvatarChange, handleSubmit, resetForm,
+        cropImageObj, setCropImageObj, processAvatarUpload
     } = useSettings();
 
     if (loading) {
@@ -27,6 +29,15 @@ export default function StudentSettingsPage() {
 
     return (
         <div className="flex flex-col xl:flex-row w-full gap-8 pb-10">
+            {/* Cropper Modal */}
+            {cropImageObj && (
+                <ImageCropperModal
+                    imageSrc={cropImageObj.url}
+                    onCropComplete={processAvatarUpload}
+                    onClose={() => setCropImageObj(null)}
+                />
+            )}
+
             {/* ── LEFT MAIN ── */}
             <div className="flex-1 space-y-6">
                 <StudentTopbar />

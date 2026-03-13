@@ -34,29 +34,53 @@ export async function POST(request: Request) {
         const body = JSON.parse(rawBody);
         const eventName = body.event;
         const eventData = body.data;
-        console.log("[Webhook] Event:", eventName, "| Data keys:", eventData ? Object.keys(eventData) : "none");
+        let matchedTransactionId: string | null = null;
 
-        // 2. We only care about payment.received for now
-        if (eventName === "payment.received") {
-            // FIX: Mayar sends our invoice ID in `productId` (e.g. 781e813e-f10c-4d65-b984-27708a9820db)
-            // The `id` field is just Mayar's internal payment UUID.
-            const transactionStr = eventData?.productId || eventData?.transaction?.id || eventData?.id;
-            const refId = eventData?.referenceId;
+        const transactionStr = eventData?.productId || eventData?.transaction?.id || eventData?.id;
+        const refId = eventData?.referenceId;
 
-            console.log(`[Webhook] Looking up invoice ID: ${transactionStr} or refId: ${refId}`);
-
-            // FIRST: Check if this payment is for a Subscription Invoice
-            let subInvoice = await prisma.subscriptionInvoice.findFirst({
+        // Try to find matching Subscription Invoice
+        let subInvoice = null;
+        if (transactionStr) {
+            subInvoice = await prisma.subscriptionInvoice.findFirst({
                 where: { mayarInvoiceId: transactionStr },
                 include: { subscription: true }
             });
+        }
+        if (!subInvoice && refId) {
+            subInvoice = await prisma.subscriptionInvoice.findFirst({
+                where: { id: refId },
+                include: { subscription: true }
+            });
+        }
 
-            if (!subInvoice && refId) {
-                subInvoice = await prisma.subscriptionInvoice.findFirst({
-                    where: { id: refId },
-                    include: { subscription: true }
+        // Setup common transaction lookup for One-Time Payments
+        let transaction = null;
+        if (!subInvoice) {
+            if (transactionStr) {
+                transaction = await (prisma as any).transaction.findFirst({
+                    where: { mayarInvoiceId: transactionStr },
+                    include: { user: true, course: true }
                 });
             }
+            if (!transaction && refId) {
+                transaction = await (prisma as any).transaction.findUnique({
+                    where: { id: refId },
+                    include: { user: true, course: true }
+                });
+            }
+        }
+
+        // Assign matched ID for the Webhook Log
+        if (transaction) {
+            matchedTransactionId = transaction.id;
+        } else if (subInvoice) {
+            matchedTransactionId = subInvoice.id;
+        }
+
+        // 2. We only process status changes on payment.received
+        if (eventName === "payment.received") {
+            console.log(`[Webhook] Processing payment.received for ID: ${transactionStr} or refId: ${refId}`);
 
             if (subInvoice && subInvoice.status === "PENDING") {
                 // --- Handle Subscription Payment ---
@@ -91,7 +115,6 @@ export async function POST(request: Request) {
                             status: "ACTIVE",
                             currentPeriodStart: newStart,
                             currentPeriodEnd: newEnd,
-                            // NOTE: aiChatUsedThisMonth NOT reset here — only via cron reset-ai-quota on 1st of month
                         }
                     })
                 ]);
@@ -111,66 +134,51 @@ export async function POST(request: Request) {
                 }
 
                 console.log(`[Webhook] Subscription ${sub.id} activated/renewed successfully.`);
-            } else {
-                // SECOND: If not a subscription, process as One-Time Transaction
-                let transaction = await (prisma as any).transaction.findFirst({
-                    where: { mayarInvoiceId: transactionStr },
-                    include: { user: true, course: true }
-                });
-
-                if (!transaction && refId) {
-                    transaction = await (prisma as any).transaction.findUnique({
-                        where: { id: refId },
-                        include: { user: true, course: true }
-                    });
-                }
-
-                if (transaction && transaction.status === "PENDING") {
-                    const dbOps: any[] = [
-                        (prisma as any).transaction.update({
-                            where: { id: transaction.id },
-                            data: {
-                                status: "PAID",
-                                paidAt: new Date(),
-                                paymentMethod: eventData?.paymentMethod || eventData?.transaction?.paymentMethod || "unknown",
-                                paymentChannel: eventData?.paymentChannel || eventData?.transaction?.paymentChannel || "unknown"
-                            }
-                        }),
-                        prisma.enrollment.upsert({
-                            where: {
-                                userId_courseId: {
-                                    userId: transaction.userId,
-                                    courseId: transaction.courseId
-                                }
-                            },
-                            update: { status: "ACTIVE", source: "PURCHASE" }, // Upgrade ke lifetime jika sebelumnya via subscription
-                            create: {
+            } else if (transaction && transaction.status === "PENDING") {
+                const dbOps: any[] = [
+                    (prisma as any).transaction.update({
+                        where: { id: transaction.id },
+                        data: {
+                            status: "PAID",
+                            paidAt: new Date(),
+                            paymentMethod: eventData?.paymentMethod || eventData?.transaction?.paymentMethod || "unknown",
+                            paymentChannel: eventData?.paymentChannel || eventData?.transaction?.paymentChannel || "unknown"
+                        }
+                    }),
+                    prisma.enrollment.upsert({
+                        where: {
+                            userId_courseId: {
                                 userId: transaction.userId,
-                                courseId: transaction.courseId,
-                                status: "ACTIVE",
-                                source: "PURCHASE"
+                                courseId: transaction.courseId
                             }
+                        },
+                        update: { status: "ACTIVE", source: "PURCHASE" },
+                        create: {
+                            userId: transaction.userId,
+                            courseId: transaction.courseId,
+                            status: "ACTIVE",
+                            source: "PURCHASE"
+                        }
+                    })
+                ];
+
+                if (transaction.couponId) {
+                    dbOps.push(
+                        (prisma as any).coupon.update({
+                            where: { id: transaction.couponId },
+                            data: { usedCount: { increment: 1 } }
                         })
-                    ];
-
-                    if (transaction.couponId) {
-                        dbOps.push(
-                            (prisma as any).coupon.update({
-                                where: { id: transaction.couponId },
-                                data: { usedCount: { increment: 1 } }
-                            })
-                        );
-                    }
-
-                    await prisma.$transaction(dbOps);
-
-                    sendPaymentSuccessEmail(
-                        transaction.user.name,
-                        transaction.user.email,
-                        transaction.course.title,
-                        transaction.amount
-                    ).catch(err => console.error("Payment Success email error:", err));
+                    );
                 }
+
+                await prisma.$transaction(dbOps);
+
+                sendPaymentSuccessEmail(
+                    transaction.user.name,
+                    transaction.user.email,
+                    transaction.course.title,
+                    transaction.amount
+                ).catch(err => console.error("Payment Success email error:", err));
             }
         }
 
@@ -180,7 +188,7 @@ export async function POST(request: Request) {
                 event: eventName,
                 payload: body,
                 httpStatus: 200,
-                transactionId: eventData?.referenceId || null // Best effort linking
+                transactionId: matchedTransactionId || eventData?.referenceId || null
             }
         });
 

@@ -14,10 +14,6 @@ function randomPick<T>(arr: T[]): T {
     return arr[Math.floor(Math.random() * arr.length)]
 }
 
-function randomDate(start: Date, end: Date): Date {
-    return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()))
-}
-
 function addHours(date: Date, hours: number): Date {
     return new Date(date.getTime() + hours * 60 * 60 * 1000)
 }
@@ -71,38 +67,7 @@ const PAYMENT_METHODS = ['QRIS', 'BANK_TRANSFER', 'E_WALLET']
 const PAYMENT_CHANNELS = ['BCA', 'Mandiri', 'BRI', 'GoPay', 'OVO', 'Dana', 'ShopeePay']
 
 // ============================================================
-// STEP 1: Seed 25 Student Users
-// ============================================================
-async function seedStudents(): Promise<string[]> {
-    console.log('👤 Seeding 25 Student users...\n')
-    const hashedPassword = await bcrypt.hash('Student123!', 10)
-    const userIds: string[] = []
-
-    for (let i = 0; i < INDONESIAN_NAMES.length; i++) {
-        const name = INDONESIAN_NAMES[i]
-        const email = generateEmail(name, i + 1)
-
-        const user = await prisma.user.upsert({
-            where: { email },
-            update: {},
-            create: {
-                email,
-                name,
-                password: hashedPassword,
-                role: 'STUDENT',
-                avatarUrl: `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(name)}`,
-            },
-        })
-        userIds.push(user.id)
-        console.log(`   ✅ ${name} (${email})`)
-    }
-
-    console.log(`\n   Total: ${userIds.length} students\n`)
-    return userIds
-}
-
-// ============================================================
-// STEP 2: Fetch Existing Courses & Plans
+// STEP 2: Fetch Products
 // ============================================================
 async function fetchProducts() {
     const courses = await prisma.course.findMany({
@@ -121,349 +86,171 @@ async function fetchProducts() {
         process.exit(1)
     }
 
-    console.log(`📚 Found ${courses.length} published courses`)
-    console.log(`📋 Found ${plans.length} active subscription plans\n`)
-
     return { courses, plans }
 }
 
 // ============================================================
-// STEP 3: Seed Transactions (Maret 2026)
-// ============================================================
-interface CreatedTransaction {
-    id: string
-    userId: string
-    courseId: string
-    type: TransactionType
-    status: TransactionStatus
-    planId?: string
-    amount: number
-    createdAt: Date
-    paidAt: Date | null
-}
-
-async function seedTransactions(
-    userIds: string[],
-    courses: { id: string; originalPrice: number; discountedPrice: number | null }[],
-    plans: { id: string; monthlyPrice: number; yearlyPrice: number | null; slug: string }[]
-): Promise<CreatedTransaction[]> {
-    console.log('💳 Seeding transactions for March 2026...\n')
-
-    const MARCH_START = new Date('2026-03-01T00:00:00+07:00')
-    const MARCH_END = new Date('2026-03-31T23:59:59+07:00')
-
-    const TOTAL_TRANSACTIONS = 120
-    const ONE_TIME_COUNT = Math.round(TOTAL_TRANSACTIONS * 0.6)  // 72
-    const SUBSCRIPTION_COUNT = TOTAL_TRANSACTIONS - ONE_TIME_COUNT // 48
-
-    // Status distribution helper
-    function pickStatus(): TransactionStatus {
-        const roll = Math.random() * 100
-        if (roll < 80) return TransactionStatus.PAID
-        if (roll < 95) return TransactionStatus.PENDING
-        return TransactionStatus.FAILED
-    }
-
-    const createdTransactions: CreatedTransaction[] = []
-
-    // --- ONE_TIME transactions ---
-    console.log(`   📦 Creating ${ONE_TIME_COUNT} ONE_TIME transactions...`)
-    for (let i = 0; i < ONE_TIME_COUNT; i++) {
-        const userId = randomPick(userIds)
-        const course = randomPick(courses)
-        const status = pickStatus()
-        const createdAt = randomDate(MARCH_START, MARCH_END)
-        const amount = course.discountedPrice ?? course.originalPrice
-        const paidAt = status === TransactionStatus.PAID
-            ? addHours(createdAt, randomInt(0, 2))
-            : null
-
-        const tx = await prisma.transaction.create({
-            data: {
-                userId,
-                courseId: course.id,
-                amount,
-                status,
-                type: TransactionType.ONE_TIME,
-                paymentMethod: randomPick(PAYMENT_METHODS),
-                paymentChannel: randomPick(PAYMENT_CHANNELS),
-                createdAt,
-                paidAt,
-                expiredAt: status === TransactionStatus.PENDING
-                    ? addHours(createdAt, 24)
-                    : null,
-                mayarInvoiceId: `INV-OT-${Date.now()}-${randomInt(1000, 9999)}-${i}`,
-            },
-        })
-
-        createdTransactions.push({
-            id: tx.id,
-            userId,
-            courseId: course.id,
-            type: TransactionType.ONE_TIME,
-            status,
-            amount,
-            createdAt,
-            paidAt,
-        })
-    }
-
-    // --- SUBSCRIPTION transactions ---
-    console.log(`   📋 Creating ${SUBSCRIPTION_COUNT} SUBSCRIPTION transactions...`)
-    for (let i = 0; i < SUBSCRIPTION_COUNT; i++) {
-        const userId = randomPick(userIds)
-        const course = randomPick(courses) // FK required
-        const plan = randomPick(plans)
-        const status = pickStatus()
-        const createdAt = randomDate(MARCH_START, MARCH_END)
-        const isYearly = Math.random() > 0.6
-        const amount = isYearly ? (plan.yearlyPrice ?? plan.monthlyPrice * 12) : plan.monthlyPrice
-        const paidAt = status === TransactionStatus.PAID
-            ? addHours(createdAt, randomInt(0, 2))
-            : null
-
-        const tx = await prisma.transaction.create({
-            data: {
-                userId,
-                courseId: course.id,
-                amount,
-                status,
-                type: TransactionType.SUBSCRIPTION,
-                paymentMethod: randomPick(PAYMENT_METHODS),
-                paymentChannel: randomPick(PAYMENT_CHANNELS),
-                createdAt,
-                paidAt,
-                expiredAt: status === TransactionStatus.PENDING
-                    ? addHours(createdAt, 24)
-                    : null,
-                mayarInvoiceId: `INV-SUB-${Date.now()}-${randomInt(1000, 9999)}-${i}`,
-            },
-        })
-
-        createdTransactions.push({
-            id: tx.id,
-            userId,
-            courseId: course.id,
-            type: TransactionType.SUBSCRIPTION,
-            status,
-            planId: plan.id,
-            amount,
-            createdAt,
-            paidAt,
-        })
-    }
-
-    const paidCount = createdTransactions.filter(t => t.status === TransactionStatus.PAID).length
-    const pendingCount = createdTransactions.filter(t => t.status === TransactionStatus.PENDING).length
-    const failedCount = createdTransactions.filter(t => t.status === TransactionStatus.FAILED).length
-
-    console.log(`\n   📊 Total: ${createdTransactions.length} transactions`)
-    console.log(`      ✅ PAID: ${paidCount}  ⏳ PENDING: ${pendingCount}  ❌ FAILED: ${failedCount}\n`)
-
-    return createdTransactions
-}
-
-// ============================================================
-// STEP 4: Seed Enrollments (dari PAID ONE_TIME)
-// ============================================================
-async function seedEnrollments(transactions: CreatedTransaction[]): Promise<void> {
-    console.log('🎓 Seeding enrollments from PAID ONE_TIME transactions...\n')
-
-    const paidOneTime = transactions.filter(
-        t => t.status === TransactionStatus.PAID && t.type === TransactionType.ONE_TIME
-    )
-
-    // Deduplicate by [userId, courseId]
-    const seen = new Set<string>()
-    let created = 0
-
-    for (const tx of paidOneTime) {
-        const key = `${tx.userId}:${tx.courseId}`
-        if (seen.has(key)) continue
-        seen.add(key)
-
-        // Check if enrollment already exists
-        const existing = await prisma.enrollment.findUnique({
-            where: { userId_courseId: { userId: tx.userId, courseId: tx.courseId } },
-        })
-        if (existing) continue
-
-        await prisma.enrollment.create({
-            data: {
-                userId: tx.userId,
-                courseId: tx.courseId,
-                enrolledAt: tx.paidAt ?? tx.createdAt,
-                status: 'ACTIVE',
-                source: EnrollmentSource.PURCHASE,
-            },
-        })
-        created++
-    }
-
-    console.log(`   ✅ Created ${created} enrollments\n`)
-}
-
-// ============================================================
-// STEP 5: Seed UserSubscriptions + Invoices (dari PAID SUBSCRIPTION)
-// ============================================================
-async function seedSubscriptions(transactions: CreatedTransaction[]): Promise<void> {
-    console.log('📋 Seeding user subscriptions & invoices from PAID SUBSCRIPTION transactions...\n')
-
-    const paidSub = transactions.filter(
-        t => t.status === TransactionStatus.PAID && t.type === TransactionType.SUBSCRIPTION && t.planId
-    )
-
-    // Deduplicate — 1 user gets 1 subscription max per plan
-    const seen = new Set<string>()
-    let created = 0
-
-    for (const tx of paidSub) {
-        const key = `${tx.userId}:${tx.planId}`
-        if (seen.has(key)) continue
-        seen.add(key)
-
-        const isYearly = tx.amount > 500000
-        const billingCycle = isYearly ? BillingCycle.YEARLY : BillingCycle.MONTHLY
-        const periodStart = tx.paidAt ?? tx.createdAt
-        const periodEnd = new Date(periodStart)
-        if (isYearly) {
-            periodEnd.setFullYear(periodEnd.getFullYear() + 1)
-        } else {
-            periodEnd.setMonth(periodEnd.getMonth() + 1)
-        }
-
-        const sub = await prisma.userSubscription.create({
-            data: {
-                userId: tx.userId,
-                planId: tx.planId!,
-                status: SubscriptionStatus.ACTIVE,
-                billingCycle,
-                currentPeriodStart: periodStart,
-                currentPeriodEnd: periodEnd,
-                createdAt: tx.createdAt,
-            },
-        })
-
-        // Create matching invoice
-        await prisma.subscriptionInvoice.create({
-            data: {
-                subscriptionId: sub.id,
-                amount: tx.amount,
-                status: SubscriptionInvoiceStatus.PAID,
-                billingPeriodStart: periodStart,
-                billingPeriodEnd: periodEnd,
-                paidAt: tx.paidAt,
-                mayarInvoiceId: `SINV-${Date.now()}-${randomInt(10000, 99999)}`,
-                createdAt: tx.createdAt,
-            },
-        })
-
-        // Also create enrollment for subscription courses
-        const planCourses = await prisma.planCourse.findMany({
-            where: { planId: tx.planId! },
-            select: { courseId: true },
-        })
-        for (const pc of planCourses) {
-            const existing = await prisma.enrollment.findUnique({
-                where: { userId_courseId: { userId: tx.userId, courseId: pc.courseId } },
-            })
-            if (!existing) {
-                await prisma.enrollment.create({
-                    data: {
-                        userId: tx.userId,
-                        courseId: pc.courseId,
-                        enrolledAt: tx.paidAt ?? tx.createdAt,
-                        status: 'ACTIVE',
-                        source: EnrollmentSource.SUBSCRIPTION,
-                    },
-                })
-            }
-        }
-
-        created++
-    }
-
-    console.log(`   ✅ Created ${created} subscriptions with invoices\n`)
-}
-
-// ============================================================
-// STEP 6: Seed Course Reviews (dari user yang enrolled)
-// ============================================================
-async function seedReviews(): Promise<void> {
-    console.log('⭐ Seeding course reviews from enrolled students...\n')
-
-    const enrollments = await prisma.enrollment.findMany({
-        select: { userId: true, courseId: true },
-    })
-
-    // Shuffle and pick ~60% for reviews
-    const shuffled = enrollments.sort(() => Math.random() - 0.5)
-    const toReview = shuffled.slice(0, Math.ceil(shuffled.length * 0.6))
-
-    let created = 0
-
-    for (const enrollment of toReview) {
-        // Check unique constraint
-        const existing = await prisma.courseReview.findUnique({
-            where: {
-                userId_courseId: {
-                    userId: enrollment.userId,
-                    courseId: enrollment.courseId,
-                },
-            },
-        })
-        if (existing) continue
-
-        const rating = randomInt(4, 5)
-        const comment = randomPick(REVIEW_COMMENTS)
-        const reviewDate = randomDate(
-            new Date('2026-03-05T00:00:00+07:00'),
-            new Date('2026-03-31T23:59:59+07:00')
-        )
-
-        await prisma.courseReview.create({
-            data: {
-                userId: enrollment.userId,
-                courseId: enrollment.courseId,
-                rating,
-                comment,
-                createdAt: reviewDate,
-            },
-        })
-        created++
-    }
-
-    console.log(`   ✅ Created ${created} course reviews\n`)
-}
-
-// ============================================================
-// Main
+// Main Seeding Logic - Chronological & Realistic
 // ============================================================
 async function main() {
     console.log('═══════════════════════════════════════════════════')
-    console.log('  🌱 LUMINUS — Sales Data Seeder (Maret 2026)')
+    console.log('  🌱 LUMINUS — Realistic Sales Seeder (March 2026)')
+    console.log('  Timeline: March 1 - March 13 (Today)')
     console.log('═══════════════════════════════════════════════════\n')
 
-    // Level 1: Students
-    const userIds = await seedStudents()
+    // 0. Cleanup old data to start fresh
+    console.log('🧹 Cleaning up old sales data...')
+    await prisma.courseReview.deleteMany()
+    await prisma.enrollment.deleteMany()
+    await prisma.subscriptionInvoice.deleteMany()
+    await prisma.userSubscription.deleteMany()
+    await prisma.transaction.deleteMany()
+    await prisma.user.deleteMany({ where: { role: 'STUDENT' } })
 
-    // Level 2: Fetch products
     const { courses, plans } = await fetchProducts()
+    const hashedPassword = await bcrypt.hash('Student123!', 10)
+    
+    const startDate = new Date('2026-03-01T09:00:00+07:00')
+    const today = new Date('2026-03-13T13:00:00+07:00') 
+    
+    let userIndex = 0
+    let totalTransactions = 0
+    let totalEnrollments = 0
 
-    // Level 3: Transactions
-    const transactions = await seedTransactions(userIds, courses, plans)
+    // Iterate day by day from March 1st to Today
+    let currentDate = new Date(startDate)
+    while (currentDate <= today) {
+        const dateString = currentDate.toISOString().split('T')[0]
+        console.log(`📅 Processing Date: ${dateString}`)
 
-    // Level 4: Enrollments
-    await seedEnrollments(transactions)
+        // 1. Create 1-2 new users per day (Organic growth)
+        const usersToCreateToday = randomInt(1, 2)
+        for (let i = 0; i < usersToCreateToday; i++) {
+            if (userIndex >= INDONESIAN_NAMES.length) break
 
-    // Level 5: Subscriptions + Invoices
-    await seedSubscriptions(transactions)
+            const name = INDONESIAN_NAMES[userIndex]
+            const email = generateEmail(name, userIndex + 1)
+            const userCreatedAt = new Date(currentDate)
+            userCreatedAt.setHours(randomInt(8, 11))
 
-    // Level 6: Reviews
-    await seedReviews()
+            const user = await prisma.user.create({
+                data: {
+                    email,
+                    name,
+                    password: hashedPassword,
+                    role: 'STUDENT',
+                    phoneNumber: `0812${randomInt(10000000, 99999999)}`,
+                    avatarUrl: `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(name)}`,
+                    createdAt: userCreatedAt
+                }
+            })
+            userIndex++
 
-    console.log('═══════════════════════════════════════════════════')
-    console.log('  🎉 Sales seeding complete! Dashboard ready.')
+            // 2. Chance to purchase
+            if (Math.random() < 0.8) {
+                const txDate = new Date(userCreatedAt)
+                txDate.setHours(userCreatedAt.getHours() + randomInt(1, 4))
+
+                const isSubscription = Math.random() > 0.7
+                const statusRoll = Math.random() * 100
+                const status = statusRoll < 75 ? TransactionStatus.PAID : (statusRoll < 90 ? TransactionStatus.PENDING : TransactionStatus.FAILED)
+                
+                let amount = 0
+                let type: TransactionType = TransactionType.ONE_TIME
+                let targetCourse = randomPick(courses)
+                let targetPlanId: string | undefined = undefined
+
+                if (isSubscription) {
+                    const plan = randomPick(plans)
+                    const isYearly = Math.random() > 0.8
+                    amount = isYearly ? (plan.yearlyPrice ?? plan.monthlyPrice * 12) : plan.monthlyPrice
+                    type = TransactionType.SUBSCRIPTION
+                    targetPlanId = plan.id
+                } else {
+                    amount = targetCourse.discountedPrice ?? targetCourse.originalPrice
+                }
+
+                const tx = await prisma.transaction.create({
+                    data: {
+                        userId: user.id,
+                        courseId: targetCourse.id,
+                        amount,
+                        status,
+                        type,
+                        paymentMethod: randomPick(PAYMENT_METHODS),
+                        paymentChannel: randomPick(PAYMENT_CHANNELS),
+                        createdAt: txDate,
+                        paidAt: status === TransactionStatus.PAID ? addHours(txDate, 1) : null,
+                        mayarInvoiceId: `INV-${type === TransactionType.ONE_TIME ? 'OT' : 'SUB'}-${Date.now()}-${randomInt(1000, 9999)}`,
+                    }
+                })
+                totalTransactions++
+
+                if (status === TransactionStatus.PAID) {
+                    await prisma.enrollment.create({
+                        data: {
+                            userId: user.id,
+                            courseId: targetCourse.id,
+                            enrolledAt: tx.paidAt!,
+                            status: 'ACTIVE',
+                            source: isSubscription ? EnrollmentSource.SUBSCRIPTION : EnrollmentSource.PURCHASE,
+                        }
+                    })
+                    totalEnrollments++
+
+                    if (isSubscription && targetPlanId) {
+                        const sub = await prisma.userSubscription.create({
+                            data: {
+                                userId: user.id,
+                                planId: targetPlanId,
+                                status: SubscriptionStatus.ACTIVE,
+                                billingCycle: amount > 500000 ? BillingCycle.YEARLY : BillingCycle.MONTHLY,
+                                currentPeriodStart: tx.paidAt!,
+                                currentPeriodEnd: addHours(tx.paidAt!, 720),
+                                createdAt: tx.createdAt
+                            }
+                        })
+                        await prisma.subscriptionInvoice.create({
+                            data: {
+                                subscriptionId: sub.id,
+                                amount,
+                                status: SubscriptionInvoiceStatus.PAID,
+                                billingPeriodStart: tx.paidAt!,
+                                billingPeriodEnd: addHours(tx.paidAt!, 720),
+                                paidAt: tx.paidAt,
+                                mayarInvoiceId: `SINV-${Date.now()}-${randomInt(1000, 9999)}`
+                            }
+                        })
+                    }
+
+                    if (Math.random() < 0.4) {
+                        const reviewDate = new Date(tx.paidAt!)
+                        reviewDate.setDate(reviewDate.getDate() + randomInt(1, 2))
+                        
+                        if (reviewDate <= today) {
+                            await prisma.courseReview.create({
+                                data: {
+                                    userId: user.id,
+                                    courseId: targetCourse.id,
+                                    rating: randomInt(4, 5),
+                                    comment: randomPick(REVIEW_COMMENTS),
+                                    createdAt: reviewDate
+                                }
+                            })
+                        }
+                    }
+                }
+            }
+        }
+        currentDate.setDate(currentDate.getDate() + 1)
+    }
+
+    console.log('\n═══════════════════════════════════════════════════')
+    console.log(`Summary:`)
+    console.log(`👤 New Students: ${userIndex}`)
+    console.log(`💳 Transactions: ${totalTransactions}`)
+    console.log(`🎓 Enrollments: ${totalEnrollments}`)
+    console.log('🎉 Realistic seeding complete!')
     console.log('═══════════════════════════════════════════════════\n')
 }
 
