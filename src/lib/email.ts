@@ -8,7 +8,9 @@ import SubscriptionExpiredTemplate from '@/components/emails/SubscriptionExpired
 
 // Resend menggunakan HTTP API — kompatibel 100% dengan Vercel serverless
 // Nodemailer (TCP SMTP) diblokir oleh Vercel di level network
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Inisialisasi Resend secara lazy atau pastikan tidak error saat build time
+const resendApiKey = process.env.RESEND_API_KEY || '';
+const resend = new Resend(resendApiKey || 'dummy_key_for_build');
 
 const FROM_ADDRESS = process.env.MAIL_FROM_ADDRESS || 'noreply@luminusapp.com';
 const FROM_NAME = process.env.MAIL_FROM_NAME || 'Luminus';
