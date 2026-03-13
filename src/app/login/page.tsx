@@ -53,93 +53,118 @@ export default function LoginPage() {
             <span className="auth-logo-text">Luminus Education</span>
           </div>
 
-          {/* Header */}
-          <div className="auth-header">
-            <h1>Masuk ke Luminus Education</h1>
-            <p>Gunakan akun Anda untuk masuk</p>
-          </div>
+                    <div className="auth-header" style={{ marginBottom: "1rem" }}>
+                        <h1>Masuk ke Luminus Education</h1>
+                        <p>Gunakan akun Anda untuk masuk</p>
+                    </div>
 
-          {/* Error Messages */}
-          {error && (
-            <div className="auth-error">
-              <i className="fas fa-exclamation-circle"></i>
-              <span>{error}</span>
+                    {/* DEMO AUTOFILL BUTTONS */}
+                    <div className="flex gap-2 mb-6">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setEmail("admin@luminus.com");
+                                setPassword("Password123!");
+                            }}
+                            className="flex-1 py-1.5 px-3 bg-[#f8f9fa] hover:bg-[#e9ecef] border border-[#dee2e6] rounded text-xs font-semibold text-[#495057] transition-colors"
+                        >
+                            <i className="fas fa-shield-alt mr-1.5"></i>
+                            Isi Akun Admin
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setEmail("dexanggabaru12@gmail.com");
+                                setPassword("123");
+                            }}
+                            className="flex-1 py-1.5 px-3 bg-[#f8f9fa] hover:bg-[#e9ecef] border border-[#dee2e6] rounded text-xs font-semibold text-[#495057] transition-colors"
+                        >
+                            <i className="fas fa-user-graduate mr-1.5"></i>
+                            Isi Akun Siswa
+                        </button>
+                    </div>
+
+                    {/* Error Messages */}
+                    {error && (
+                        <div className="auth-error">
+                            <i className="fas fa-exclamation-circle"></i>
+                            <span>{error}</span>
+                        </div>
+                    )}
+
+                    {/* Login Form */}
+                    <form onSubmit={handleSubmit} className="auth-form">
+                        {/* Email field */}
+                        <div className="auth-input-wrapper">
+                            <label htmlFor="email">Email</label>
+                            <div className="auth-input-field-wrapper">
+                                <i className="fas fa-envelope auth-input-icon"></i>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className="auth-input-field"
+                                    placeholder="Masukkan email Anda"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        {/* Password field */}
+                        <div className="auth-input-wrapper">
+                            <label htmlFor="password">Password</label>
+                            <div className="auth-input-field-wrapper">
+                                <i className="fas fa-lock auth-input-icon"></i>
+                                <input
+                                    type={showPassword ? 'text' : 'password'}
+                                    id="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="auth-input-field"
+                                    placeholder="Masukkan password"
+                                    required
+                                />
+                                <i
+                                    className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'} auth-toggle-password cursor-pointer`}
+                                    onClick={() => setShowPassword(!showPassword)}
+                                ></i>
+                            </div>
+                        </div>
+
+                        {/* Remember me & Forgot password */}
+                        <div className="auth-options">
+                            <label className="auth-checkbox-label">
+                                <input
+                                    type="checkbox"
+                                    checked={rememberMe}
+                                    onChange={(e) => setRememberMe(e.target.checked)}
+                                    className="auth-checkbox"
+                                />
+                                <span>Ingat saya</span>
+                            </label>
+                            <Link href="/forgot-password" className="auth-forgot-link">
+                                Lupa Password?
+                            </Link>
+                        </div>
+
+                        {/* Submit button */}
+                        <button type="submit" className="auth-btn-primary" disabled={loading}>
+                            {loading ? 'Memproses...' : 'Masuk'}
+                        </button>
+
+                        {/* Register link */}
+                        <div className="auth-link-section">
+                            <p>
+                                Belum punya akun?{' '}
+                                <Link href="/register" className="auth-link">
+                                    Daftar sekarang
+                                </Link>
+                            </p>
+                        </div>
+                    </form>
+                </div>
             </div>
-          )}
-
-          {/* Login Form */}
-          <form onSubmit={handleSubmit} className="auth-form">
-            {/* Email field */}
-            <div className="auth-input-wrapper">
-              <label htmlFor="email">Email</label>
-              <div className="auth-input-field-wrapper">
-                <i className="fas fa-envelope auth-input-icon"></i>
-                <input
-                  type="email"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="auth-input-field"
-                  placeholder="Masukkan email Anda"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Password field */}
-            <div className="auth-input-wrapper">
-              <label htmlFor="password">Password</label>
-              <div className="auth-input-field-wrapper">
-                <i className="fas fa-lock auth-input-icon"></i>
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="auth-input-field"
-                  placeholder="Masukkan password"
-                  required
-                />
-                <i
-                  className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'} auth-toggle-password`}
-                  onClick={() => setShowPassword(!showPassword)}
-                ></i>
-              </div>
-            </div>
-
-            {/* Remember me & Forgot password */}
-            <div className="auth-options">
-              <label className="auth-checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="auth-checkbox"
-                />
-                <span>Ingat saya</span>
-              </label>
-              <Link href="/forgot-password" className="auth-forgot-link">
-                Lupa Password?
-              </Link>
-            </div>
-
-            {/* Submit button */}
-            <button type="submit" className="auth-btn-primary" disabled={loading}>
-              {loading ? 'Memproses...' : 'Masuk'}
-            </button>
-
-            {/* Register link */}
-            <div className="auth-link-section">
-              <p>
-                Belum punya akun?{' '}
-                <Link href="/register" className="auth-link">
-                  Daftar sekarang
-                </Link>
-              </p>
-            </div>
-          </form>
-        </div>
-      </div>
-    </main>
-  );
+        </main>
+    );
 }
