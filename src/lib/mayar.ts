@@ -50,25 +50,22 @@ export async function createMayarInvoice(payload: CreatePaymentPayload) {
     }
 }
 
-export function verifyMayarWebhook(signature: string, payloadStr: string): boolean {
-    if (!MAYAR_WEBHOOK_SECRET) {
+// Mayar menggunakan x-callback-token yang dibandingkan langsung dengan secret
+// (bukan HMAC — token dari Mayar adalah plain token, bukan digest)
+export function verifyMayarWebhook(callbackToken: string, secret: string): boolean {
+    if (!secret) {
         console.error("MAYAR_WEBHOOK_SECRET is not configured! Rejecting webhook.");
         return false;
     }
 
     try {
-        // HMAC SHA256 of the payload body string using the secret
-        const expectedSignature = crypto
-            .createHmac('sha256', MAYAR_WEBHOOK_SECRET)
-            .update(payloadStr)
-            .digest('hex');
+        // Timing-safe comparison untuk mencegah timing attacks
+        const tokenBuffer = Buffer.from(callbackToken);
+        const secretBuffer = Buffer.from(secret);
 
-        // Timing-safe comparison to prevent timing attacks
-        if (signature.length !== expectedSignature.length) return false;
-        return crypto.timingSafeEqual(
-            Buffer.from(signature, 'hex'),
-            Buffer.from(expectedSignature, 'hex')
-        );
+        if (tokenBuffer.length !== secretBuffer.length) return false;
+
+        return crypto.timingSafeEqual(tokenBuffer, secretBuffer);
     } catch (e) {
         return false;
     }
