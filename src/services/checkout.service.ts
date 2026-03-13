@@ -52,13 +52,14 @@ export async function applyCoupon(couponCode: string, courseId: string, basePric
 export async function processCourseCheckout(input: CheckoutInput): Promise<CheckoutResult> {
     const { userId, userEmail, userName, courseId, couponCode } = input;
 
-    // 0. Fetch User to get phone number
+    // 0. Fetch fresh user data from DB (not session, which can be stale)
     const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: { phoneNumber: true }
+        select: { name: true, email: true, phoneNumber: true }
     });
     
-    // Fallback if somehow not found or null
+    const freshName = user?.name || userName;
+    const freshEmail = user?.email || userEmail;
     const mobileNumber = user?.phoneNumber || "0000000000";
 
     // 1. Validate Course
@@ -77,6 +78,9 @@ export async function processCourseCheckout(input: CheckoutInput): Promise<Check
     // 1.5 Handle Coupon if provided
     if (couponCode) {
         const couponResult = await applyCoupon(couponCode, courseId, finalPrice);
+        if (couponResult.couponId === null) {
+            throw new Error("COUPON_INVALID");
+        }
         discountAmount = couponResult.discountAmount;
         appliedCouponId = couponResult.couponId;
         finalPrice = finalPrice - discountAmount;
@@ -98,6 +102,30 @@ export async function processCourseCheckout(input: CheckoutInput): Promise<Check
 
     if (existingEnrollment) {
         throw new Error("ALREADY_ENROLLED");
+    }
+
+    // 2.5 Guard against duplicate PENDING transactions (race condition)
+    const existingPending = await (prisma as any).transaction.findFirst({
+        where: {
+            userId,
+            courseId: course.id,
+            status: "PENDING",
+            createdAt: { gt: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+        }
+    });
+    if (existingPending) {
+        if (existingPending.mayarInvoiceUrl) {
+            return {
+                isFree: false,
+                paymentUrl: existingPending.mayarInvoiceUrl,
+                transactionId: existingPending.id
+            };
+        }
+        // Stale PENDING without link — mark failed and continue
+        await prisma.transaction.update({
+            where: { id: existingPending.id },
+            data: { status: "FAILED" }
+        });
     }
 
     // 3. Create a PENDING transaction
@@ -139,8 +167,8 @@ export async function processCourseCheckout(input: CheckoutInput): Promise<Check
         await prisma.$transaction(txns);
 
         sendPaymentSuccessEmail(
-            userName,
-            userEmail,
+            freshName,
+            freshEmail,
             course.title,
             0
         ).catch(err => console.error("Free Checkkout email error:", err));
@@ -154,8 +182,8 @@ export async function processCourseCheckout(input: CheckoutInput): Promise<Check
 
     // 4. Hit Mayar API to create Invoice/Payment Link
     const payloadToMayar = {
-        name: userName,
-        email: userEmail,
+        name: freshName,
+        email: freshEmail,
         amount: finalPrice,
         description: `Pembelian Kursus: ${course.title}`,
         mobile: mobileNumber // Mandatory for Mayar Hosted Checkout
@@ -166,6 +194,11 @@ export async function processCourseCheckout(input: CheckoutInput): Promise<Check
         mayarResp = await createMayarInvoice(payloadToMayar);
     } catch (mErr: any) {
         console.error("MAYAR INVOICE ERROR:", mErr);
+        // Cleanup: mark orphaned transaction as FAILED
+        await prisma.transaction.update({
+            where: { id: transaction.id },
+            data: { status: "FAILED" }
+        });
         throw new Error(`MAYAR_REJECTED`);
     }
 
@@ -174,15 +207,20 @@ export async function processCourseCheckout(input: CheckoutInput): Promise<Check
 
     if (!paymentLink) {
         console.error("MAYAR SUCCESS BUT NO LINK:", mayarResp);
+        await prisma.transaction.update({
+            where: { id: transaction.id },
+            data: { status: "FAILED" }
+        });
         throw new Error("MAYAR_NO_LINK");
     }
 
-    // 5. Update Transaction with Mayar Details
+    // 5. Update Transaction with Mayar Details + set expiry deadline
     await prisma.transaction.update({
         where: { id: transaction.id },
         data: {
             mayarInvoiceId: invoiceId?.toString(),
-            mayarInvoiceUrl: paymentLink
+            mayarInvoiceUrl: paymentLink,
+            expiredAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
         }
     });
 

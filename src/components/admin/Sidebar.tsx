@@ -15,7 +15,8 @@ import {
     Search,
     Menu,
     ChevronDown,
-    BarChart3
+    BarChart3,
+    Megaphone
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -49,11 +50,12 @@ export default function Sidebar() {
                 { label: "Pelanggan", href: "/admin/subscribers", icon: CreditCard },
                 { label: "Paket", href: "/admin/plans", icon: Award },
                 { label: "Kupon", href: "/admin/coupons", icon: Ticket },
+                { label: "Promo", href: "/admin/promos", icon: Megaphone },
                 { label: "Keuangan", href: "/admin/finance", icon: BarChart3 },
             ]
         },
         {
-            title: "PENGATURAN",
+            title: "DEVELOPER TOOLS",
             items: [
                 { label: "Webhooks", href: "/admin/webhooks", icon: Webhook },
             ]
@@ -64,13 +66,12 @@ export default function Sidebar() {
         <aside className="w-[280px] bg-white border-r border-gray-100 flex flex-col hidden md:flex shrink-0 z-20">
             {/* Header / Logo */}
             <div className="h-[84px] flex items-center justify-between px-7 shrink-0 border-b border-gray-50">
-                <div className="flex items-center gap-3">
+                <Link href="/admin" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
                     <img src="/images/logo2.png" alt="Luminus Logo" className="h-[36px] object-contain" />
-                    <span className="text-[22px] font-extrabold text-[#1a1a1a] tracking-tight">Luminus</span>
-                </div>
-                <button className="text-gray-500 hover:text-gray-900 transition-colors">
-                    <Menu className="w-6 h-6" strokeWidth={2} />
-                </button>
+                    <span className="font-semibold text-2xl text-black">
+                        Lu<span className="bg-gradient-to-r from-[#696EFF] to-[#F8ACFF] text-transparent bg-clip-text">minus</span>
+                    </span>
+                </Link>
             </div>
 
             {/* Navigation Lists */}

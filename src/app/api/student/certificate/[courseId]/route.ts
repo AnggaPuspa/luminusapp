@@ -20,7 +20,9 @@ export async function GET(
             where: {
                 userId,
                 courseId,
-                status: "ACTIVE"
+                status: {
+                    in: ["ACTIVE", "COMPLETED"]
+                }
             },
             include: {
                 user: { select: { name: true } },

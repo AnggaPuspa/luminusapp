@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
-import { exportFinanceTransactions } from '@/services/finance.service';
+import { exportFinanceTransactions, getFinanceStats } from '@/services/finance.service';
 import { verifySession } from '@/lib/auth';
 import { format } from 'date-fns';
+import { id } from 'date-fns/locale';
+
+function fmtRp(n: number) {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })
+        .format(n)
+        .replace(/\u00A0/g, ' '); // Replace non-breaking space with regular space
+}
 
 export async function GET(request: Request) {
     try {
@@ -17,30 +24,62 @@ export async function GET(request: Request) {
         const year = yearParam ? parseInt(yearParam) : new Date().getFullYear();
         const month = monthParam === 'all' ? 'all' : (monthParam ? parseInt(monthParam) : new Date().getMonth());
 
-        const transactions = await exportFinanceTransactions(month, year);
+        const [transactions, stats] = await Promise.all([
+            exportFinanceTransactions(month, year),
+            getFinanceStats(month, year)
+        ]);
 
-        // Build CSV string
-        const headers = ['Date', 'Customer Name', 'Customer Email', 'Item', 'Type', 'Gross Amount', 'Tax (PPN 11%)', 'Net Amount', 'Status'];
+        const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        const dateLabel = month === 'all' 
+            ? `Tahun ${year}` 
+            : `${MONTHS[month as number]} ${year}`;
+
+        // Build Accounting-Standard CSV string
+        // \uFEFF is the Byte Order Mark (BOM) needed so Excel knows this is UTF-8
+        let csvContent = "\uFEFF";
         
-        let csvContent = headers.join(',') + '\n';
+        // --- HEADER SECTION (P&L STATEMENT) ---
+        csvContent += `"PT LUMINUS APPLICATION"\n`;
+        csvContent += `"LAPORAN LABA RUGI (PROFIT & LOSS)"\n`;
+        csvContent += `"Periode:","${dateLabel}"\n\n`;
+
+        csvContent += `"KETERANGAN","","JUMLAH (Rp)"\n`;
+        csvContent += `"PENDAPATAN (REVENUE)"\n`;
+        csvContent += `"Pendapatan Kursus","","${fmtRp(stats.courseRevenue.current)}"\n`;
+        csvContent += `"Pendapatan Berlangganan (MRR)","","${fmtRp(stats.subscriptionRevenue.current)}"\n`;
+        csvContent += `"TOTAL PENDAPATAN KOTOR","","${fmtRp(stats.grossRevenue.current)}"\n\n`;
+
+        csvContent += `"PENGURANGAN & BEBAN (DEDUCTIONS)"\n`;
+        csvContent += `"Pajak Dipungut (PPN 11%)","","${fmtRp(-stats.taxCollected.current)}"\n`;
+        csvContent += `"Dampak Diskon Kupon","","${fmtRp(-stats.couponImpact.current)}"\n`;
+        const totalDeductions = stats.taxCollected.current + stats.couponImpact.current;
+        csvContent += `"TOTAL PENGURANGAN","","${fmtRp(-totalDeductions)}"\n\n`;
+
+        csvContent += `"PENDAPATAN BERSIH (NET REVENUE)","","${fmtRp(stats.netRevenue.current)}"\n\n`;
+        csvContent += `"=================================================="\n\n`;
+
+        // --- TRANSACTIONS SECTION ---
+        csvContent += `"RINCIAN TRANSAKSI"\n`;
+        const headers = ['Tanggal', 'Nama Pelanggan', 'Email', 'Item', 'Tipe', 'Gross Amount', 'Tax (PPN 11%)', 'Net Amount', 'Status'];
+        csvContent += headers.map(h => `"${h}"`).join(',') + '\n';
 
         transactions.forEach(t => {
-            const formattedDate = format(new Date(t.date), 'yyyy-MM-dd HH:mm:ss');
+            const formattedDate = format(new Date(t.date), "dd MMM yyyy - HH:mm", { locale: id });
             // Escape quotes inside CSV fields
-            const name = `"${t.customerName.replace(/"/g, '""')}"`;
-            const email = `"${t.customerEmail.replace(/"/g, '""')}"`;
-            const item = `"${t.item.replace(/"/g, '""')}"`;
+            const name = `"${(t.customerName || "-").replace(/"/g, '""')}"`;
+            const email = `"${(t.customerEmail || "-").replace(/"/g, '""')}"`;
+            const item = `"${(t.item || "-").replace(/"/g, '""')}"`;
 
             const row = [
-                formattedDate,
+                `"${formattedDate}"`,
                 name,
                 email,
                 item,
-                t.type,
-                t.amount,
-                t.tax,
-                t.net,
-                t.status
+                `"${t.type}"`,
+                `"${fmtRp(t.amount)}"`,
+                `"${fmtRp(t.tax)}"`,
+                `"${fmtRp(t.net)}"`,
+                `"${t.status}"`
             ];
 
             csvContent += row.join(',') + '\n';

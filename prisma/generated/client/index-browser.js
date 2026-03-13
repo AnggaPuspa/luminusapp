@@ -321,6 +321,22 @@ exports.Prisma.SubscriptionInvoiceScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.PromoPopupScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  description: 'description',
+  imageUrl: 'imageUrl',
+  promoCode: 'promoCode',
+  ctaText: 'ctaText',
+  ctaUrl: 'ctaUrl',
+  startDate: 'startDate',
+  endDate: 'endDate',
+  isActive: 'isActive',
+  priority: 'priority',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -426,7 +442,8 @@ exports.Prisma.ModelName = {
   SubscriptionPlan: 'SubscriptionPlan',
   PlanCourse: 'PlanCourse',
   UserSubscription: 'UserSubscription',
-  SubscriptionInvoice: 'SubscriptionInvoice'
+  SubscriptionInvoice: 'SubscriptionInvoice',
+  PromoPopup: 'PromoPopup'
 };
 
 /**

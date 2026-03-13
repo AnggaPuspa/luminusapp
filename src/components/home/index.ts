@@ -3,6 +3,7 @@ export { default as About } from './About';
 export { default as Courses } from './Courses';
 export { default as RoadMap } from './RoadMap';
 export { default as Testimonials } from './Testimonials';
+export { default as PromoPopup } from './PromoPopup';
 export { default as Pricing } from './Pricing';
 export { default as FAQ } from './FAQ';
 export { default as Forum } from './Forum';

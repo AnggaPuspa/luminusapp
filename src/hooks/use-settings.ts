@@ -67,6 +67,8 @@ export function useSettings() {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
+    const [cropImageObj, setCropImageObj] = useState<{ url: string; file: File } | null>(null);
+
     const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -83,11 +85,22 @@ export function useSettings() {
             return;
         }
 
+        const url = URL.createObjectURL(file);
+        setCropImageObj({ url, file });
+        
+        // Reset file input so same file can be re-selected later
+        if (fileInputRef.current) fileInputRef.current.value = "";
+    };
+
+    const processAvatarUpload = async (croppedBlob: Blob) => {
         setUploading(true);
+        setCropImageObj(null); // Close modal 
 
         try {
             const formDataUpload = new FormData();
-            formDataUpload.append("file", file);
+            // Convert blob to file so filename exists
+            const fileObj = new File([croppedBlob], "cropped-avatar.png", { type: "image/png" });
+            formDataUpload.append("file", fileObj);
 
             const res = await fetch("/api/student/avatar", {
                 method: "POST",
@@ -108,8 +121,6 @@ export function useSettings() {
             toast.error(error.message || "Gagal mengupload foto");
         } finally {
             setUploading(false);
-            // Reset file input so same file can be re-selected
-            if (fileInputRef.current) fileInputRef.current.value = "";
         }
     };
 
@@ -166,6 +177,9 @@ export function useSettings() {
         handleAvatarChange,
         handleSubmit,
         resetForm,
+        cropImageObj,
+        setCropImageObj,
+        processAvatarUpload,
     };
 }
 

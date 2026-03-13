@@ -70,6 +70,23 @@ export default function AdminCouponsPage() {
 
     const handleCloseModal = () => { setIsModalOpen(false); setEditingId(null); };
 
+    const formatCurrencyInput = (val: number | string) => {
+        if (!val) return "";
+        const num = typeof val === "string" ? parseInt(val, 10) : val;
+        if (isNaN(num)) return "";
+        return new Intl.NumberFormat('id-ID').format(num);
+    };
+
+    const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const numericStr = e.target.value.replace(/\D/g, "");
+        setFormData({ ...formData, discountValue: numericStr ? parseInt(numericStr, 10) : 0 });
+    };
+
+    const handleMinPurchaseChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const numericStr = e.target.value.replace(/\D/g, "");
+        setFormData({ ...formData, minPurchase: numericStr });
+    };
+
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSaving(true);
@@ -522,18 +539,18 @@ export default function AdminCouponsPage() {
                                     <label className="block text-[13px] font-semibold text-[#1a1a1a] mb-1.5">Nilai Diskon *</label>
                                     <div className="relative">
                                         {formData.discountType === "FIXED" && (
-                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-[#8e95a5] text-[13px] font-medium">Rp</span>
+                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-[#8e95a5] text-[13px] font-medium pointer-events-none">Rp</span>
                                         )}
                                         <input
-                                            type="number"
+                                            type="text"
                                             required
-                                            min="0"
-                                            value={formData.discountValue}
-                                            onChange={(e) => setFormData({ ...formData, discountValue: Number(e.target.value) })}
-                                            className={`w-full py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#4F46E5] text-[13px] bg-gray-50 hover:bg-white transition-colors ${formData.discountType === "FIXED" ? 'pl-9 pr-4' : 'px-4'}`}
+                                            value={formatCurrencyInput(formData.discountValue)}
+                                            onChange={handleDiscountChange}
+                                            placeholder="0"
+                                            className={`w-full py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#4F46E5] text-[13px] bg-gray-50 hover:bg-white transition-colors outline-none ${formData.discountType === "FIXED" ? 'pl-9 pr-4' : 'px-4'}`}
                                         />
                                         {formData.discountType === "PERCENTAGE" && (
-                                            <span className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#8e95a5] text-[13px] font-medium">%</span>
+                                            <span className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#8e95a5] text-[13px] font-medium pointer-events-none">%</span>
                                         )}
                                     </div>
                                 </div>
@@ -553,15 +570,19 @@ export default function AdminCouponsPage() {
 
                                 {/* MIN PURCHASE */}
                                 <div>
-                                    <label className="block text-[13px] font-semibold text-[#1a1a1a] mb-1.5">Min. Pembelian (Rp)</label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={formData.minPurchase}
-                                        onChange={(e) => setFormData({ ...formData, minPurchase: e.target.value })}
-                                        placeholder="Opsional"
-                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#4F46E5] text-[13px] bg-gray-50 hover:bg-white transition-colors"
-                                    />
+                                    <label className="block text-[13px] font-semibold text-[#1a1a1a] mb-1.5">Min. Pembelian <span className="text-[#8e95a5] font-normal">— Opsional</span></label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <span className="text-[#8e95a5] font-medium text-[13px]">Rp</span>
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={formatCurrencyInput(formData.minPurchase)}
+                                            onChange={handleMinPurchaseChange}
+                                            placeholder="0"
+                                            className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#4F46E5] text-[13px] bg-gray-50 hover:bg-white transition-colors outline-none"
+                                        />
+                                    </div>
                                 </div>
 
                                 {/* EXPIRE DATE */}

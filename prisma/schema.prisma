@@ -373,3 +373,22 @@ enum SubscriptionInvoiceStatus {
   FAILED
   REFUNDED
 }
+
+model PromoPopup {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  imageUrl    String?
+  promoCode   String?
+  ctaText     String?
+  ctaUrl      String?
+  startDate   DateTime  @default(now())
+  endDate     DateTime?
+  isActive    Boolean   @default(true)
+  priority    Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([isActive, startDate, endDate])
+  @@map("promo_popups")
+}

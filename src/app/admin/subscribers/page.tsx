@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Users, Search, Filter, Ban, RefreshCcw, CheckCircle2, XCircle, AlertCircle, ArrowUpRight, ArrowDownRight, MoreHorizontal, Calendar, TrendingUp, Download } from "lucide-react";
 import { BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, XAxis, Tooltip, YAxis } from "recharts";
+import SubscriberDetailDrawer from "@/components/admin/SubscriberDetailDrawer";
 
 const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -36,7 +37,8 @@ interface Subscriber {
         name: string;
         tier: string;
         aiMentorQuota: number;
-    }
+    };
+    createdAt: string;
 }
 
 export default function AdminSubscribersPage() {
@@ -57,6 +59,7 @@ export default function AdminSubscribersPage() {
     const [statusFilter, setStatusFilter] = useState("ALL");
     const [tierFilter, setTierFilter] = useState("ALL");
     const [currentPage, setCurrentPage] = useState(1);
+    const [selectedSubscriber, setSelectedSubscriber] = useState<Subscriber | null>(null);
     const pageSize = 10;
 
     const fetchStats = async () => {
@@ -141,7 +144,17 @@ export default function AdminSubscribersPage() {
         const matchesStatus = statusFilter === "ALL" || sub.status === statusFilter;
         const matchesTier = tierFilter === "ALL" || sub.plan.tier === tierFilter;
 
-        return matchesSearch && matchesStatus && matchesTier;
+        let matchesDate = true;
+        if (sub.createdAt) {
+            const subDate = new Date(sub.createdAt);
+            if (selectedMonth === "all") {
+                matchesDate = subDate.getFullYear() === selectedYear;
+            } else {
+                matchesDate = subDate.getMonth() === selectedMonth && subDate.getFullYear() === selectedYear;
+            }
+        }
+
+        return matchesSearch && matchesStatus && matchesTier && matchesDate;
     });
 
     // Reset pagination when filters change
@@ -507,7 +520,7 @@ export default function AdminSubscribersPage() {
                                 </tr>
                             ) : (
                                 paginatedSubscribers.map((sub) => (
-                                    <tr key={sub.id} className="group hover:bg-gray-50/50 transition-colors border-b border-gray-50">
+                                    <tr key={sub.id} onClick={() => setSelectedSubscriber(sub)} className="group hover:bg-gray-50/50 transition-colors border-b border-gray-50 cursor-pointer">
                                         <td className="p-0">
                                             <div className="h-[64px] flex items-center px-4 overflow-hidden">
                                                 <div className="min-w-0 w-full">
@@ -559,12 +572,12 @@ export default function AdminSubscribersPage() {
                                         <td className="p-0">
                                             <div className="h-[64px] flex items-center px-4 justify-start gap-1.5">
                                                 {sub.status === 'PENDING' && (
-                                                    <button onClick={() => handleApprove(sub.id)} className="text-[11px] font-bold text-[#22C55E] bg-[#F0FDF4] hover:bg-green-100 px-2 py-1.5 rounded transition-colors whitespace-nowrap">
+                                                <button onClick={(e) => { e.stopPropagation(); handleApprove(sub.id); }} className="text-[11px] font-bold text-[#22C55E] bg-[#F0FDF4] hover:bg-green-100 px-2 py-1.5 rounded transition-colors whitespace-nowrap">
                                                         Setujui
                                                     </button>
                                                 )}
                                                 {sub.status === 'ACTIVE' && (
-                                                    <button onClick={() => handleSuspend(sub.id)} className="text-[11px] font-bold text-[#EF4444] bg-[#FEF2F2] hover:bg-red-100 px-2 py-1.5 rounded transition-colors whitespace-nowrap">
+                                                <button onClick={(e) => { e.stopPropagation(); handleSuspend(sub.id); }} className="text-[11px] font-bold text-[#EF4444] bg-[#FEF2F2] hover:bg-red-100 px-2 py-1.5 rounded transition-colors whitespace-nowrap">
                                                         Tangguhkan
                                                     </button>
                                                 )}
@@ -616,6 +629,16 @@ export default function AdminSubscribersPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Subscriber Detail Drawer */}
+            <SubscriberDetailDrawer
+                subscriber={selectedSubscriber}
+                onClose={() => setSelectedSubscriber(null)}
+                onAction={() => {
+                    fetchSubscribers();
+                    fetchStats();
+                }}
+            />
         </div>
     );
 }
