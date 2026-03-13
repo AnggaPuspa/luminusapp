@@ -57,7 +57,21 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
-            [name]: name.includes("Price") || name === "duration" ? Number(value) : value
+            [name]: name === "duration" ? Number(value) : value
+        }));
+    };
+
+    const formatCurrency = (val: number) => {
+        if (!val) return "";
+        return new Intl.NumberFormat('id-ID').format(val);
+    };
+
+    const handleCurrencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        const numericStr = value.replace(/\D/g, "");
+        setFormData(prev => ({
+            ...prev,
+            [name]: numericStr ? parseInt(numericStr, 10) : 0
         }));
     };
 
@@ -95,14 +109,14 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
     }
 
     return (
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-[900px] mx-auto space-y-6 pb-10">
             <div className="flex items-center gap-4">
-                <Link href="/admin/courses" className="text-gray-500 hover:text-gray-900 transition-colors p-2 -ml-2 rounded-full hover:bg-gray-100">
+                <Link href="/admin/courses" className="text-gray-500 hover:text-gray-900 transition-colors p-2 -ml-2 rounded-xl hover:bg-gray-100 border border-transparent">
                     <ArrowLeft className="w-5 h-5" />
                 </Link>
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Edit Course</h1>
-                    <p className="text-gray-500 mt-1">Update details for {formData.title}</p>
+                    <h1 className="text-[20px] font-bold text-[#1a1a1a]">Edit Course</h1>
+                    <p className="text-[13px] text-[#8e95a5] mt-0.5">Update details for {formData.title}</p>
                 </div>
             </div>
 
@@ -118,86 +132,96 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="bg-white border rounded-xl shadow-sm p-6 md:p-8 space-y-6">
+            <form onSubmit={handleSubmit} className="bg-white rounded-[20px] border border-gray-200/80 shadow-sm p-6 md:p-8 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="md:col-span-2 space-y-2">
-                        <label className="text-sm font-medium text-gray-900">Course Title <span className="text-red-500">*</span></label>
+                    <div className="md:col-span-2 space-y-1.5">
+                        <label className="text-[#8e95a5] text-[12px] font-semibold uppercase tracking-wider block">Course Title <span className="text-red-500">*</span></label>
                         <input
                             type="text"
                             name="title"
                             required
                             value={formData.title}
                             onChange={handleChange}
-                            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors outline-none"
+                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5]/30 transition-all text-[#1a1a1a]"
                         />
                     </div>
 
-                    <div className="md:col-span-2 space-y-2">
-                        <label className="text-sm font-medium text-gray-900">Description</label>
+                    <div className="md:col-span-2 space-y-1.5">
+                        <label className="text-[#8e95a5] text-[12px] font-semibold uppercase tracking-wider block">Description</label>
                         <textarea
                             name="description"
                             rows={4}
                             value={formData.description}
                             onChange={handleChange}
-                            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors outline-none resize-y"
+                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5]/30 transition-all text-[#1a1a1a] resize-y"
                         />
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-900">Original Price (Rp) <span className="text-red-500">*</span></label>
-                        <input
-                            type="number"
-                            name="originalPrice"
-                            required
-                            min="0"
-                            value={formData.originalPrice}
-                            onChange={handleChange}
-                            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors outline-none"
-                        />
+                    <div className="space-y-1.5">
+                        <label className="text-[#8e95a5] text-[12px] font-semibold uppercase tracking-wider block">Original Price <span className="text-red-500">*</span></label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <span className="text-gray-500 font-medium text-[13px]">Rp</span>
+                            </div>
+                            <input
+                                type="text"
+                                name="originalPrice"
+                                required
+                                value={formatCurrency(formData.originalPrice)}
+                                onChange={handleCurrencyChange}
+                                className="w-full pl-[42px] pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5]/30 transition-all text-[#1a1a1a]"
+                                placeholder="0"
+                            />
+                        </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-900">Discounted Price (Rp)</label>
-                        <input
-                            type="number"
-                            name="discountedPrice"
-                            min="0"
-                            value={formData.discountedPrice}
-                            onChange={handleChange}
-                            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors outline-none"
-                        />
+                    <div className="space-y-1.5">
+                        <label className="text-[#8e95a5] text-[12px] font-semibold uppercase tracking-wider block">Discounted Price</label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <span className="text-gray-500 font-medium text-[13px]">Rp</span>
+                            </div>
+                            <input
+                                type="text"
+                                name="discountedPrice"
+                                value={formatCurrency(formData.discountedPrice)}
+                                onChange={handleCurrencyChange}
+                                className="w-full pl-[42px] pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5]/30 transition-all text-[#1a1a1a]"
+                                placeholder="Kosongkan jika tidak ada diskon"
+                            />
+                        </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-900">Total Duration (Hours)</label>
+                    <div className="space-y-1.5">
+                        <label className="text-[#8e95a5] text-[12px] font-semibold uppercase tracking-wider block">Total Duration (Hours)</label>
                         <input
                             type="number"
                             name="duration"
                             min="0"
                             value={formData.duration}
                             onChange={handleChange}
-                            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors outline-none"
+                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5]/30 transition-all text-[#1a1a1a]"
                         />
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-900">Status</label>
+                    <div className="space-y-1.5">
+                        <label className="text-[#8e95a5] text-[12px] font-semibold uppercase tracking-wider block">Status</label>
                         <select
                             name="status"
                             value={formData.status}
                             onChange={handleChange}
-                            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors outline-none"
+                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5]/30 transition-all text-[#1a1a1a]"
                         >
                             <option value="DRAFT">Draft</option>
                             <option value="PUBLISHED">Published</option>
                         </select>
                     </div>
 
-                    <div className="md:col-span-2 space-y-2">
-                        <label className="text-sm font-medium text-gray-900">Thumbnail Image</label>
+                    <div className="md:col-span-2 space-y-1.5">
+                        <label className="text-[#8e95a5] text-[12px] font-semibold uppercase tracking-wider block">Thumbnail Image</label>
                         <div className="flex gap-4 items-center">
                             {formData.thumbnailUrl && (
-                                <img src={formData.thumbnailUrl} alt="Thumbnail preview" className="w-24 h-16 object-cover rounded-lg border" />
+                                <img src={formData.thumbnailUrl} alt="Thumbnail preview" className="w-24 h-16 object-cover rounded-xl border border-gray-100" />
                             )}
                             <div className="flex-1">
                                 <input
@@ -240,24 +264,24 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                             setSaving(false);
                                         }
                                     }}
-                                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors outline-none"
+                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5]/30 transition-all text-gray-600 file:mr-4 file:py-1.5 file:px-4 file:rounded-lg file:border-0 file:text-[12px] file:font-semibold file:bg-[#4F46E5]/10 file:text-[#4F46E5] hover:file:bg-[#4F46E5]/20"
                                 />
-                                <p className="text-xs text-gray-500 mt-1">Upload a new image file to replace the current thumbnail.</p>
+                                <p className="text-[11.5px] text-[#8e95a5] mt-2 font-medium">Upload a new image file to replace the current thumbnail.</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="pt-6 border-t flex justify-end">
+                <div className="pt-6 border-t border-gray-100 flex justify-end">
                     <button
                         type="submit"
                         disabled={saving}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium inline-flex items-center gap-2 transition-colors disabled:opacity-70"
+                        className="bg-[#4F46E5] hover:bg-[#4338ca] text-white px-5 py-2.5 rounded-xl font-bold inline-flex items-center gap-2 transition-colors disabled:opacity-70 text-[13px] shadow-sm shadow-[#4F46E5]/20"
                     >
-                        {saving ? "Updating..." : (
+                        {saving ? "Memperbarui..." : (
                             <>
-                                <Save className="w-4 h-4" />
-                                Update Course
+                                <Save className="w-4 h-4" strokeWidth={2.5} />
+                                Update Kursus
                             </>
                         )}
                     </button>
@@ -265,7 +289,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
             </form>
 
             {/* Curriculum Builder Section */}
-            <div className="bg-white border rounded-xl shadow-sm p-6 md:p-8 mt-6">
+            <div className="bg-white rounded-[20px] shadow-sm border border-gray-200/80 p-6 md:p-8 mt-6">
                 <ModuleBuilder
                     courseId={id}
                     initialModules={modules}

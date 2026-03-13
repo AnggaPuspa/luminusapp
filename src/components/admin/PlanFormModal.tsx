@@ -54,6 +54,18 @@ export default function PlanFormModal({ isOpen, onClose, initialData, onSaved }:
         setFeatures(newFeatures);
     };
 
+    const formatCurrencyInput = (valStr: string) => {
+        if (!valStr) return "";
+        const num = parseInt(valStr, 10);
+        if (isNaN(num)) return "";
+        return new Intl.NumberFormat('id-ID').format(num);
+    };
+
+    const handleCurrenyChange = (e: React.ChangeEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<string>>) => {
+        const numericStr = e.target.value.replace(/\D/g, "");
+        setter(numericStr);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -151,22 +163,35 @@ export default function PlanFormModal({ isOpen, onClose, initialData, onSaved }:
                         {/* Harga */}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className={labelClass}>Harga Bulanan (Rp) *</label>
-                                <input
-                                    required type="number" min="0" value={monthlyPrice}
-                                    onChange={(e) => setMonthlyPrice(e.target.value)}
-                                    placeholder="99000"
-                                    className={inputClass}
-                                />
+                                <label className={labelClass}>Harga Bulanan *</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <span className="text-gray-500 font-medium text-[13px]">Rp</span>
+                                    </div>
+                                    <input
+                                        required
+                                        type="text"
+                                        value={formatCurrencyInput(monthlyPrice)}
+                                        onChange={(e) => handleCurrenyChange(e, setMonthlyPrice)}
+                                        placeholder="0"
+                                        className={`${inputClass} pl-[42px]`}
+                                    />
+                                </div>
                             </div>
                             <div>
-                                <label className={labelClass}>Harga Tahunan (Rp) <span className="text-[#8e95a5] font-normal">— Opsional</span></label>
-                                <input
-                                    type="number" min="0" value={yearlyPrice}
-                                    onChange={(e) => setYearlyPrice(e.target.value)}
-                                    placeholder="990000"
-                                    className={inputClass}
-                                />
+                                <label className={labelClass}>Harga Tahunan <span className="text-[#8e95a5] font-normal">— Opsional</span></label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <span className="text-gray-500 font-medium text-[13px]">Rp</span>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={formatCurrencyInput(yearlyPrice)}
+                                        onChange={(e) => handleCurrenyChange(e, setYearlyPrice)}
+                                        placeholder="0"
+                                        className={`${inputClass} pl-[42px]`}
+                                    />
+                                </div>
                             </div>
                         </div>
 

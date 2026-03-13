@@ -50,14 +50,13 @@ export default function Footer() {
             <a href="mailto:luminus.student@gmail.com">
               <p>luminus.student@gmail.com</p>
             </a>
-            <p>+62 813 4482 9209</p>
-            <p>Jln. Gajah Mada, Bandung</p>
+            <p>+62 869 6969 6969</p>
+            <p>Denpasar, Bali</p>
           </div>
         </div>
       </div>
       <p className="absolute bottom-5 left-0 w-full text-center opacity-60 text-white font-medium text-sm">
-        Copyright © <span className="hover:font-bold hover:underline cursor-pointer">Luminus</span> | Developed by{' '}
-        <span className="hover:font-bold hover:underline cursor-pointer">Maba Kabupaten.</span>
+        Copyright © <span className="hover:font-bold hover:underline cursor-pointer">Luminus</span>
       </p>
     </section>
   );

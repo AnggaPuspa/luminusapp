@@ -6,29 +6,21 @@ import { sendPaymentSuccessEmail, sendSubscriptionSuccessEmail } from "@/lib/ema
 export async function POST(request: Request) {
     try {
         const rawBody = await request.text();
-        
-        // Debug: Log all headers to find correct signature header name
-        const allHeaders: Record<string, string> = {};
-        request.headers.forEach((value, key) => {
-            allHeaders[key] = value;
-        });
-        console.log("[Webhook] Received headers:", JSON.stringify(allHeaders));
-        console.log("[Webhook] Raw body (first 500 chars):", rawBody.substring(0, 500));
 
-        // Try multiple possible header names for signature
-        const signature = request.headers.get("x-callback-signature") 
+        // Signature verification — STRICT enforcement
+        const signature = request.headers.get("x-callback-signature")
             || request.headers.get("x-mayar-signature")
             || request.headers.get("x-webhook-signature")
             || request.headers.get("signature");
 
-        // Verify Signature - but log instead of rejecting if no secret configured
-        if (process.env.MAYAR_WEBHOOK_SECRET && signature) {
-            if (!verifyMayarWebhook(signature, rawBody)) {
-                console.warn("[Webhook] Signature mismatch! Received:", signature);
-                // Still process for now to debug, but log the warning
-            }
-        } else {
-            console.warn("[Webhook] No signature found in request headers or no secret configured");
+        if (!signature || !process.env.MAYAR_WEBHOOK_SECRET) {
+            console.error("[Webhook] REJECTED: Missing signature or webhook secret not configured");
+            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        }
+
+        if (!verifyMayarWebhook(signature, rawBody)) {
+            console.error("[Webhook] REJECTED: Invalid signature");
+            return NextResponse.json({ message: "Invalid signature" }, { status: 403 });
         }
 
         const body = JSON.parse(rawBody);
@@ -83,102 +75,108 @@ export async function POST(request: Request) {
             console.log(`[Webhook] Processing payment.received for ID: ${transactionStr} or refId: ${refId}`);
 
             if (subInvoice && subInvoice.status === "PENDING") {
-                // --- Handle Subscription Payment ---
-                const now = new Date();
-                const sub = subInvoice.subscription;
-
-                // Calculate new period ends 
-                let newStart = sub.currentPeriodStart;
-                let newEnd = sub.currentPeriodEnd;
-
-                // If subscription was inactive or expired, reset the start date to now
-                if (sub.status !== "ACTIVE" || sub.currentPeriodEnd < now) {
-                    newStart = now;
-                    newEnd = new Date(now);
-                    if (sub.billingCycle === "YEARLY") newEnd.setFullYear(newEnd.getFullYear() + 1);
-                    else newEnd.setMonth(newEnd.getMonth() + 1);
+                // Atomic lock: claim this invoice to prevent duplicate processing
+                const lockResult = await prisma.subscriptionInvoice.updateMany({
+                    where: { id: subInvoice.id, status: "PENDING" },
+                    data: { status: "PAID", paidAt: new Date() }
+                });
+                if (lockResult.count === 0) {
+                    console.log(`[Webhook] Subscription invoice ${subInvoice.id} already processed, skipping.`);
                 } else {
-                    // It's an active renewal (paid before expiration), just extend the end date
-                    newEnd = new Date(sub.currentPeriodEnd);
-                    if (sub.billingCycle === "YEARLY") newEnd.setFullYear(newEnd.getFullYear() + 1);
-                    else newEnd.setMonth(newEnd.getMonth() + 1);
-                }
+                    // --- Handle Subscription Payment ---
+                    const now = new Date();
+                    const sub = subInvoice.subscription;
 
-                await prisma.$transaction([
-                    prisma.subscriptionInvoice.update({
-                        where: { id: subInvoice.id },
-                        data: { status: "PAID", paidAt: now }
-                    }),
-                    prisma.userSubscription.update({
+                    // Calculate new period ends 
+                    let newStart = sub.currentPeriodStart;
+                    let newEnd = sub.currentPeriodEnd;
+
+                    if (sub.status !== "ACTIVE" || sub.currentPeriodEnd < now) {
+                        newStart = now;
+                        newEnd = new Date(now);
+                        if (sub.billingCycle === "YEARLY") newEnd.setFullYear(newEnd.getFullYear() + 1);
+                        else newEnd.setMonth(newEnd.getMonth() + 1);
+                    } else {
+                        newEnd = new Date(sub.currentPeriodEnd);
+                        if (sub.billingCycle === "YEARLY") newEnd.setFullYear(newEnd.getFullYear() + 1);
+                        else newEnd.setMonth(newEnd.getMonth() + 1);
+                    }
+
+                    await prisma.userSubscription.update({
                         where: { id: sub.id },
                         data: {
                             status: "ACTIVE",
                             currentPeriodStart: newStart,
                             currentPeriodEnd: newEnd,
                         }
-                    })
-                ]);
+                    });
 
-                // Fetch user data for the email
-                const user = await prisma.user.findUnique({ where: { id: sub.userId } });
-                const plan = await prisma.subscriptionPlan.findUnique({ where: { id: sub.planId } });
+                    // Fetch user data for the email
+                    const user = await prisma.user.findUnique({ where: { id: sub.userId } });
+                    const plan = await prisma.subscriptionPlan.findUnique({ where: { id: sub.planId } });
 
-                if (user && plan) {
-                    sendSubscriptionSuccessEmail(
-                        user.name || "Siswa",
-                        user.email,
-                        plan.name,
-                        subInvoice.amount,
-                        sub.billingCycle
-                    ).catch((err: any) => console.error("Subscription Success email error:", err));
+                    if (user && plan) {
+                        sendSubscriptionSuccessEmail(
+                            user.name || "Siswa",
+                            user.email,
+                            plan.name,
+                            subInvoice.amount,
+                            sub.billingCycle
+                        ).catch((err: any) => console.error("Subscription Success email error:", err));
+                    }
+
+                    console.log(`[Webhook] Subscription ${sub.id} activated/renewed successfully.`);
                 }
-
-                console.log(`[Webhook] Subscription ${sub.id} activated/renewed successfully.`);
             } else if (transaction && transaction.status === "PENDING") {
-                const dbOps: any[] = [
-                    (prisma as any).transaction.update({
-                        where: { id: transaction.id },
-                        data: {
-                            status: "PAID",
-                            paidAt: new Date(),
-                            paymentMethod: eventData?.paymentMethod || eventData?.transaction?.paymentMethod || "unknown",
-                            paymentChannel: eventData?.paymentChannel || eventData?.transaction?.paymentChannel || "unknown"
-                        }
-                    }),
-                    prisma.enrollment.upsert({
-                        where: {
-                            userId_courseId: {
+                // Atomic lock: claim this transaction to prevent duplicate processing
+                const lockResult = await (prisma as any).transaction.updateMany({
+                    where: { id: transaction.id, status: "PENDING" },
+                    data: {
+                        status: "PAID",
+                        paidAt: new Date(),
+                        paymentMethod: eventData?.paymentMethod || eventData?.transaction?.paymentMethod || "unknown",
+                        paymentChannel: eventData?.paymentChannel || eventData?.transaction?.paymentChannel || "unknown"
+                    }
+                });
+                if (lockResult.count === 0) {
+                    console.log(`[Webhook] Transaction ${transaction.id} already processed, skipping.`);
+                } else {
+                    const dbOps: any[] = [
+                        prisma.enrollment.upsert({
+                            where: {
+                                userId_courseId: {
+                                    userId: transaction.userId,
+                                    courseId: transaction.courseId
+                                }
+                            },
+                            update: { status: "ACTIVE", source: "PURCHASE" },
+                            create: {
                                 userId: transaction.userId,
-                                courseId: transaction.courseId
+                                courseId: transaction.courseId,
+                                status: "ACTIVE",
+                                source: "PURCHASE"
                             }
-                        },
-                        update: { status: "ACTIVE", source: "PURCHASE" },
-                        create: {
-                            userId: transaction.userId,
-                            courseId: transaction.courseId,
-                            status: "ACTIVE",
-                            source: "PURCHASE"
-                        }
-                    })
-                ];
-
-                if (transaction.couponId) {
-                    dbOps.push(
-                        (prisma as any).coupon.update({
-                            where: { id: transaction.couponId },
-                            data: { usedCount: { increment: 1 } }
                         })
-                    );
+                    ];
+
+                    if (transaction.couponId) {
+                        dbOps.push(
+                            (prisma as any).coupon.update({
+                                where: { id: transaction.couponId },
+                                data: { usedCount: { increment: 1 } }
+                            })
+                        );
+                    }
+
+                    await prisma.$transaction(dbOps);
+
+                    sendPaymentSuccessEmail(
+                        transaction.user.name,
+                        transaction.user.email,
+                        transaction.course.title,
+                        transaction.amount
+                    ).catch(err => console.error("Payment Success email error:", err));
                 }
-
-                await prisma.$transaction(dbOps);
-
-                sendPaymentSuccessEmail(
-                    transaction.user.name,
-                    transaction.user.email,
-                    transaction.course.title,
-                    transaction.amount
-                ).catch(err => console.error("Payment Success email error:", err));
             }
         }
 

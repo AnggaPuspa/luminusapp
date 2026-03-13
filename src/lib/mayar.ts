@@ -63,7 +63,12 @@ export function verifyMayarWebhook(signature: string, payloadStr: string): boole
             .update(payloadStr)
             .digest('hex');
 
-        return signature === expectedSignature;
+        // Timing-safe comparison to prevent timing attacks
+        if (signature.length !== expectedSignature.length) return false;
+        return crypto.timingSafeEqual(
+            Buffer.from(signature, 'hex'),
+            Buffer.from(expectedSignature, 'hex')
+        );
     } catch (e) {
         return false;
     }

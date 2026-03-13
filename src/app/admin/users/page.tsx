@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
-import { Users, ArrowUpRight, MoreHorizontal, Search, Filter, TrendingUp, ShieldCheck, GraduationCap, Calendar } from "lucide-react";
+import { Users, ArrowUpRight, MoreHorizontal, Search, Filter, TrendingUp, ShieldCheck, GraduationCap, Calendar, Download } from "lucide-react";
 import { BarChart, Bar, ResponsiveContainer, XAxis, Tooltip, YAxis, PieChart, Pie, Cell } from "recharts";
+import UserDetailDrawer from "@/components/admin/UserDetailDrawer";
 
 const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -23,7 +24,18 @@ export default function UsersPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [roleFilter, setRoleFilter] = useState("ALL");
     const [currentPage, setCurrentPage] = useState(1);
+    const [selectedUser, setSelectedUser] = useState<any>(null);
     const pageSize = 10;
+
+    // Date Picker state
+    const [selectedMonth, setSelectedMonth] = useState<number | "all">(new Date().getMonth());
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [showDatePicker, setShowDatePicker] = useState(false);
+
+    const MONTH_NAMES = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
 
     useEffect(() => {
         fetchUsers();
@@ -52,7 +64,16 @@ export default function UsersPage() {
         const matchSearch = (u.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
             (u.email || "").toLowerCase().includes(searchTerm.toLowerCase());
         const matchRole = roleFilter === "ALL" || u.role === roleFilter;
-        return matchSearch && matchRole;
+
+        let matchesDate = true;
+        const subDate = new Date(u.createdAt);
+        if (selectedMonth === "all") {
+            matchesDate = subDate.getFullYear() === selectedYear;
+        } else {
+            matchesDate = subDate.getMonth() === selectedMonth && subDate.getFullYear() === selectedYear;
+        }
+
+        return matchSearch && matchRole && matchesDate;
     });
 
     const totalItems = filteredUsers.length;
@@ -60,27 +81,71 @@ export default function UsersPage() {
     const startIndex = (currentPage - 1) * pageSize;
     const paginatedUsers = filteredUsers.slice(startIndex, startIndex + pageSize);
 
-    // Build last 15 days registration chart data
-    const chartDays = Array.from({ length: 15 }, (_, i) => {
-        const d = new Date();
-        d.setDate(d.getDate() - (14 - i));
-        return {
-            label: format(d, "dd", { locale: id }),
-            dateStr: format(d, "yyyy-MM-dd"),
-            count: 0
-        };
-    });
-    users.forEach(u => {
-        const dayStr = format(new Date(u.createdAt), "yyyy-MM-dd");
-        const slot = chartDays.find(d => d.dateStr === dayStr);
-        if (slot) slot.count++;
-    });
+    // Build dynamic chart data based on selected month/year
+    const chartDays = (() => {
+        if (selectedMonth === "all") {
+            // Group by month
+            const months = Array.from({ length: 12 }, (_, i) => ({
+                label: MONTH_NAMES[i].substring(0, 3),
+                count: 0
+            }));
+            filteredUsers.forEach(u => {
+                const d = new Date(u.createdAt);
+                if (d.getFullYear() === selectedYear) {
+                    months[d.getMonth()].count++;
+                }
+            });
+            return months;
+        } else {
+            // Group by day of the month
+            const daysInMonth = new Date(selectedYear, selectedMonth as number + 1, 0).getDate();
+            const days = Array.from({ length: daysInMonth }, (_, i) => ({
+                label: (i + 1).toString().padStart(2, '0'),
+                dateStr: `${selectedYear}-${String(selectedMonth as number + 1).padStart(2, '0')}-${String(i + 1).padStart(2, '0')}`,
+                count: 0
+            }));
+            filteredUsers.forEach(u => {
+                const d = new Date(u.createdAt);
+                if (d.getMonth() === selectedMonth && d.getFullYear() === selectedYear) {
+                    const dayObj = days[d.getDate() - 1];
+                    if (dayObj) dayObj.count++;
+                }
+            });
+            return days;
+        }
+    })();
+
     const maxCount = Math.max(...chartDays.map(d => d.count), 1);
     const newThisMonth = users.filter(u => {
         const d = new Date(u.createdAt);
-        const now = new Date();
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        return d.getMonth() === (selectedMonth === "all" ? new Date().getMonth() : selectedMonth) && d.getFullYear() === selectedYear;
     }).length;
+
+    const handleExportCSV = () => {
+        if (filteredUsers.length === 0) return alert("Hanya ada data kosong!");
+        
+        const headers = ["Nama", "Email", "Role", "Total Pendaftaran", "Total Transaksi", "Tanggal Bergabung"];
+        const csvContent = [
+            headers.join(","),
+            ...filteredUsers.map(u => [
+                `"${u.name || "-"}"`,
+                u.email || "-",
+                u.role,
+                u._count?.enrollments || 0,
+                u._count?.transactions || 0,
+                `"${format(new Date(u.createdAt), "dd MMM yyyy - HH:mm", { locale: id })}"`
+            ].join(","))
+        ].join("\n");
+
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `Data_Pengguna_${format(new Date(), "yyyy-MM-dd")}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     return (
         <div className="space-y-6 max-w-[1600px] mx-auto pb-10">
@@ -92,10 +157,62 @@ export default function UsersPage() {
                 <div className="xl:col-span-7 bg-white rounded-2xl p-7 shadow-sm">
                     <div className="flex justify-between items-start mb-6">
                         <h2 className="text-[17px] font-bold text-[#1a1a1a]">Pertumbuhan Pengguna</h2>
-                        <div className="flex gap-2">
-                            <button className="p-2 bg-gray-50 border border-gray-100 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors cursor-pointer">
+                        <div className="flex gap-2 relative">
+                            <button
+                                onClick={() => setShowDatePicker(!showDatePicker)}
+                                className={`p-2 border rounded-lg transition-colors cursor-pointer ${showDatePicker ? 'bg-gray-100 border-gray-200 text-gray-900' : 'bg-gray-50 border-gray-100 text-gray-400 hover:bg-gray-100 hover:text-gray-900'}`}
+                            >
                                 <Calendar className="w-[18px] h-[18px]" strokeWidth={2} />
                             </button>
+
+                            {/* Date Picker Popover */}
+                            {showDatePicker && (
+                                <>
+                                    <div className="fixed inset-0 z-10" onClick={() => setShowDatePicker(false)} />
+                                    <div className="absolute top-full right-0 mt-2 z-20 bg-white rounded-xl shadow-xl border border-gray-100 p-4 w-[280px]">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <button
+                                                onClick={() => setSelectedYear(prev => prev - 1)}
+                                                className="p-1 hover:bg-gray-100 rounded text-gray-500"
+                                            >&lt;</button>
+                                            <span className="font-semibold text-[15px]">{selectedYear}</span>
+                                            <button
+                                                onClick={() => setSelectedYear(prev => prev + 1)}
+                                                className="p-1 hover:bg-gray-100 rounded text-gray-500"
+                                            >&gt;</button>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedMonth("all");
+                                                    setShowDatePicker(false);
+                                                }}
+                                                className={`py-2 text-[13px] col-span-3 rounded-lg transition-colors ${selectedMonth === "all"
+                                                    ? "bg-[#4F46E5] text-white font-medium shadow-sm"
+                                                    : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                                                    }`}
+                                            >
+                                                Sepanjang Tahun ({selectedYear})
+                                            </button>
+                                            {MONTH_NAMES.map((m, i) => (
+                                                <button
+                                                    key={m}
+                                                    onClick={() => {
+                                                        setSelectedMonth(i);
+                                                        setShowDatePicker(false);
+                                                    }}
+                                                    className={`py-2 text-[13px] rounded-lg transition-colors ${selectedMonth === i
+                                                        ? "bg-[#4F46E5] text-white font-medium shadow-sm"
+                                                        : "text-gray-600 hover:bg-gray-50"
+                                                        }`}
+                                                >
+                                                    {m.substring(0, 3)}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                             <button className="p-2 bg-gray-50 border border-gray-100 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors cursor-pointer">
                                 <MoreHorizontal className="w-[18px] h-[18px]" strokeWidth={2} />
                             </button>
@@ -104,14 +221,14 @@ export default function UsersPage() {
 
                     <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
                         <div className="flex items-baseline gap-4">
-                            <h3 className="text-[34px] font-bold text-[#1a1a1a] leading-none">{loading ? "—" : users.length}</h3>
+                            <h3 className="text-[34px] font-bold text-[#1a1a1a] leading-none">{loading ? "—" : filteredUsers.length}</h3>
                             <div className="flex items-center gap-2">
                                 <TrendingUp className="w-5 h-5 text-[#84C529]" strokeWidth={2.5} />
-                                <span className="text-[13px] font-medium text-[#8e95a5]">Total pengguna terdaftar</span>
+                                <span className="text-[13px] font-medium text-[#8e95a5]">Total pada periode ini</span>
                             </div>
                         </div>
-                        <span className="text-[13px] font-medium text-[#8e95a5]">
-                            {loading ? "—" : newThisMonth} baru bulan ini
+                        <span className="text-[13px] font-medium text-[#4F46E5] bg-[#EEEDFA] px-3 py-1 rounded-full">
+                            {selectedMonth === "all" ? `Sepanjang Tahun ${selectedYear}` : `${MONTH_NAMES[selectedMonth as number]} ${selectedYear}`}
                         </span>
                     </div>
 
@@ -279,6 +396,13 @@ export default function UsersPage() {
                             </select>
                             <Filter className="w-[14px] h-[14px] absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                         </div>
+                        <button 
+                            onClick={handleExportCSV}
+                            title="Unduh CSV"
+                            className="p-2 border border-gray-100 bg-gray-50 rounded-lg text-gray-400 hover:text-gray-900 transition-colors"
+                        >
+                            <Download className="w-[18px] h-[18px]" strokeWidth={2} />
+                        </button>
                     </div>
                 </div>
 
@@ -296,11 +420,41 @@ export default function UsersPage() {
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr>
-                                    <td colSpan={6} className="px-4 py-8 text-center text-[13px] text-[#8e95a5] font-medium">
-                                        Memuat data pengguna...
-                                    </td>
-                                </tr>
+                                Array.from({ length: 5 }).map((_, i) => (
+                                    <tr key={i} className="border-b border-gray-50">
+                                        <td className="p-0">
+                                            <div className="h-[64px] px-4 flex items-center">
+                                                <div className="h-4 w-32 bg-gray-100 rounded animate-pulse"></div>
+                                            </div>
+                                        </td>
+                                        <td className="p-0">
+                                            <div className="h-[64px] px-4 flex items-center">
+                                                <div className="h-4 w-48 bg-gray-100 rounded animate-pulse"></div>
+                                            </div>
+                                        </td>
+                                        <td className="p-0">
+                                            <div className="h-[64px] px-4 flex items-center">
+                                                <div className="h-6 w-16 bg-gray-100 rounded-md animate-pulse"></div>
+                                            </div>
+                                        </td>
+                                        <td className="p-0">
+                                            <div className="h-[64px] px-4 flex items-center">
+                                                <div className="h-4 w-12 bg-gray-100 rounded animate-pulse"></div>
+                                            </div>
+                                        </td>
+                                        <td className="p-0">
+                                            <div className="h-[64px] px-4 flex items-center">
+                                                <div className="h-4 w-12 bg-gray-100 rounded animate-pulse"></div>
+                                            </div>
+                                        </td>
+                                        <td className="p-0">
+                                            <div className="h-[64px] px-4 flex flex-col justify-center gap-2">
+                                                <div className="h-4 w-20 bg-gray-100 rounded animate-pulse"></div>
+                                                <div className="h-3 w-12 bg-gray-50 rounded animate-pulse"></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
                             ) : filteredUsers.length === 0 ? (
                                 <tr>
                                     <td colSpan={6} className="px-4 py-12 text-center">
@@ -317,7 +471,7 @@ export default function UsersPage() {
                                 </tr>
                             ) : (
                                 paginatedUsers.map((user) => (
-                                    <tr key={user.id} className="group hover:bg-gray-50/50 transition-colors border-b border-gray-50">
+                                    <tr key={user.id} onClick={() => setSelectedUser(user)} className="group hover:bg-gray-50/50 transition-colors border-b border-gray-50 cursor-pointer">
                                         {/* Nama */}
                                         <td className="p-0">
                                             <div className="h-[64px] flex items-center px-4 overflow-hidden">
@@ -399,6 +553,10 @@ export default function UsersPage() {
                 </div>
             </div>
 
+            <UserDetailDrawer
+                user={selectedUser}
+                onClose={() => setSelectedUser(null)}
+            />
         </div>
     );
 }

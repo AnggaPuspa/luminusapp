@@ -34,6 +34,7 @@ export async function POST(request: Request) {
             COURSE_UNAVAILABLE: 404, // Used interchangeably for simplicity
             ALREADY_ENROLLED: 400,
             PRICE_TOO_LOW: 400,
+            COUPON_INVALID: 400,
             MAYAR_NO_LINK: 502,
             MAYAR_REJECTED: 502,
         };
@@ -44,6 +45,7 @@ export async function POST(request: Request) {
             COURSE_NOT_FOUND: "Course not found or unavailable",
             ALREADY_ENROLLED: "You are already enrolled in this course.",
             PRICE_TOO_LOW: "Harga kursus terlalu rendah. Minimum transaksi Mayar adalah Rp 500.",
+            COUPON_INVALID: "Kupon tidak valid atau sudah tidak berlaku.",
         };
 
         const message = messageMap[error.message] || error.message || "Internal Server Error";

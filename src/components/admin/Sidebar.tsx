@@ -15,7 +15,8 @@ import {
     Search,
     Menu,
     ChevronDown,
-    BarChart3
+    BarChart3,
+    Megaphone
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -49,6 +50,7 @@ export default function Sidebar() {
                 { label: "Pelanggan", href: "/admin/subscribers", icon: CreditCard },
                 { label: "Paket", href: "/admin/plans", icon: Award },
                 { label: "Kupon", href: "/admin/coupons", icon: Ticket },
+                { label: "Promo", href: "/admin/promos", icon: Megaphone },
                 { label: "Keuangan", href: "/admin/finance", icon: BarChart3 },
             ]
         },
@@ -70,9 +72,6 @@ export default function Sidebar() {
                         Lu<span className="bg-gradient-to-r from-[#696EFF] to-[#F8ACFF] text-transparent bg-clip-text">minus</span>
                     </span>
                 </Link>
-                <button className="text-gray-500 hover:text-gray-900 transition-colors">
-                    <Menu className="w-6 h-6" strokeWidth={2} />
-                </button>
             </div>
 
             {/* Navigation Lists */}

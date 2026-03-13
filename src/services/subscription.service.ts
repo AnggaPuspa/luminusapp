@@ -110,6 +110,8 @@ export async function processSubscriptionCheckout(input: SubscriptionInput): Pro
     const mayarId = mayarResp?.data?.id || mayarResp?.id;
 
     if (!paymentLink) {
+        await prisma.userSubscription.update({ where: { id: subscription.id }, data: { status: "CANCELLED" } });
+        await prisma.subscriptionInvoice.update({ where: { id: invoice.id }, data: { status: "FAILED", failureReason: "Mayar response has no payment link" } });
         throw new Error("MAYAR_NO_LINK");
     }
 
@@ -148,6 +150,7 @@ export async function processSubscriptionRenewal(): Promise<{ success: boolean; 
     const results = [];
 
     for (const sub of subsToRenew) {
+        let invoice: any = null;
         try {
             const existingInvoice = await prisma.subscriptionInvoice.findFirst({
                 where: {
@@ -173,7 +176,7 @@ export async function processSubscriptionRenewal(): Promise<{ success: boolean; 
                 ? sub.plan.yearlyPrice
                 : sub.plan.monthlyPrice;
 
-            const invoice = await prisma.subscriptionInvoice.create({
+            invoice = await prisma.subscriptionInvoice.create({
                 data: {
                     subscriptionId: sub.id,
                     amount: amount,
@@ -208,6 +211,13 @@ export async function processSubscriptionRenewal(): Promise<{ success: boolean; 
 
         } catch (err: any) {
             console.error(`Error renewing sub ${sub.id}:`, err);
+            // Cleanup orphaned invoice
+            if (invoice) {
+                await prisma.subscriptionInvoice.update({
+                    where: { id: invoice.id },
+                    data: { status: "FAILED", failureReason: err.message }
+                }).catch(cleanupErr => console.error(`Failed to cleanup invoice:`, cleanupErr));
+            }
             results.push({ subId: sub.id, success: false, error: err.message });
         }
     }

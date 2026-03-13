@@ -157,7 +157,7 @@
 }
 
 .blog-content {
-  padding: 10px 0 20px 20px;
+  padding: 10px 20px 20px 20px;
 }
 
 .blog-content h4 {
@@ -508,3 +508,191 @@
     line-height: 1.5;
   }
 }
+
+/* =============================================
+   TAMBAHAN RESPONSIVE — DESKTOP FIRST APPROACH
+   Tidak ada baris desktop CSS yang diubah di atas.
+   Semua perubahan berikut adalah append-only.
+   ============================================= */
+
+/* ======== TABLET (max-width: 768px) ======== */
+@media (max-width: 768px) {
+
+  /* Hero Section */
+  .header-responsive {
+    height: auto;
+    padding: 80px 0 60px 0;
+  }
+
+  .header-container-responsive {
+    flex-direction: column-reverse;
+    gap: 0;
+  }
+
+  .header-left-responsive {
+    width: 100%;
+    text-align: center;
+    align-items: center;
+    margin-top: 8px;
+    padding: 0 12px;
+  }
+
+  .header-left-responsive p {
+    text-align: center;
+    width: 90% !important;
+    margin: 0 auto 24px auto;
+  }
+
+  .header-left-responsive .flex {
+    justify-content: center;
+  }
+
+  .header-right-responsive {
+    width: 80%;
+    margin: 0 auto;
+  }
+
+  /* Blog / Courses Section */
+  .blog-section {
+    padding: 60px 0 40px 0;
+  }
+
+  .blog-header {
+    width: 100%;
+    text-align: left;
+  }
+
+  .blog-left p {
+    font-size: 24px;
+  }
+
+  .blog-card {
+    padding: 16px 0 12px 0;
+  }
+
+  .blog-content {
+    padding: 8px 16px 16px 16px;
+  }
+
+  .blog-content p {
+    font-size: 16px;
+    margin-top: 10px;
+  }
+
+  /* CTA Section */
+  .cta-section {
+    height: auto;
+    padding: 60px 16px;
+  }
+
+  .cta-title {
+    font-size: 24px;
+    line-height: 1.4;
+  }
+
+  .cta-description {
+    font-size: 14px;
+    max-width: 100%;
+    padding: 0 8px;
+  }
+
+  .cta-button {
+    margin-top: 20px;
+    padding: 10px 24px;
+    font-size: 14px;
+  }
+
+  /* Scroll Button */
+  .scroll-up-btn {
+    right: 20px;
+    bottom: 20px;
+    width: 48px;
+    height: 48px;
+    font-size: 22px;
+  }
+}
+
+/* ======== MOBILE (max-width: 480px) ======== */
+@media (max-width: 480px) {
+
+  /* Hero Section */
+  .header-responsive {
+    padding: 64px 0 40px 0;
+  }
+
+  .header-left-responsive {
+    padding: 0 8px;
+  }
+
+  .header-left-responsive p {
+    font-size: 14px !important;
+    width: 100% !important;
+  }
+
+  .header-right-responsive {
+    width: 90%;
+  }
+
+  /* Blog / Courses Section */
+  .blog-section {
+    padding: 40px 0 24px 0;
+  }
+
+  .blog-container {
+    width: 95%;
+    padding: 10px 0;
+  }
+
+  .blog-section .swiper-container {
+    width: 80vw;
+  }
+
+  .blog-left p {
+    font-size: 20px;
+  }
+
+  .blog-card {
+    padding: 12px 0 10px 0;
+  }
+
+  .blog-content {
+    padding: 6px 14px 14px 14px;
+  }
+
+  .blog-content p {
+    font-size: 15px;
+    margin-top: 8px;
+  }
+
+  /* CTA Section */
+  .cta-section {
+    padding: 48px 12px;
+  }
+
+  .cta-title {
+    font-size: 20px;
+    line-height: 1.4;
+  }
+
+  .cta-description {
+    font-size: 13px;
+    margin-top: 6px;
+  }
+
+  .cta-button {
+    margin-top: 16px;
+    padding: 10px 20px;
+    font-size: 13px;
+    border-radius: 8px;
+  }
+
+  /* Scroll Button - smaller on tiny screens */
+  .scroll-up-btn {
+    right: 12px;
+    bottom: 16px;
+    width: 42px;
+    height: 42px;
+    font-size: 18px;
+  }
+}
+

@@ -11,6 +11,7 @@ import {
   CTA,
   Footer,
   ScrollButton,
+  PromoPopup
 } from '@/components';
 
 // Home page specific styles
@@ -64,9 +65,24 @@ export default async function Home() {
     take: 6 // Show latest 6 top reviews
   });
 
+  // Fetch active promo for the popup
+  const now = new Date();
+  const activePromo = await prisma.promoPopup.findFirst({
+        where: {
+            isActive: true,
+            startDate: { lte: now },
+            OR: [
+                { endDate: null },
+                { endDate: { gte: now } }
+            ]
+        },
+        orderBy: { priority: 'desc' },
+  });
+
   return (
     <>
       <ScrollButton />
+      <PromoPopup promo={activePromo} />
       <Navbar />
       <Hero />
       <About />

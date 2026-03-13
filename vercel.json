@@ -14,6 +14,10 @@
             "schedule": "0 6 * * *"
         },
         {
+            "path": "/api/cron/expire-transactions",
+            "schedule": "0 */6 * * *"
+        },
+        {
             "path": "/api/cron/reset-ai-quota",
             "schedule": "0 0 1 * *"
         }

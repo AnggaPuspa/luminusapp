@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { ArrowUpRight, ArrowDownRight, MoreHorizontal, Calendar, TrendingUp, Search, Filter, Download } from "lucide-react";
 import { BarChart, Bar, AreaChart, Area, ResponsiveContainer, XAxis, Tooltip, YAxis } from "recharts";
+import OrderDetailDrawer from "@/components/admin/OrderDetailDrawer";
 
 const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -19,11 +19,12 @@ const CustomTooltip = ({ active, payload }: any) => {
 };
 
 export default function OrdersPage() {
-    const router = useRouter();
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [statusFilter, setStatusFilter] = useState("ALL");
     const [currentPage, setCurrentPage] = useState(1);
+    const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
     const pageSize = 10;
 
     const [stats, setStats] = useState<any>(null);
@@ -82,12 +83,24 @@ export default function OrdersPage() {
         return { value: Math.round(change * 10) / 10, isPositive: change >= 0 };
     };
 
-    const filteredOrders = orders.filter(o =>
-        (o.mayarInvoiceId || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (o.user?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (o.user?.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (o.course?.title || "").toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredOrders = orders.filter(o => {
+        const matchesSearch = (o.mayarInvoiceId || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (o.user?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (o.user?.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (o.course?.title || "").toLowerCase().includes(searchTerm.toLowerCase());
+        
+        const matchesStatus = statusFilter === "ALL" || o.status === statusFilter;
+        
+        let matchesDate = true;
+        const orderDate = new Date(o.createdAt);
+        if (selectedMonth === "all") {
+            matchesDate = orderDate.getFullYear() === selectedYear;
+        } else {
+            matchesDate = orderDate.getMonth() === selectedMonth && orderDate.getFullYear() === selectedYear;
+        }
+        
+        return matchesSearch && matchesStatus && matchesDate;
+    });
 
     const totalItems = filteredOrders.length;
     const totalPages = Math.ceil(totalItems / pageSize) || 1;
@@ -108,6 +121,33 @@ export default function OrdersPage() {
         'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
         'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
     ];
+
+    const handleExportCSV = () => {
+        if (filteredOrders.length === 0) return alert("Hanya ada data kosong!");
+        
+        const headers = ["Mayar Invoice ID", "Nama Pelanggan", "Email", "Kursus", "Tanggal", "Jumlah (Rp)", "Status"];
+        const csvContent = [
+            headers.join(","),
+            ...filteredOrders.map(o => [
+                o.mayarInvoiceId || "-",
+                `"${o.user?.name || "-"}"`,
+                o.user?.email || "-",
+                `"${o.course?.title || "-"}"`,
+                `"${format(new Date(o.createdAt), "dd MMM yyyy - HH:mm", { locale: id })}"`,
+                o.amount || 0,
+                o.status
+            ].join(","))
+        ].join("\n");
+
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `Data_Pesanan_${format(new Date(), "yyyy-MM-dd")}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     const earningsChange = stats ? calcChange(stats.stats.totalEarnings, stats.stats.prevEarnings) : { value: 0, isPositive: true };
     const salesChange = stats ? calcChange(stats.stats.totalSales, stats.stats.prevSales) : { value: 0, isPositive: true };
@@ -448,8 +488,27 @@ export default function OrdersPage() {
                                 className="pl-10 pr-4 py-2 border border-gray-100 bg-gray-50 rounded-lg text-[13px] font-medium focus:outline-none focus:ring-1 focus:ring-[#4F46E5] transition-colors w-64 hover:bg-gray-100"
                             />
                         </div>
-                        <button className="p-2 border border-gray-100 bg-gray-50 rounded-lg text-gray-400 hover:text-gray-900 transition-colors"><Filter className="w-[18px] h-[18px]" strokeWidth={2} /></button>
-                        <button className="p-2 border border-gray-100 bg-gray-50 rounded-lg text-gray-400 hover:text-gray-900 transition-colors"><Download className="w-[18px] h-[18px]" strokeWidth={2} /></button>
+                        <div className="relative hidden sm:block">
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                                className="appearance-none pl-4 pr-10 py-2 border border-gray-100 bg-gray-50 rounded-lg text-[13px] font-medium focus:outline-none focus:ring-1 focus:ring-[#4F46E5] transition-colors cursor-pointer hover:bg-gray-100 text-gray-600"
+                            >
+                                <option value="ALL">Semua Status</option>
+                                <option value="PENDING">Pending</option>
+                                <option value="PAID">Lunas (Paid)</option>
+                                <option value="FAILED">Gagal (Failed)</option>
+                                <option value="EXPIRED">Kedaluwarsa (Expired)</option>
+                            </select>
+                            <Filter className="w-[14px] h-[14px] absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                        </div>
+                        <button 
+                            onClick={handleExportCSV}
+                            title="Unduh CSV"
+                            className="p-2 border border-gray-100 bg-gray-50 rounded-lg text-gray-400 hover:text-gray-900 transition-colors"
+                        >
+                            <Download className="w-[18px] h-[18px]" strokeWidth={2} />
+                        </button>
                     </div>
                 </div>
 
@@ -468,11 +527,43 @@ export default function OrdersPage() {
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr>
-                                    <td colSpan={7} className="px-6 py-8 text-center text-gray-400 text-[13px] font-medium">
-                                        Memuat pesanan...
-                                    </td>
-                                </tr>
+                                Array.from({ length: 5 }).map((_, i) => (
+                                    <tr key={i} className="border-b border-gray-50">
+                                        <td className="p-0">
+                                            <div className="h-[64px] px-4 flex items-center">
+                                                <div className="h-4 w-32 bg-gray-100 rounded animate-pulse"></div>
+                                            </div>
+                                        </td>
+                                        <td className="p-0">
+                                            <div className="h-[64px] px-4 flex flex-col justify-center gap-2">
+                                                <div className="h-4 w-28 bg-gray-100 rounded animate-pulse"></div>
+                                                <div className="h-3 w-40 bg-gray-50 rounded animate-pulse"></div>
+                                            </div>
+                                        </td>
+                                        <td className="p-0">
+                                            <div className="h-[64px] px-4 flex items-center">
+                                                <div className="h-4 w-48 bg-gray-100 rounded animate-pulse"></div>
+                                            </div>
+                                        </td>
+                                        <td className="p-0">
+                                            <div className="h-[64px] px-4 flex flex-col justify-center gap-2">
+                                                <div className="h-4 w-20 bg-gray-100 rounded animate-pulse"></div>
+                                                <div className="h-3 w-12 bg-gray-50 rounded animate-pulse"></div>
+                                            </div>
+                                        </td>
+                                        <td className="p-0">
+                                            <div className="h-[64px] px-4 flex items-center">
+                                                <div className="h-4 w-24 bg-gray-100 rounded animate-pulse"></div>
+                                            </div>
+                                        </td>
+                                        <td className="p-0">
+                                            <div className="h-[64px] px-4 flex items-center">
+                                                <div className="h-6 w-16 bg-gray-100 rounded-md animate-pulse"></div>
+                                            </div>
+                                        </td>
+                                        <td className="p-0"></td>
+                                    </tr>
+                                ))
                             ) : paginatedOrders.length === 0 ? (
                                 <tr>
                                     <td colSpan={7} className="px-6 py-8 text-center text-gray-400 text-[13px] font-medium">
@@ -483,7 +574,7 @@ export default function OrdersPage() {
                                 paginatedOrders.map((order) => (
                                     <tr
                                         key={order.id}
-                                        onClick={() => router.push(`/admin/orders/${order.id}`)}
+                                        onClick={() => setSelectedOrderId(order.id)}
                                         className="group hover:bg-gray-50/50 transition-colors border-b border-gray-50 cursor-pointer"
                                     >
                                         <td className="p-0">
@@ -580,6 +671,16 @@ export default function OrdersPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Transaction Detail Drawer */}
+            <OrderDetailDrawer
+                orderId={selectedOrderId}
+                onClose={() => setSelectedOrderId(null)}
+                onStatusUpdated={() => {
+                    fetchOrders();
+                    fetchStats();
+                }}
+            />
         </div>
     );
 }

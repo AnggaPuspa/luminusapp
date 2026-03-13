@@ -21,6 +21,46 @@ export async function GET(request: Request) {
                         enrollments: true,
                         transactions: true,
                     }
+                },
+                enrollments: {
+                    take: 5,
+                    orderBy: {
+                        enrolledAt: "desc"
+                    },
+                    include: {
+                        course: {
+                            select: {
+                                title: true,
+                                thumbnailUrl: true
+                            }
+                        }
+                    }
+                },
+                reviews: {
+                    take: 5,
+                    orderBy: {
+                        createdAt: "desc"
+                    },
+                    include: {
+                        course: {
+                            select: {
+                                title: true
+                            }
+                        }
+                    }
+                },
+                transactions: {
+                    take: 5,
+                    orderBy: {
+                        createdAt: "desc"
+                    },
+                    select: {
+                        id: true,
+                        mayarInvoiceId: true,
+                        status: true,
+                        createdAt: true,
+                        amount: true
+                    }
                 }
             }
         });
