@@ -7,29 +7,20 @@ export async function POST(request: Request) {
     try {
         const rawBody = await request.text();
 
-        // === DIAGNOSTIC: Dump all incoming headers (remove after debugging) ===
-        const allHeaders: Record<string, string> = {};
-        request.headers.forEach((value, key) => { allHeaders[key] = value; });
-        console.log("[Webhook] Incoming headers:", JSON.stringify(allHeaders, null, 2));
-        console.log("[Webhook] MAYAR_WEBHOOK_SECRET configured:", !!process.env.MAYAR_WEBHOOK_SECRET);
+        // Mayar mengirim token autentikasi di header "x-callback-token"
+        const callbackToken = request.headers.get("x-callback-token");
+        const webhookSecret = process.env.MAYAR_WEBHOOK_SECRET;
 
-        // Signature verification — STRICT enforcement
-        const signature = request.headers.get("x-callback-signature")
-            || request.headers.get("x-mayar-signature")
-            || request.headers.get("x-webhook-signature")
-            || request.headers.get("signature");
-
-        console.log("[Webhook] Detected signature value:", signature ?? "NULL - not found in any expected header");
-
-        if (!signature || !process.env.MAYAR_WEBHOOK_SECRET) {
-            console.error("[Webhook] REJECTED: Missing signature or webhook secret not configured");
-            console.error("[Webhook] signature found:", !!signature, "| secret configured:", !!process.env.MAYAR_WEBHOOK_SECRET);
+        if (!callbackToken || !webhookSecret) {
+            console.error("[Webhook] REJECTED: Missing x-callback-token or webhook secret not configured");
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        if (!verifyMayarWebhook(signature, rawBody)) {
-            console.error("[Webhook] REJECTED: Invalid signature");
-            return NextResponse.json({ message: "Invalid signature" }, { status: 403 });
+        // Mayar menggunakan simple token comparison (bukan HMAC)
+        // x-callback-token harus sama persis dengan MAYAR_WEBHOOK_SECRET
+        if (!verifyMayarWebhook(callbackToken, webhookSecret)) {
+            console.error("[Webhook] REJECTED: Invalid callback token");
+            return NextResponse.json({ message: "Invalid token" }, { status: 403 });
         }
 
         const body = JSON.parse(rawBody);
