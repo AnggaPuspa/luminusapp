@@ -424,7 +424,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "D:\\A\\luminusGoHosying\\luminus-nextjs\\prisma\\generated\\client",
+      "value": "/workspace/prisma/generated/client",
       "fromEnvVar": null
     },
     "config": {
@@ -433,17 +433,16 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "windows",
+        "value": "debian-openssl-3.0.x",
         "native": true
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "D:\\A\\luminusGoHosying\\luminus-nextjs\\prisma\\schema.prisma",
+    "sourceFilePath": "/workspace/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null,
-    "schemaEnvPath": "../../../.env"
+    "rootEnvPath": null
   },
   "relativePath": "../..",
   "clientVersion": "5.22.0",
@@ -452,7 +451,7 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
-  "postinstall": false,
+  "postinstall": true,
   "inlineDatasources": {
     "db": {
       "url": {
