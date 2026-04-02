@@ -8139,8 +8139,8 @@ export namespace Prisma {
     status: $Enums.TransactionStatus | null
     paymentMethod: string | null
     paymentChannel: string | null
-    mayarInvoiceId: string | null
-    mayarInvoiceUrl: string | null
+    paymentToken: string | null
+    paymentUrl: string | null
     paidAt: Date | null
     expiredAt: Date | null
     createdAt: Date | null
@@ -8158,8 +8158,8 @@ export namespace Prisma {
     status: $Enums.TransactionStatus | null
     paymentMethod: string | null
     paymentChannel: string | null
-    mayarInvoiceId: string | null
-    mayarInvoiceUrl: string | null
+    paymentToken: string | null
+    paymentUrl: string | null
     paidAt: Date | null
     expiredAt: Date | null
     createdAt: Date | null
@@ -8177,8 +8177,8 @@ export namespace Prisma {
     status: number
     paymentMethod: number
     paymentChannel: number
-    mayarInvoiceId: number
-    mayarInvoiceUrl: number
+    paymentToken: number
+    paymentUrl: number
     paidAt: number
     expiredAt: number
     createdAt: number
@@ -8208,8 +8208,8 @@ export namespace Prisma {
     status?: true
     paymentMethod?: true
     paymentChannel?: true
-    mayarInvoiceId?: true
-    mayarInvoiceUrl?: true
+    paymentToken?: true
+    paymentUrl?: true
     paidAt?: true
     expiredAt?: true
     createdAt?: true
@@ -8227,8 +8227,8 @@ export namespace Prisma {
     status?: true
     paymentMethod?: true
     paymentChannel?: true
-    mayarInvoiceId?: true
-    mayarInvoiceUrl?: true
+    paymentToken?: true
+    paymentUrl?: true
     paidAt?: true
     expiredAt?: true
     createdAt?: true
@@ -8246,8 +8246,8 @@ export namespace Prisma {
     status?: true
     paymentMethod?: true
     paymentChannel?: true
-    mayarInvoiceId?: true
-    mayarInvoiceUrl?: true
+    paymentToken?: true
+    paymentUrl?: true
     paidAt?: true
     expiredAt?: true
     createdAt?: true
@@ -8352,8 +8352,8 @@ export namespace Prisma {
     status: $Enums.TransactionStatus
     paymentMethod: string | null
     paymentChannel: string | null
-    mayarInvoiceId: string | null
-    mayarInvoiceUrl: string | null
+    paymentToken: string | null
+    paymentUrl: string | null
     paidAt: Date | null
     expiredAt: Date | null
     createdAt: Date
@@ -8390,8 +8390,8 @@ export namespace Prisma {
     status?: boolean
     paymentMethod?: boolean
     paymentChannel?: boolean
-    mayarInvoiceId?: boolean
-    mayarInvoiceUrl?: boolean
+    paymentToken?: boolean
+    paymentUrl?: boolean
     paidAt?: boolean
     expiredAt?: boolean
     createdAt?: boolean
@@ -8414,8 +8414,8 @@ export namespace Prisma {
     status?: boolean
     paymentMethod?: boolean
     paymentChannel?: boolean
-    mayarInvoiceId?: boolean
-    mayarInvoiceUrl?: boolean
+    paymentToken?: boolean
+    paymentUrl?: boolean
     paidAt?: boolean
     expiredAt?: boolean
     createdAt?: boolean
@@ -8436,8 +8436,8 @@ export namespace Prisma {
     status?: boolean
     paymentMethod?: boolean
     paymentChannel?: boolean
-    mayarInvoiceId?: boolean
-    mayarInvoiceUrl?: boolean
+    paymentToken?: boolean
+    paymentUrl?: boolean
     paidAt?: boolean
     expiredAt?: boolean
     createdAt?: boolean
@@ -8476,8 +8476,8 @@ export namespace Prisma {
       status: $Enums.TransactionStatus
       paymentMethod: string | null
       paymentChannel: string | null
-      mayarInvoiceId: string | null
-      mayarInvoiceUrl: string | null
+      paymentToken: string | null
+      paymentUrl: string | null
       paidAt: Date | null
       expiredAt: Date | null
       createdAt: Date
@@ -8889,8 +8889,8 @@ export namespace Prisma {
     readonly status: FieldRef<"Transaction", 'TransactionStatus'>
     readonly paymentMethod: FieldRef<"Transaction", 'String'>
     readonly paymentChannel: FieldRef<"Transaction", 'String'>
-    readonly mayarInvoiceId: FieldRef<"Transaction", 'String'>
-    readonly mayarInvoiceUrl: FieldRef<"Transaction", 'String'>
+    readonly paymentToken: FieldRef<"Transaction", 'String'>
+    readonly paymentUrl: FieldRef<"Transaction", 'String'>
     readonly paidAt: FieldRef<"Transaction", 'DateTime'>
     readonly expiredAt: FieldRef<"Transaction", 'DateTime'>
     readonly createdAt: FieldRef<"Transaction", 'DateTime'>
@@ -19347,8 +19347,8 @@ export namespace Prisma {
     status: $Enums.SubscriptionInvoiceStatus | null
     billingPeriodStart: Date | null
     billingPeriodEnd: Date | null
-    mayarInvoiceId: string | null
-    mayarInvoiceUrl: string | null
+    paymentToken: string | null
+    paymentUrl: string | null
     paidAt: Date | null
     failedAt: Date | null
     failureReason: string | null
@@ -19363,8 +19363,8 @@ export namespace Prisma {
     status: $Enums.SubscriptionInvoiceStatus | null
     billingPeriodStart: Date | null
     billingPeriodEnd: Date | null
-    mayarInvoiceId: string | null
-    mayarInvoiceUrl: string | null
+    paymentToken: string | null
+    paymentUrl: string | null
     paidAt: Date | null
     failedAt: Date | null
     failureReason: string | null
@@ -19379,8 +19379,8 @@ export namespace Prisma {
     status: number
     billingPeriodStart: number
     billingPeriodEnd: number
-    mayarInvoiceId: number
-    mayarInvoiceUrl: number
+    paymentToken: number
+    paymentUrl: number
     paidAt: number
     failedAt: number
     failureReason: number
@@ -19407,8 +19407,8 @@ export namespace Prisma {
     status?: true
     billingPeriodStart?: true
     billingPeriodEnd?: true
-    mayarInvoiceId?: true
-    mayarInvoiceUrl?: true
+    paymentToken?: true
+    paymentUrl?: true
     paidAt?: true
     failedAt?: true
     failureReason?: true
@@ -19423,8 +19423,8 @@ export namespace Prisma {
     status?: true
     billingPeriodStart?: true
     billingPeriodEnd?: true
-    mayarInvoiceId?: true
-    mayarInvoiceUrl?: true
+    paymentToken?: true
+    paymentUrl?: true
     paidAt?: true
     failedAt?: true
     failureReason?: true
@@ -19439,8 +19439,8 @@ export namespace Prisma {
     status?: true
     billingPeriodStart?: true
     billingPeriodEnd?: true
-    mayarInvoiceId?: true
-    mayarInvoiceUrl?: true
+    paymentToken?: true
+    paymentUrl?: true
     paidAt?: true
     failedAt?: true
     failureReason?: true
@@ -19542,8 +19542,8 @@ export namespace Prisma {
     status: $Enums.SubscriptionInvoiceStatus
     billingPeriodStart: Date
     billingPeriodEnd: Date
-    mayarInvoiceId: string | null
-    mayarInvoiceUrl: string | null
+    paymentToken: string | null
+    paymentUrl: string | null
     paidAt: Date | null
     failedAt: Date | null
     failureReason: string | null
@@ -19577,8 +19577,8 @@ export namespace Prisma {
     status?: boolean
     billingPeriodStart?: boolean
     billingPeriodEnd?: boolean
-    mayarInvoiceId?: boolean
-    mayarInvoiceUrl?: boolean
+    paymentToken?: boolean
+    paymentUrl?: boolean
     paidAt?: boolean
     failedAt?: boolean
     failureReason?: boolean
@@ -19594,8 +19594,8 @@ export namespace Prisma {
     status?: boolean
     billingPeriodStart?: boolean
     billingPeriodEnd?: boolean
-    mayarInvoiceId?: boolean
-    mayarInvoiceUrl?: boolean
+    paymentToken?: boolean
+    paymentUrl?: boolean
     paidAt?: boolean
     failedAt?: boolean
     failureReason?: boolean
@@ -19611,8 +19611,8 @@ export namespace Prisma {
     status?: boolean
     billingPeriodStart?: boolean
     billingPeriodEnd?: boolean
-    mayarInvoiceId?: boolean
-    mayarInvoiceUrl?: boolean
+    paymentToken?: boolean
+    paymentUrl?: boolean
     paidAt?: boolean
     failedAt?: boolean
     failureReason?: boolean
@@ -19639,8 +19639,8 @@ export namespace Prisma {
       status: $Enums.SubscriptionInvoiceStatus
       billingPeriodStart: Date
       billingPeriodEnd: Date
-      mayarInvoiceId: string | null
-      mayarInvoiceUrl: string | null
+      paymentToken: string | null
+      paymentUrl: string | null
       paidAt: Date | null
       failedAt: Date | null
       failureReason: string | null
@@ -20046,8 +20046,8 @@ export namespace Prisma {
     readonly status: FieldRef<"SubscriptionInvoice", 'SubscriptionInvoiceStatus'>
     readonly billingPeriodStart: FieldRef<"SubscriptionInvoice", 'DateTime'>
     readonly billingPeriodEnd: FieldRef<"SubscriptionInvoice", 'DateTime'>
-    readonly mayarInvoiceId: FieldRef<"SubscriptionInvoice", 'String'>
-    readonly mayarInvoiceUrl: FieldRef<"SubscriptionInvoice", 'String'>
+    readonly paymentToken: FieldRef<"SubscriptionInvoice", 'String'>
+    readonly paymentUrl: FieldRef<"SubscriptionInvoice", 'String'>
     readonly paidAt: FieldRef<"SubscriptionInvoice", 'DateTime'>
     readonly failedAt: FieldRef<"SubscriptionInvoice", 'DateTime'>
     readonly failureReason: FieldRef<"SubscriptionInvoice", 'String'>
@@ -21487,8 +21487,8 @@ export namespace Prisma {
     status: 'status',
     paymentMethod: 'paymentMethod',
     paymentChannel: 'paymentChannel',
-    mayarInvoiceId: 'mayarInvoiceId',
-    mayarInvoiceUrl: 'mayarInvoiceUrl',
+    paymentToken: 'paymentToken',
+    paymentUrl: 'paymentUrl',
     paidAt: 'paidAt',
     expiredAt: 'expiredAt',
     createdAt: 'createdAt',
@@ -21645,8 +21645,8 @@ export namespace Prisma {
     status: 'status',
     billingPeriodStart: 'billingPeriodStart',
     billingPeriodEnd: 'billingPeriodEnd',
-    mayarInvoiceId: 'mayarInvoiceId',
-    mayarInvoiceUrl: 'mayarInvoiceUrl',
+    paymentToken: 'paymentToken',
+    paymentUrl: 'paymentUrl',
     paidAt: 'paidAt',
     failedAt: 'failedAt',
     failureReason: 'failureReason',
@@ -22359,8 +22359,8 @@ export namespace Prisma {
     status?: EnumTransactionStatusFilter<"Transaction"> | $Enums.TransactionStatus
     paymentMethod?: StringNullableFilter<"Transaction"> | string | null
     paymentChannel?: StringNullableFilter<"Transaction"> | string | null
-    mayarInvoiceId?: StringNullableFilter<"Transaction"> | string | null
-    mayarInvoiceUrl?: StringNullableFilter<"Transaction"> | string | null
+    paymentToken?: StringNullableFilter<"Transaction"> | string | null
+    paymentUrl?: StringNullableFilter<"Transaction"> | string | null
     paidAt?: DateTimeNullableFilter<"Transaction"> | Date | string | null
     expiredAt?: DateTimeNullableFilter<"Transaction"> | Date | string | null
     createdAt?: DateTimeFilter<"Transaction"> | Date | string
@@ -22382,8 +22382,8 @@ export namespace Prisma {
     status?: SortOrder
     paymentMethod?: SortOrderInput | SortOrder
     paymentChannel?: SortOrderInput | SortOrder
-    mayarInvoiceId?: SortOrderInput | SortOrder
-    mayarInvoiceUrl?: SortOrderInput | SortOrder
+    paymentToken?: SortOrderInput | SortOrder
+    paymentUrl?: SortOrderInput | SortOrder
     paidAt?: SortOrderInput | SortOrder
     expiredAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -22399,7 +22399,7 @@ export namespace Prisma {
 
   export type TransactionWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    mayarInvoiceId?: string
+    paymentToken?: string
     AND?: TransactionWhereInput | TransactionWhereInput[]
     OR?: TransactionWhereInput[]
     NOT?: TransactionWhereInput | TransactionWhereInput[]
@@ -22409,7 +22409,7 @@ export namespace Prisma {
     status?: EnumTransactionStatusFilter<"Transaction"> | $Enums.TransactionStatus
     paymentMethod?: StringNullableFilter<"Transaction"> | string | null
     paymentChannel?: StringNullableFilter<"Transaction"> | string | null
-    mayarInvoiceUrl?: StringNullableFilter<"Transaction"> | string | null
+    paymentUrl?: StringNullableFilter<"Transaction"> | string | null
     paidAt?: DateTimeNullableFilter<"Transaction"> | Date | string | null
     expiredAt?: DateTimeNullableFilter<"Transaction"> | Date | string | null
     createdAt?: DateTimeFilter<"Transaction"> | Date | string
@@ -22421,7 +22421,7 @@ export namespace Prisma {
     course?: XOR<CourseRelationFilter, CourseWhereInput>
     user?: XOR<UserRelationFilter, UserWhereInput>
     webhookLogs?: WebhookLogListRelationFilter
-  }, "id" | "mayarInvoiceId">
+  }, "id" | "paymentToken">
 
   export type TransactionOrderByWithAggregationInput = {
     id?: SortOrder
@@ -22431,8 +22431,8 @@ export namespace Prisma {
     status?: SortOrder
     paymentMethod?: SortOrderInput | SortOrder
     paymentChannel?: SortOrderInput | SortOrder
-    mayarInvoiceId?: SortOrderInput | SortOrder
-    mayarInvoiceUrl?: SortOrderInput | SortOrder
+    paymentToken?: SortOrderInput | SortOrder
+    paymentUrl?: SortOrderInput | SortOrder
     paidAt?: SortOrderInput | SortOrder
     expiredAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -22458,8 +22458,8 @@ export namespace Prisma {
     status?: EnumTransactionStatusWithAggregatesFilter<"Transaction"> | $Enums.TransactionStatus
     paymentMethod?: StringNullableWithAggregatesFilter<"Transaction"> | string | null
     paymentChannel?: StringNullableWithAggregatesFilter<"Transaction"> | string | null
-    mayarInvoiceId?: StringNullableWithAggregatesFilter<"Transaction"> | string | null
-    mayarInvoiceUrl?: StringNullableWithAggregatesFilter<"Transaction"> | string | null
+    paymentToken?: StringNullableWithAggregatesFilter<"Transaction"> | string | null
+    paymentUrl?: StringNullableWithAggregatesFilter<"Transaction"> | string | null
     paidAt?: DateTimeNullableWithAggregatesFilter<"Transaction"> | Date | string | null
     expiredAt?: DateTimeNullableWithAggregatesFilter<"Transaction"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Transaction"> | Date | string
@@ -23202,8 +23202,8 @@ export namespace Prisma {
     status?: EnumSubscriptionInvoiceStatusFilter<"SubscriptionInvoice"> | $Enums.SubscriptionInvoiceStatus
     billingPeriodStart?: DateTimeFilter<"SubscriptionInvoice"> | Date | string
     billingPeriodEnd?: DateTimeFilter<"SubscriptionInvoice"> | Date | string
-    mayarInvoiceId?: StringNullableFilter<"SubscriptionInvoice"> | string | null
-    mayarInvoiceUrl?: StringNullableFilter<"SubscriptionInvoice"> | string | null
+    paymentToken?: StringNullableFilter<"SubscriptionInvoice"> | string | null
+    paymentUrl?: StringNullableFilter<"SubscriptionInvoice"> | string | null
     paidAt?: DateTimeNullableFilter<"SubscriptionInvoice"> | Date | string | null
     failedAt?: DateTimeNullableFilter<"SubscriptionInvoice"> | Date | string | null
     failureReason?: StringNullableFilter<"SubscriptionInvoice"> | string | null
@@ -23219,8 +23219,8 @@ export namespace Prisma {
     status?: SortOrder
     billingPeriodStart?: SortOrder
     billingPeriodEnd?: SortOrder
-    mayarInvoiceId?: SortOrderInput | SortOrder
-    mayarInvoiceUrl?: SortOrderInput | SortOrder
+    paymentToken?: SortOrderInput | SortOrder
+    paymentUrl?: SortOrderInput | SortOrder
     paidAt?: SortOrderInput | SortOrder
     failedAt?: SortOrderInput | SortOrder
     failureReason?: SortOrderInput | SortOrder
@@ -23231,7 +23231,7 @@ export namespace Prisma {
 
   export type SubscriptionInvoiceWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    mayarInvoiceId?: string
+    paymentToken?: string
     AND?: SubscriptionInvoiceWhereInput | SubscriptionInvoiceWhereInput[]
     OR?: SubscriptionInvoiceWhereInput[]
     NOT?: SubscriptionInvoiceWhereInput | SubscriptionInvoiceWhereInput[]
@@ -23240,14 +23240,14 @@ export namespace Prisma {
     status?: EnumSubscriptionInvoiceStatusFilter<"SubscriptionInvoice"> | $Enums.SubscriptionInvoiceStatus
     billingPeriodStart?: DateTimeFilter<"SubscriptionInvoice"> | Date | string
     billingPeriodEnd?: DateTimeFilter<"SubscriptionInvoice"> | Date | string
-    mayarInvoiceUrl?: StringNullableFilter<"SubscriptionInvoice"> | string | null
+    paymentUrl?: StringNullableFilter<"SubscriptionInvoice"> | string | null
     paidAt?: DateTimeNullableFilter<"SubscriptionInvoice"> | Date | string | null
     failedAt?: DateTimeNullableFilter<"SubscriptionInvoice"> | Date | string | null
     failureReason?: StringNullableFilter<"SubscriptionInvoice"> | string | null
     retryCount?: IntFilter<"SubscriptionInvoice"> | number
     createdAt?: DateTimeFilter<"SubscriptionInvoice"> | Date | string
     subscription?: XOR<UserSubscriptionRelationFilter, UserSubscriptionWhereInput>
-  }, "id" | "mayarInvoiceId">
+  }, "id" | "paymentToken">
 
   export type SubscriptionInvoiceOrderByWithAggregationInput = {
     id?: SortOrder
@@ -23256,8 +23256,8 @@ export namespace Prisma {
     status?: SortOrder
     billingPeriodStart?: SortOrder
     billingPeriodEnd?: SortOrder
-    mayarInvoiceId?: SortOrderInput | SortOrder
-    mayarInvoiceUrl?: SortOrderInput | SortOrder
+    paymentToken?: SortOrderInput | SortOrder
+    paymentUrl?: SortOrderInput | SortOrder
     paidAt?: SortOrderInput | SortOrder
     failedAt?: SortOrderInput | SortOrder
     failureReason?: SortOrderInput | SortOrder
@@ -23280,8 +23280,8 @@ export namespace Prisma {
     status?: EnumSubscriptionInvoiceStatusWithAggregatesFilter<"SubscriptionInvoice"> | $Enums.SubscriptionInvoiceStatus
     billingPeriodStart?: DateTimeWithAggregatesFilter<"SubscriptionInvoice"> | Date | string
     billingPeriodEnd?: DateTimeWithAggregatesFilter<"SubscriptionInvoice"> | Date | string
-    mayarInvoiceId?: StringNullableWithAggregatesFilter<"SubscriptionInvoice"> | string | null
-    mayarInvoiceUrl?: StringNullableWithAggregatesFilter<"SubscriptionInvoice"> | string | null
+    paymentToken?: StringNullableWithAggregatesFilter<"SubscriptionInvoice"> | string | null
+    paymentUrl?: StringNullableWithAggregatesFilter<"SubscriptionInvoice"> | string | null
     paidAt?: DateTimeNullableWithAggregatesFilter<"SubscriptionInvoice"> | Date | string | null
     failedAt?: DateTimeNullableWithAggregatesFilter<"SubscriptionInvoice"> | Date | string | null
     failureReason?: StringNullableWithAggregatesFilter<"SubscriptionInvoice"> | string | null
@@ -23840,8 +23840,8 @@ export namespace Prisma {
     status?: $Enums.TransactionStatus
     paymentMethod?: string | null
     paymentChannel?: string | null
-    mayarInvoiceId?: string | null
-    mayarInvoiceUrl?: string | null
+    paymentToken?: string | null
+    paymentUrl?: string | null
     paidAt?: Date | string | null
     expiredAt?: Date | string | null
     createdAt?: Date | string
@@ -23862,8 +23862,8 @@ export namespace Prisma {
     status?: $Enums.TransactionStatus
     paymentMethod?: string | null
     paymentChannel?: string | null
-    mayarInvoiceId?: string | null
-    mayarInvoiceUrl?: string | null
+    paymentToken?: string | null
+    paymentUrl?: string | null
     paidAt?: Date | string | null
     expiredAt?: Date | string | null
     createdAt?: Date | string
@@ -23880,8 +23880,8 @@ export namespace Prisma {
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     paymentMethod?: NullableStringFieldUpdateOperationsInput | string | null
     paymentChannel?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceId?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentToken?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     expiredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23902,8 +23902,8 @@ export namespace Prisma {
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     paymentMethod?: NullableStringFieldUpdateOperationsInput | string | null
     paymentChannel?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceId?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentToken?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     expiredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23922,8 +23922,8 @@ export namespace Prisma {
     status?: $Enums.TransactionStatus
     paymentMethod?: string | null
     paymentChannel?: string | null
-    mayarInvoiceId?: string | null
-    mayarInvoiceUrl?: string | null
+    paymentToken?: string | null
+    paymentUrl?: string | null
     paidAt?: Date | string | null
     expiredAt?: Date | string | null
     createdAt?: Date | string
@@ -23939,8 +23939,8 @@ export namespace Prisma {
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     paymentMethod?: NullableStringFieldUpdateOperationsInput | string | null
     paymentChannel?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceId?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentToken?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     expiredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23957,8 +23957,8 @@ export namespace Prisma {
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     paymentMethod?: NullableStringFieldUpdateOperationsInput | string | null
     paymentChannel?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceId?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentToken?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     expiredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -24731,8 +24731,8 @@ export namespace Prisma {
     status?: $Enums.SubscriptionInvoiceStatus
     billingPeriodStart: Date | string
     billingPeriodEnd: Date | string
-    mayarInvoiceId?: string | null
-    mayarInvoiceUrl?: string | null
+    paymentToken?: string | null
+    paymentUrl?: string | null
     paidAt?: Date | string | null
     failedAt?: Date | string | null
     failureReason?: string | null
@@ -24748,8 +24748,8 @@ export namespace Prisma {
     status?: $Enums.SubscriptionInvoiceStatus
     billingPeriodStart: Date | string
     billingPeriodEnd: Date | string
-    mayarInvoiceId?: string | null
-    mayarInvoiceUrl?: string | null
+    paymentToken?: string | null
+    paymentUrl?: string | null
     paidAt?: Date | string | null
     failedAt?: Date | string | null
     failureReason?: string | null
@@ -24763,8 +24763,8 @@ export namespace Prisma {
     status?: EnumSubscriptionInvoiceStatusFieldUpdateOperationsInput | $Enums.SubscriptionInvoiceStatus
     billingPeriodStart?: DateTimeFieldUpdateOperationsInput | Date | string
     billingPeriodEnd?: DateTimeFieldUpdateOperationsInput | Date | string
-    mayarInvoiceId?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentToken?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failureReason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -24780,8 +24780,8 @@ export namespace Prisma {
     status?: EnumSubscriptionInvoiceStatusFieldUpdateOperationsInput | $Enums.SubscriptionInvoiceStatus
     billingPeriodStart?: DateTimeFieldUpdateOperationsInput | Date | string
     billingPeriodEnd?: DateTimeFieldUpdateOperationsInput | Date | string
-    mayarInvoiceId?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentToken?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failureReason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -24796,8 +24796,8 @@ export namespace Prisma {
     status?: $Enums.SubscriptionInvoiceStatus
     billingPeriodStart: Date | string
     billingPeriodEnd: Date | string
-    mayarInvoiceId?: string | null
-    mayarInvoiceUrl?: string | null
+    paymentToken?: string | null
+    paymentUrl?: string | null
     paidAt?: Date | string | null
     failedAt?: Date | string | null
     failureReason?: string | null
@@ -24811,8 +24811,8 @@ export namespace Prisma {
     status?: EnumSubscriptionInvoiceStatusFieldUpdateOperationsInput | $Enums.SubscriptionInvoiceStatus
     billingPeriodStart?: DateTimeFieldUpdateOperationsInput | Date | string
     billingPeriodEnd?: DateTimeFieldUpdateOperationsInput | Date | string
-    mayarInvoiceId?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentToken?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failureReason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -24827,8 +24827,8 @@ export namespace Prisma {
     status?: EnumSubscriptionInvoiceStatusFieldUpdateOperationsInput | $Enums.SubscriptionInvoiceStatus
     billingPeriodStart?: DateTimeFieldUpdateOperationsInput | Date | string
     billingPeriodEnd?: DateTimeFieldUpdateOperationsInput | Date | string
-    mayarInvoiceId?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentToken?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failureReason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -25589,8 +25589,8 @@ export namespace Prisma {
     status?: SortOrder
     paymentMethod?: SortOrder
     paymentChannel?: SortOrder
-    mayarInvoiceId?: SortOrder
-    mayarInvoiceUrl?: SortOrder
+    paymentToken?: SortOrder
+    paymentUrl?: SortOrder
     paidAt?: SortOrder
     expiredAt?: SortOrder
     createdAt?: SortOrder
@@ -25613,8 +25613,8 @@ export namespace Prisma {
     status?: SortOrder
     paymentMethod?: SortOrder
     paymentChannel?: SortOrder
-    mayarInvoiceId?: SortOrder
-    mayarInvoiceUrl?: SortOrder
+    paymentToken?: SortOrder
+    paymentUrl?: SortOrder
     paidAt?: SortOrder
     expiredAt?: SortOrder
     createdAt?: SortOrder
@@ -25632,8 +25632,8 @@ export namespace Prisma {
     status?: SortOrder
     paymentMethod?: SortOrder
     paymentChannel?: SortOrder
-    mayarInvoiceId?: SortOrder
-    mayarInvoiceUrl?: SortOrder
+    paymentToken?: SortOrder
+    paymentUrl?: SortOrder
     paidAt?: SortOrder
     expiredAt?: SortOrder
     createdAt?: SortOrder
@@ -26238,8 +26238,8 @@ export namespace Prisma {
     status?: SortOrder
     billingPeriodStart?: SortOrder
     billingPeriodEnd?: SortOrder
-    mayarInvoiceId?: SortOrder
-    mayarInvoiceUrl?: SortOrder
+    paymentToken?: SortOrder
+    paymentUrl?: SortOrder
     paidAt?: SortOrder
     failedAt?: SortOrder
     failureReason?: SortOrder
@@ -26259,8 +26259,8 @@ export namespace Prisma {
     status?: SortOrder
     billingPeriodStart?: SortOrder
     billingPeriodEnd?: SortOrder
-    mayarInvoiceId?: SortOrder
-    mayarInvoiceUrl?: SortOrder
+    paymentToken?: SortOrder
+    paymentUrl?: SortOrder
     paidAt?: SortOrder
     failedAt?: SortOrder
     failureReason?: SortOrder
@@ -26275,8 +26275,8 @@ export namespace Prisma {
     status?: SortOrder
     billingPeriodStart?: SortOrder
     billingPeriodEnd?: SortOrder
-    mayarInvoiceId?: SortOrder
-    mayarInvoiceUrl?: SortOrder
+    paymentToken?: SortOrder
+    paymentUrl?: SortOrder
     paidAt?: SortOrder
     failedAt?: SortOrder
     failureReason?: SortOrder
@@ -28076,8 +28076,8 @@ export namespace Prisma {
     status?: $Enums.TransactionStatus
     paymentMethod?: string | null
     paymentChannel?: string | null
-    mayarInvoiceId?: string | null
-    mayarInvoiceUrl?: string | null
+    paymentToken?: string | null
+    paymentUrl?: string | null
     paidAt?: Date | string | null
     expiredAt?: Date | string | null
     createdAt?: Date | string
@@ -28096,8 +28096,8 @@ export namespace Prisma {
     status?: $Enums.TransactionStatus
     paymentMethod?: string | null
     paymentChannel?: string | null
-    mayarInvoiceId?: string | null
-    mayarInvoiceUrl?: string | null
+    paymentToken?: string | null
+    paymentUrl?: string | null
     paidAt?: Date | string | null
     expiredAt?: Date | string | null
     createdAt?: Date | string
@@ -28300,8 +28300,8 @@ export namespace Prisma {
     status?: EnumTransactionStatusFilter<"Transaction"> | $Enums.TransactionStatus
     paymentMethod?: StringNullableFilter<"Transaction"> | string | null
     paymentChannel?: StringNullableFilter<"Transaction"> | string | null
-    mayarInvoiceId?: StringNullableFilter<"Transaction"> | string | null
-    mayarInvoiceUrl?: StringNullableFilter<"Transaction"> | string | null
+    paymentToken?: StringNullableFilter<"Transaction"> | string | null
+    paymentUrl?: StringNullableFilter<"Transaction"> | string | null
     paidAt?: DateTimeNullableFilter<"Transaction"> | Date | string | null
     expiredAt?: DateTimeNullableFilter<"Transaction"> | Date | string | null
     createdAt?: DateTimeFilter<"Transaction"> | Date | string
@@ -28435,8 +28435,8 @@ export namespace Prisma {
     status?: $Enums.TransactionStatus
     paymentMethod?: string | null
     paymentChannel?: string | null
-    mayarInvoiceId?: string | null
-    mayarInvoiceUrl?: string | null
+    paymentToken?: string | null
+    paymentUrl?: string | null
     paidAt?: Date | string | null
     expiredAt?: Date | string | null
     createdAt?: Date | string
@@ -28455,8 +28455,8 @@ export namespace Prisma {
     status?: $Enums.TransactionStatus
     paymentMethod?: string | null
     paymentChannel?: string | null
-    mayarInvoiceId?: string | null
-    mayarInvoiceUrl?: string | null
+    paymentToken?: string | null
+    paymentUrl?: string | null
     paidAt?: Date | string | null
     expiredAt?: Date | string | null
     createdAt?: Date | string
@@ -29376,8 +29376,8 @@ export namespace Prisma {
     status?: $Enums.TransactionStatus
     paymentMethod?: string | null
     paymentChannel?: string | null
-    mayarInvoiceId?: string | null
-    mayarInvoiceUrl?: string | null
+    paymentToken?: string | null
+    paymentUrl?: string | null
     paidAt?: Date | string | null
     expiredAt?: Date | string | null
     createdAt?: Date | string
@@ -29397,8 +29397,8 @@ export namespace Prisma {
     status?: $Enums.TransactionStatus
     paymentMethod?: string | null
     paymentChannel?: string | null
-    mayarInvoiceId?: string | null
-    mayarInvoiceUrl?: string | null
+    paymentToken?: string | null
+    paymentUrl?: string | null
     paidAt?: Date | string | null
     expiredAt?: Date | string | null
     createdAt?: Date | string
@@ -29430,8 +29430,8 @@ export namespace Prisma {
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     paymentMethod?: NullableStringFieldUpdateOperationsInput | string | null
     paymentChannel?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceId?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentToken?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     expiredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -29451,8 +29451,8 @@ export namespace Prisma {
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     paymentMethod?: NullableStringFieldUpdateOperationsInput | string | null
     paymentChannel?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceId?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentToken?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     expiredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -29792,8 +29792,8 @@ export namespace Prisma {
     status?: $Enums.TransactionStatus
     paymentMethod?: string | null
     paymentChannel?: string | null
-    mayarInvoiceId?: string | null
-    mayarInvoiceUrl?: string | null
+    paymentToken?: string | null
+    paymentUrl?: string | null
     paidAt?: Date | string | null
     expiredAt?: Date | string | null
     createdAt?: Date | string
@@ -29813,8 +29813,8 @@ export namespace Prisma {
     status?: $Enums.TransactionStatus
     paymentMethod?: string | null
     paymentChannel?: string | null
-    mayarInvoiceId?: string | null
-    mayarInvoiceUrl?: string | null
+    paymentToken?: string | null
+    paymentUrl?: string | null
     paidAt?: Date | string | null
     expiredAt?: Date | string | null
     createdAt?: Date | string
@@ -30444,8 +30444,8 @@ export namespace Prisma {
     status?: $Enums.SubscriptionInvoiceStatus
     billingPeriodStart: Date | string
     billingPeriodEnd: Date | string
-    mayarInvoiceId?: string | null
-    mayarInvoiceUrl?: string | null
+    paymentToken?: string | null
+    paymentUrl?: string | null
     paidAt?: Date | string | null
     failedAt?: Date | string | null
     failureReason?: string | null
@@ -30459,8 +30459,8 @@ export namespace Prisma {
     status?: $Enums.SubscriptionInvoiceStatus
     billingPeriodStart: Date | string
     billingPeriodEnd: Date | string
-    mayarInvoiceId?: string | null
-    mayarInvoiceUrl?: string | null
+    paymentToken?: string | null
+    paymentUrl?: string | null
     paidAt?: Date | string | null
     failedAt?: Date | string | null
     failureReason?: string | null
@@ -30598,8 +30598,8 @@ export namespace Prisma {
     status?: EnumSubscriptionInvoiceStatusFilter<"SubscriptionInvoice"> | $Enums.SubscriptionInvoiceStatus
     billingPeriodStart?: DateTimeFilter<"SubscriptionInvoice"> | Date | string
     billingPeriodEnd?: DateTimeFilter<"SubscriptionInvoice"> | Date | string
-    mayarInvoiceId?: StringNullableFilter<"SubscriptionInvoice"> | string | null
-    mayarInvoiceUrl?: StringNullableFilter<"SubscriptionInvoice"> | string | null
+    paymentToken?: StringNullableFilter<"SubscriptionInvoice"> | string | null
+    paymentUrl?: StringNullableFilter<"SubscriptionInvoice"> | string | null
     paidAt?: DateTimeNullableFilter<"SubscriptionInvoice"> | Date | string | null
     failedAt?: DateTimeNullableFilter<"SubscriptionInvoice"> | Date | string | null
     failureReason?: StringNullableFilter<"SubscriptionInvoice"> | string | null
@@ -30725,8 +30725,8 @@ export namespace Prisma {
     status?: $Enums.TransactionStatus
     paymentMethod?: string | null
     paymentChannel?: string | null
-    mayarInvoiceId?: string | null
-    mayarInvoiceUrl?: string | null
+    paymentToken?: string | null
+    paymentUrl?: string | null
     paidAt?: Date | string | null
     expiredAt?: Date | string | null
     createdAt?: Date | string
@@ -30861,8 +30861,8 @@ export namespace Prisma {
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     paymentMethod?: NullableStringFieldUpdateOperationsInput | string | null
     paymentChannel?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceId?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentToken?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     expiredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -30881,8 +30881,8 @@ export namespace Prisma {
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     paymentMethod?: NullableStringFieldUpdateOperationsInput | string | null
     paymentChannel?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceId?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentToken?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     expiredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -30900,8 +30900,8 @@ export namespace Prisma {
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     paymentMethod?: NullableStringFieldUpdateOperationsInput | string | null
     paymentChannel?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceId?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentToken?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     expiredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -30987,8 +30987,8 @@ export namespace Prisma {
     status?: $Enums.TransactionStatus
     paymentMethod?: string | null
     paymentChannel?: string | null
-    mayarInvoiceId?: string | null
-    mayarInvoiceUrl?: string | null
+    paymentToken?: string | null
+    paymentUrl?: string | null
     paidAt?: Date | string | null
     expiredAt?: Date | string | null
     createdAt?: Date | string
@@ -31088,8 +31088,8 @@ export namespace Prisma {
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     paymentMethod?: NullableStringFieldUpdateOperationsInput | string | null
     paymentChannel?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceId?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentToken?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     expiredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -31108,8 +31108,8 @@ export namespace Prisma {
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     paymentMethod?: NullableStringFieldUpdateOperationsInput | string | null
     paymentChannel?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceId?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentToken?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     expiredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -31127,8 +31127,8 @@ export namespace Prisma {
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     paymentMethod?: NullableStringFieldUpdateOperationsInput | string | null
     paymentChannel?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceId?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentToken?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     expiredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -31271,8 +31271,8 @@ export namespace Prisma {
     status?: $Enums.TransactionStatus
     paymentMethod?: string | null
     paymentChannel?: string | null
-    mayarInvoiceId?: string | null
-    mayarInvoiceUrl?: string | null
+    paymentToken?: string | null
+    paymentUrl?: string | null
     paidAt?: Date | string | null
     expiredAt?: Date | string | null
     createdAt?: Date | string
@@ -31287,8 +31287,8 @@ export namespace Prisma {
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     paymentMethod?: NullableStringFieldUpdateOperationsInput | string | null
     paymentChannel?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceId?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentToken?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     expiredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -31308,8 +31308,8 @@ export namespace Prisma {
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     paymentMethod?: NullableStringFieldUpdateOperationsInput | string | null
     paymentChannel?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceId?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentToken?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     expiredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -31327,8 +31327,8 @@ export namespace Prisma {
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     paymentMethod?: NullableStringFieldUpdateOperationsInput | string | null
     paymentChannel?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceId?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentToken?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     expiredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -31453,8 +31453,8 @@ export namespace Prisma {
     status?: $Enums.SubscriptionInvoiceStatus
     billingPeriodStart: Date | string
     billingPeriodEnd: Date | string
-    mayarInvoiceId?: string | null
-    mayarInvoiceUrl?: string | null
+    paymentToken?: string | null
+    paymentUrl?: string | null
     paidAt?: Date | string | null
     failedAt?: Date | string | null
     failureReason?: string | null
@@ -31468,8 +31468,8 @@ export namespace Prisma {
     status?: EnumSubscriptionInvoiceStatusFieldUpdateOperationsInput | $Enums.SubscriptionInvoiceStatus
     billingPeriodStart?: DateTimeFieldUpdateOperationsInput | Date | string
     billingPeriodEnd?: DateTimeFieldUpdateOperationsInput | Date | string
-    mayarInvoiceId?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentToken?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failureReason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -31483,8 +31483,8 @@ export namespace Prisma {
     status?: EnumSubscriptionInvoiceStatusFieldUpdateOperationsInput | $Enums.SubscriptionInvoiceStatus
     billingPeriodStart?: DateTimeFieldUpdateOperationsInput | Date | string
     billingPeriodEnd?: DateTimeFieldUpdateOperationsInput | Date | string
-    mayarInvoiceId?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentToken?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failureReason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -31498,8 +31498,8 @@ export namespace Prisma {
     status?: EnumSubscriptionInvoiceStatusFieldUpdateOperationsInput | $Enums.SubscriptionInvoiceStatus
     billingPeriodStart?: DateTimeFieldUpdateOperationsInput | Date | string
     billingPeriodEnd?: DateTimeFieldUpdateOperationsInput | Date | string
-    mayarInvoiceId?: NullableStringFieldUpdateOperationsInput | string | null
-    mayarInvoiceUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentToken?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     failureReason?: NullableStringFieldUpdateOperationsInput | string | null

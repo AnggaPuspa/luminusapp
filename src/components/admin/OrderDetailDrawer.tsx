@@ -243,7 +243,7 @@ export default function OrderDetailDrawer({ orderId, onClose, onStatusUpdated }:
                                     <div className="bg-gray-50 rounded-xl p-4 space-y-2.5">
                                         <div className="flex justify-between items-center">
                                             <span className="text-[12px] text-gray-500">Invoice ID</span>
-                                            <span className="text-[11px] font-mono text-gray-500 truncate max-w-[200px]" title={order.mayarInvoiceId}>{order.mayarInvoiceId || "N/A"}</span>
+                                            <span className="text-[11px] font-mono text-gray-500 truncate max-w-[200px]" title={order.paymentToken}>{order.paymentToken || "N/A"}</span>
                                         </div>
                                         <div className="flex justify-between items-center">
                                             <span className="text-[12px] text-gray-500">Metode</span>
@@ -253,9 +253,9 @@ export default function OrderDetailDrawer({ orderId, onClose, onStatusUpdated }:
                                             <span className="text-[12px] text-gray-500">Channel</span>
                                             <span className="text-[13px] text-[#1a1a1a] uppercase">{order.paymentChannel || "N/A"}</span>
                                         </div>
-                                        {order.mayarInvoiceUrl && (
+                                        {order.paymentUrl && (
                                             <a
-                                                href={order.mayarInvoiceUrl}
+                                                href={order.paymentUrl}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="flex items-center gap-1.5 text-[12px] text-[#4F46E5] font-medium hover:underline pt-1"

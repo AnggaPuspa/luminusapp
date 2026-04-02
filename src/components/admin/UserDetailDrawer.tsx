@@ -216,7 +216,7 @@ export default function UserDetailDrawer({ user, onClose }: UserDetailDrawerProp
                                                             Rp {trx.amount.toLocaleString("id-ID")}
                                                         </p>
                                                         <div className="flex items-center gap-2 mt-1">
-                                                            <p className="text-[11px] font-mono text-gray-400">#{trx.mayarInvoiceId || trx.id.slice(-8)}</p>
+                                                            <p className="text-[11px] font-mono text-gray-400">#{trx.paymentToken || trx.id.slice(-8)}</p>
                                                             <span className="text-gray-300">•</span>
                                                             <p className="text-[11px] text-gray-500">{format(new Date(trx.createdAt), "dd MMM yy")}</p>
                                                         </div>

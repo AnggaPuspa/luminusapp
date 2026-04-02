@@ -183,7 +183,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div>
                             <p className="text-xs text-gray-500 font-medium">Invoice ID</p>
-                            <p className="text-sm font-mono text-gray-900">{order.mayarInvoiceId || "N/A"}</p>
+                            <p className="text-sm font-mono text-gray-900">{order.paymentToken || "N/A"}</p>
                         </div>
                         <div>
                             <p className="text-xs text-gray-500 font-medium">Metode Pembayaran</p>
@@ -193,10 +193,10 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                             <p className="text-xs text-gray-500 font-medium">Channel Pembayaran</p>
                             <p className="text-sm text-gray-900 uppercase">{order.paymentChannel || "N/A"}</p>
                         </div>
-                        {order.mayarInvoiceUrl && (
+                        {order.paymentUrl && (
                             <div>
                                 <p className="text-xs text-gray-500 font-medium mb-1">Link Invoice</p>
-                                <a href={order.mayarInvoiceUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">
+                                <a href={order.paymentUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">
                                     Buka di Mayar &nearr;
                                 </a>
                             </div>

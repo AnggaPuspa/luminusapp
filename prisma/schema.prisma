@@ -110,8 +110,8 @@ model Transaction {
   status          TransactionStatus @default(PENDING)
   paymentMethod   String?
   paymentChannel  String?
-  mayarInvoiceId  String?           @unique
-  mayarInvoiceUrl String?
+  paymentToken  String?           @unique
+  paymentUrl    String?
   paidAt          DateTime?
   expiredAt       DateTime?
   createdAt       DateTime          @default(now())
@@ -300,8 +300,8 @@ model SubscriptionInvoice {
   status             SubscriptionInvoiceStatus @default(PENDING)
   billingPeriodStart DateTime
   billingPeriodEnd   DateTime
-  mayarInvoiceId     String?                   @unique
-  mayarInvoiceUrl    String?
+  paymentToken       String?                   @unique
+  paymentUrl         String?
   paidAt             DateTime?
   failedAt           DateTime?
   failureReason      String?
@@ -311,7 +311,7 @@ model SubscriptionInvoice {
   subscription UserSubscription @relation(fields: [subscriptionId], references: [id])
 
   @@index([subscriptionId])
-  @@index([mayarInvoiceId])
+  @@index([paymentToken])
   @@map("subscription_invoices")
 }
 

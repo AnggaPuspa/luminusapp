@@ -20,7 +20,7 @@ export async function GET(request: Request) {
             take: 100, // Limit to 100 most recent for performance
             include: {
                 transaction: {
-                    select: { mayarInvoiceId: true }
+                    select: { paymentToken: true }
                 }
             }
         });
