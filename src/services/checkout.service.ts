@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { createMayarInvoice } from "@/lib/mayar";
+import { snap } from "@/lib/midtrans";
 import { sendPaymentSuccessEmail } from "@/lib/email";
 
 // --- Types ---
@@ -114,10 +114,10 @@ export async function processCourseCheckout(input: CheckoutInput): Promise<Check
         }
     });
     if (existingPending) {
-        if (existingPending.mayarInvoiceUrl) {
+        if (existingPending.paymentUrl) {
             return {
                 isFree: false,
-                paymentUrl: existingPending.mayarInvoiceUrl,
+                paymentUrl: existingPending.paymentUrl,
                 transactionId: existingPending.id
             };
         }
@@ -180,46 +180,56 @@ export async function processCourseCheckout(input: CheckoutInput): Promise<Check
         };
     }
 
-    // 4. Hit Mayar API to create Invoice/Payment Link
-    const payloadToMayar = {
-        name: freshName,
-        email: freshEmail,
-        amount: finalPrice,
-        description: `Pembelian Kursus: ${course.title}`,
-        mobile: mobileNumber // Mandatory for Mayar Hosted Checkout
+    // 4. Hit Midtrans Snap API
+    const parameter = {
+        transaction_details: {
+            order_id: transaction.id,
+            gross_amount: finalPrice
+        },
+        customer_details: {
+            first_name: freshName,
+            email: freshEmail,
+            phone: mobileNumber
+        },
+        item_details: [{
+            id: course.id,
+            price: finalPrice,
+            quantity: 1,
+            name: course.title.substring(0, 50)
+        }]
     };
 
-    let mayarResp;
+    let midtransResp;
     try {
-        mayarResp = await createMayarInvoice(payloadToMayar);
+        midtransResp = await snap.createTransaction(parameter);
     } catch (mErr: any) {
-        console.error("MAYAR INVOICE ERROR:", mErr);
+        console.error("MIDTRANS INVOICE ERROR:", mErr);
         // Cleanup: mark orphaned transaction as FAILED
         await prisma.transaction.update({
             where: { id: transaction.id },
             data: { status: "FAILED" }
         });
-        throw new Error(`MAYAR_REJECTED`);
+        throw new Error(`MIDTRANS_REJECTED`);
     }
 
-    const paymentLink = mayarResp?.data?.link || mayarResp?.link;
-    const invoiceId = mayarResp?.data?.id || mayarResp?.id;
+    const paymentLink = midtransResp.redirect_url;
+    const paymentToken = midtransResp.token;
 
     if (!paymentLink) {
-        console.error("MAYAR SUCCESS BUT NO LINK:", mayarResp);
+        console.error("MIDTRANS SUCCESS BUT NO LINK:", midtransResp);
         await prisma.transaction.update({
             where: { id: transaction.id },
             data: { status: "FAILED" }
         });
-        throw new Error("MAYAR_NO_LINK");
+        throw new Error("MIDTRANS_NO_LINK");
     }
 
-    // 5. Update Transaction with Mayar Details + set expiry deadline
+    // 5. Update Transaction with Midtrans Details + set expiry deadline
     await prisma.transaction.update({
         where: { id: transaction.id },
         data: {
-            mayarInvoiceId: invoiceId?.toString(),
-            mayarInvoiceUrl: paymentLink,
+            paymentToken: paymentToken,
+            paymentUrl: paymentLink,
             expiredAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
         }
     });

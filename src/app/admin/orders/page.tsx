@@ -84,7 +84,7 @@ export default function OrdersPage() {
     };
 
     const filteredOrders = orders.filter(o => {
-        const matchesSearch = (o.mayarInvoiceId || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        const matchesSearch = (o.paymentToken || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
             (o.user?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
             (o.user?.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
             (o.course?.title || "").toLowerCase().includes(searchTerm.toLowerCase());
@@ -129,7 +129,7 @@ export default function OrdersPage() {
         const csvContent = [
             headers.join(","),
             ...filteredOrders.map(o => [
-                o.mayarInvoiceId || "-",
+                o.paymentToken || "-",
                 `"${o.user?.name || "-"}"`,
                 o.user?.email || "-",
                 `"${o.course?.title || "-"}"`,
@@ -580,7 +580,7 @@ export default function OrdersPage() {
                                         <td className="p-0">
                                             <div className="h-[64px] flex items-center px-4 overflow-hidden">
                                                 <span className="text-gray-500 font-medium text-[13px] truncate block w-full group-hover:text-[#4F46E5] transition-colors">
-                                                    {order.mayarInvoiceId || "N/A"}
+                                                    {order.paymentToken || "N/A"}
                                                 </span>
                                             </div>
                                         </td>

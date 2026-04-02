@@ -269,7 +269,7 @@ export async function getStudentTransactions(userId: string) {
         amount: tx.amount,
         status: tx.status,
         createdAt: tx.createdAt,
-        mayarInvoiceUrl: tx.mayarInvoiceUrl || null,
+        paymentUrl: tx.paymentUrl || null,
     }));
 
     const normalizedSub = subscriptionInvoices.map((inv: any) => ({
@@ -281,7 +281,7 @@ export async function getStudentTransactions(userId: string) {
         amount: inv.amount,
         status: inv.status,
         createdAt: inv.createdAt,
-        mayarInvoiceUrl: inv.mayarInvoiceUrl || null,
+        paymentUrl: inv.paymentUrl || null,
     }));
 
     return [...normalizedCourse, ...normalizedSub]

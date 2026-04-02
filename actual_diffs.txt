@@ -1,0 +1,744 @@
+diff --git a/prisma/schema.prisma b/prisma/schema.prisma
+index 86c9df2..00666a0 100644
+--- a/prisma/schema.prisma
++++ b/prisma/schema.prisma
+@@ -110,8 +110,8 @@ model Transaction {
+   status          TransactionStatus @default(PENDING)
+   paymentMethod   String?
+   paymentChannel  String?
+-  mayarInvoiceId  String?           @unique
+-  mayarInvoiceUrl String?
++  paymentToken  String?           @unique
++  paymentUrl    String?
+   paidAt          DateTime?
+   expiredAt       DateTime?
+   createdAt       DateTime          @default(now())
+@@ -300,8 +300,8 @@ model SubscriptionInvoice {
+   status             SubscriptionInvoiceStatus @default(PENDING)
+   billingPeriodStart DateTime
+   billingPeriodEnd   DateTime
+-  mayarInvoiceId     String?                   @unique
+-  mayarInvoiceUrl    String?
++  paymentToken       String?                   @unique
++  paymentUrl         String?
+   paidAt             DateTime?
+   failedAt           DateTime?
+   failureReason      String?
+@@ -311,7 +311,7 @@ model SubscriptionInvoice {
+   subscription UserSubscription @relation(fields: [subscriptionId], references: [id])
+ 
+   @@index([subscriptionId])
+-  @@index([mayarInvoiceId])
++  @@index([paymentToken])
+   @@map("subscription_invoices")
+ }
+ 
+diff --git a/prisma/seed-sales.ts b/prisma/seed-sales.ts
+index 7946bd0..bd49cc0 100644
+--- a/prisma/seed-sales.ts
++++ b/prisma/seed-sales.ts
+@@ -181,7 +181,7 @@ async function main() {
+                         paymentChannel: randomPick(PAYMENT_CHANNELS),
+                         createdAt: txDate,
+                         paidAt: status === TransactionStatus.PAID ? addHours(txDate, 1) : null,
+-                        mayarInvoiceId: `INV-${type === TransactionType.ONE_TIME ? 'OT' : 'SUB'}-${Date.now()}-${randomInt(1000, 9999)}`,
++                        paymentToken: `INV-${type === TransactionType.ONE_TIME ? 'OT' : 'SUB'}-${Date.now()}-${randomInt(1000, 9999)}`,
+                     }
+                 })
+                 totalTransactions++
+@@ -218,7 +218,7 @@ async function main() {
+                                 billingPeriodStart: tx.paidAt!,
+                                 billingPeriodEnd: addHours(tx.paidAt!, 720),
+                                 paidAt: tx.paidAt,
+-                                mayarInvoiceId: `SINV-${Date.now()}-${randomInt(1000, 9999)}`
++                                paymentToken: `SINV-${Date.now()}-${randomInt(1000, 9999)}`
+                             }
+                         })
+                     }
+diff --git a/src/app/admin/orders/[id]/page.tsx b/src/app/admin/orders/[id]/page.tsx
+index 8d60cda..f315b50 100644
+--- a/src/app/admin/orders/[id]/page.tsx
++++ b/src/app/admin/orders/[id]/page.tsx
+@@ -183,7 +183,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
+                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                         <div>
+                             <p className="text-xs text-gray-500 font-medium">Invoice ID</p>
+-                            <p className="text-sm font-mono text-gray-900">{order.mayarInvoiceId || "N/A"}</p>
++                            <p className="text-sm font-mono text-gray-900">{order.paymentToken || "N/A"}</p>
+                         </div>
+                         <div>
+                             <p className="text-xs text-gray-500 font-medium">Metode Pembayaran</p>
+@@ -193,10 +193,10 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
+                             <p className="text-xs text-gray-500 font-medium">Channel Pembayaran</p>
+                             <p className="text-sm text-gray-900 uppercase">{order.paymentChannel || "N/A"}</p>
+                         </div>
+-                        {order.mayarInvoiceUrl && (
++                        {order.paymentUrl && (
+                             <div>
+                                 <p className="text-xs text-gray-500 font-medium mb-1">Link Invoice</p>
+-                                <a href={order.mayarInvoiceUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">
++                                <a href={order.paymentUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">
+                                     Buka di Mayar &nearr;
+                                 </a>
+                             </div>
+diff --git a/src/app/admin/orders/page.tsx b/src/app/admin/orders/page.tsx
+index 3a28320..3200954 100644
+--- a/src/app/admin/orders/page.tsx
++++ b/src/app/admin/orders/page.tsx
+@@ -84,7 +84,7 @@ export default function OrdersPage() {
+     };
+ 
+     const filteredOrders = orders.filter(o => {
+-        const matchesSearch = (o.mayarInvoiceId || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
++        const matchesSearch = (o.paymentToken || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+             (o.user?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+             (o.user?.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+             (o.course?.title || "").toLowerCase().includes(searchTerm.toLowerCase());
+@@ -129,7 +129,7 @@ export default function OrdersPage() {
+         const csvContent = [
+             headers.join(","),
+             ...filteredOrders.map(o => [
+-                o.mayarInvoiceId || "-",
++                o.paymentToken || "-",
+                 `"${o.user?.name || "-"}"`,
+                 o.user?.email || "-",
+                 `"${o.course?.title || "-"}"`,
+@@ -580,7 +580,7 @@ export default function OrdersPage() {
+                                         <td className="p-0">
+                                             <div className="h-[64px] flex items-center px-4 overflow-hidden">
+                                                 <span className="text-gray-500 font-medium text-[13px] truncate block w-full group-hover:text-[#4F46E5] transition-colors">
+-                                                    {order.mayarInvoiceId || "N/A"}
++                                                    {order.paymentToken || "N/A"}
+                                                 </span>
+                                             </div>
+                                         </td>
+diff --git a/src/app/api/admin/users/route.ts b/src/app/api/admin/users/route.ts
+index 3aa8d41..060a5ec 100644
+--- a/src/app/api/admin/users/route.ts
++++ b/src/app/api/admin/users/route.ts
+@@ -56,7 +56,7 @@ export async function GET(request: Request) {
+                     },
+                     select: {
+                         id: true,
+-                        mayarInvoiceId: true,
++                        paymentToken: true,
+                         status: true,
+                         createdAt: true,
+                         amount: true
+diff --git a/src/app/api/admin/webhooks/route.ts b/src/app/api/admin/webhooks/route.ts
+index 4a4bb25..cfc31c1 100644
+--- a/src/app/api/admin/webhooks/route.ts
++++ b/src/app/api/admin/webhooks/route.ts
+@@ -20,7 +20,7 @@ export async function GET(request: Request) {
+             take: 100, // Limit to 100 most recent for performance
+             include: {
+                 transaction: {
+-                    select: { mayarInvoiceId: true }
++                    select: { paymentToken: true }
+                 }
+             }
+         });
+diff --git a/src/app/api/webhooks/midtrans/route.ts b/src/app/api/webhooks/midtrans/route.ts
+new file mode 100644
+index 0000000..78d60d5
+--- /dev/null
++++ b/src/app/api/webhooks/midtrans/route.ts
+@@ -0,0 +1,181 @@
++import { NextResponse } from "next/server";
++import crypto from "crypto";
++import prisma from "@/lib/prisma";
++import { sendPaymentSuccessEmail, sendSubscriptionSuccessEmail } from "@/lib/email";
++
++export async function POST(request: Request) {
++    try {
++        const body = await request.json();
++
++        // Verify Midtrans Signature Key
++        const serverKey = process.env.MIDTRANS_SERVER_KEY || "";
++        const orderId = body.order_id;
++        const statusCode = body.status_code;
++        const grossAmount = body.gross_amount;
++        const signatureKey = body.signature_key;
++
++        const expectedSignature = crypto
++            .createHash("sha512")
++            .update(orderId + statusCode + grossAmount + serverKey)
++            .digest("hex");
++
++        if (signatureKey !== expectedSignature) {
++            console.error("[Webhook] REJECTED: Invalid signature key");
++            return NextResponse.json({ message: "Invalid signature" }, { status: 403 });
++        }
++
++        const transactionStatus = body.transaction_status;
++        const paymentType = body.payment_type;
++        const eventName = `midtrans.${transactionStatus}`;
++
++        let matchedTransactionId: string | null = null;
++
++        // Try to find matching Subscription Invoice first
++        let subInvoice = await prisma.subscriptionInvoice.findUnique({
++            where: { id: orderId },
++            include: { subscription: true }
++        });
++
++        // Try to find matching One-Time Transaction
++        let transaction = null;
++        if (!subInvoice) {
++            transaction = await (prisma as any).transaction.findUnique({
++                where: { id: orderId },
++                include: { user: true, course: true }
++            });
++        }
++
++        if (transaction) {
++            matchedTransactionId = transaction.id;
++        } else if (subInvoice) {
++            matchedTransactionId = subInvoice.id;
++        }
++
++        // Handle success statuses
++        if (transactionStatus === "capture" || transactionStatus === "settlement") {
++            console.log(`[Webhook] Processing payment success for order_id: ${orderId}`);
++
++            if (subInvoice && subInvoice.status === "PENDING") {
++                const lockResult = await prisma.subscriptionInvoice.updateMany({
++                    where: { id: subInvoice.id, status: "PENDING" },
++                    data: { status: "PAID", paidAt: new Date() }
++                });
++                if (lockResult.count > 0) {
++                    const now = new Date();
++                    const sub = subInvoice.subscription;
++
++                    let newStart = sub.currentPeriodStart;
++                    let newEnd = sub.currentPeriodEnd;
++
++                    if (sub.status !== "ACTIVE" || sub.currentPeriodEnd < now) {
++                        newStart = now;
++                        newEnd = new Date(now);
++                        if (sub.billingCycle === "YEARLY") newEnd.setFullYear(newEnd.getFullYear() + 1);
++                        else newEnd.setMonth(newEnd.getMonth() + 1);
++                    } else {
++                        newEnd = new Date(sub.currentPeriodEnd);
++                        if (sub.billingCycle === "YEARLY") newEnd.setFullYear(newEnd.getFullYear() + 1);
++                        else newEnd.setMonth(newEnd.getMonth() + 1);
++                    }
++
++                    await prisma.userSubscription.update({
++                        where: { id: sub.id },
++                        data: {
++                            status: "ACTIVE",
++                            currentPeriodStart: newStart,
++                            currentPeriodEnd: newEnd,
++                        }
++                    });
++
++                    const user = await prisma.user.findUnique({ where: { id: sub.userId } });
++                    const plan = await prisma.subscriptionPlan.findUnique({ where: { id: sub.planId } });
++
++                    if (user && plan) {
++                        sendSubscriptionSuccessEmail(
++                            user.name || "Siswa",
++                            user.email,
++                            plan.name,
++                            subInvoice.amount,
++                            sub.billingCycle
++                        ).catch((err: any) => console.error("Subscription Success email error:", err));
++                    }
++                    console.log(`[Webhook] Subscription ${sub.id} activated/renewed successfully.`);
++                }
++            } else if (transaction && transaction.status === "PENDING") {
++                const lockResult = await (prisma as any).transaction.updateMany({
++                    where: { id: transaction.id, status: "PENDING" },
++                    data: {
++                        status: "PAID",
++                        paidAt: new Date(),
++                        paymentMethod: paymentType,
++                        paymentChannel: body.bank || body.issuer || body.store || "unknown"
++                    }
++                });
++                if (lockResult.count > 0) {
++                    const dbOps: any[] = [
++                        prisma.enrollment.upsert({
++                            where: {
++                                userId_courseId: {
++                                    userId: transaction.userId,
++                                    courseId: transaction.courseId
++                                }
++                            },
++                            update: { status: "ACTIVE", source: "PURCHASE" },
++                            create: {
++                                userId: transaction.userId,
++                                courseId: transaction.courseId,
++                                status: "ACTIVE",
++                                source: "PURCHASE"
++                            }
++                        })
++                    ];
++
++                    if (transaction.couponId) {
++                        dbOps.push(
++                            (prisma as any).coupon.update({
++                                where: { id: transaction.couponId },
++                                data: { usedCount: { increment: 1 } }
++                            })
++                        );
++                    }
++
++                    await prisma.$transaction(dbOps);
++
++                    sendPaymentSuccessEmail(
++                        transaction.user.name,
++                        transaction.user.email,
++                        transaction.course.title,
++                        transaction.amount
++                    ).catch(err => console.error("Payment Success email error:", err));
++                }
++            }
++        } else if (transactionStatus === "deny" || transactionStatus === "cancel" || transactionStatus === "expire") {
++            if (subInvoice && subInvoice.status === "PENDING") {
++                await prisma.subscriptionInvoice.update({
++                    where: { id: subInvoice.id },
++                    data: { status: "FAILED", failureReason: transactionStatus }
++                });
++            } else if (transaction && transaction.status === "PENDING") {
++                await (prisma as any).transaction.update({
++                    where: { id: transaction.id },
++                    data: { status: "FAILED" }
++                });
++            }
++        }
++
++        // Log the webhook
++        await prisma.webhookLog.create({
++            data: {
++                event: eventName,
++                payload: body,
++                httpStatus: 200,
++                transactionId: matchedTransactionId
++            }
++        });
++
++        return NextResponse.json({ success: true }, { status: 200 });
++    } catch (error: any) {
++        console.error("Webhook processing error:", error);
++        return NextResponse.json({ message: "Internal server error" }, { status: 500 });
++    }
++}
+diff --git a/src/app/dashboard/transactions/page.tsx b/src/app/dashboard/transactions/page.tsx
+index 6553e0b..edecf86 100644
+--- a/src/app/dashboard/transactions/page.tsx
++++ b/src/app/dashboard/transactions/page.tsx
+@@ -17,7 +17,7 @@ interface TransactionItem {
+     createdAt: string;
+     amount: number;
+     status: string;
+-    mayarInvoiceUrl: string | null;
++    paymentUrl: string | null;
+ }
+ 
+ export default function StudentTransactionsPage() {
+@@ -256,8 +256,8 @@ export default function StudentTransactionsPage() {
+                                                     <button onClick={() => window.print()} className="text-gray-400 hover:text-[#696EFF] transition-colors p-2" title="Print Invoice">
+                                                         <Printer className="w-4 h-4" />
+                                                     </button>
+-                                                    {tx.mayarInvoiceUrl ? (
+-                                                        <a href={tx.mayarInvoiceUrl} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#38BDF8] transition-colors p-2" title="Lihat Detail Transaksi">
++                                                    {tx.paymentUrl ? (
++                                                        <a href={tx.paymentUrl} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#38BDF8] transition-colors p-2" title="Lihat Detail Transaksi">
+                                                             <MoreHorizontal className="w-5 h-5" />
+                                                         </a>
+                                                     ) : (
+diff --git a/src/components/admin/OrderDetailDrawer.tsx b/src/components/admin/OrderDetailDrawer.tsx
+index bbccfc0..7c970ad 100644
+--- a/src/components/admin/OrderDetailDrawer.tsx
++++ b/src/components/admin/OrderDetailDrawer.tsx
+@@ -243,7 +243,7 @@ export default function OrderDetailDrawer({ orderId, onClose, onStatusUpdated }:
+                                     <div className="bg-gray-50 rounded-xl p-4 space-y-2.5">
+                                         <div className="flex justify-between items-center">
+                                             <span className="text-[12px] text-gray-500">Invoice ID</span>
+-                                            <span className="text-[11px] font-mono text-gray-500 truncate max-w-[200px]" title={order.mayarInvoiceId}>{order.mayarInvoiceId || "N/A"}</span>
++                                            <span className="text-[11px] font-mono text-gray-500 truncate max-w-[200px]" title={order.paymentToken}>{order.paymentToken || "N/A"}</span>
+                                         </div>
+                                         <div className="flex justify-between items-center">
+                                             <span className="text-[12px] text-gray-500">Metode</span>
+@@ -253,9 +253,9 @@ export default function OrderDetailDrawer({ orderId, onClose, onStatusUpdated }:
+                                             <span className="text-[12px] text-gray-500">Channel</span>
+                                             <span className="text-[13px] text-[#1a1a1a] uppercase">{order.paymentChannel || "N/A"}</span>
+                                         </div>
+-                                        {order.mayarInvoiceUrl && (
++                                        {order.paymentUrl && (
+                                             <a
+-                                                href={order.mayarInvoiceUrl}
++                                                href={order.paymentUrl}
+                                                 target="_blank"
+                                                 rel="noopener noreferrer"
+                                                 className="flex items-center gap-1.5 text-[12px] text-[#4F46E5] font-medium hover:underline pt-1"
+diff --git a/src/components/admin/UserDetailDrawer.tsx b/src/components/admin/UserDetailDrawer.tsx
+index 220cec2..28b9964 100644
+--- a/src/components/admin/UserDetailDrawer.tsx
++++ b/src/components/admin/UserDetailDrawer.tsx
+@@ -216,7 +216,7 @@ export default function UserDetailDrawer({ user, onClose }: UserDetailDrawerProp
+                                                             Rp {trx.amount.toLocaleString("id-ID")}
+                                                         </p>
+                                                         <div className="flex items-center gap-2 mt-1">
+-                                                            <p className="text-[11px] font-mono text-gray-400">#{trx.mayarInvoiceId || trx.id.slice(-8)}</p>
++                                                            <p className="text-[11px] font-mono text-gray-400">#{trx.paymentToken || trx.id.slice(-8)}</p>
+                                                             <span className="text-gray-300">•</span>
+                                                             <p className="text-[11px] text-gray-500">{format(new Date(trx.createdAt), "dd MMM yy")}</p>
+                                                         </div>
+diff --git a/src/lib/mayar.ts b/src/lib/mayar.ts
+deleted file mode 100644
+index fad1978..0000000
+--- a/src/lib/mayar.ts
++++ /dev/null
+@@ -1,72 +0,0 @@
+-import crypto from "crypto";
+-
+-const MAYAR_API_KEY = process.env.MAYAR_API_KEY!;
+-const MAYAR_WEBHOOK_SECRET = process.env.MAYAR_WEBHOOK_SECRET!;
+-const IS_SANDBOX = process.env.MAYAR_IS_SANDBOX === "true";
+-
+-// Mayar Sandbox API uses api.mayar.club, Production uses api.mayar.id
+-const BASE_URL = IS_SANDBOX ? "https://api.mayar.club" : "https://api.mayar.id";
+-
+-export interface CreatePaymentPayload {
+-    name: string;          // Customer Name
+-    email: string;         // Customer Email
+-    amount: number;        // Payment Amount
+-    description: string;   // Transaction / Product Description
+-    mobile: string;        // Customer Mobile Number
+-    redirectUrl?: string;  // Optional redirect after payment
+-}
+-
+-export async function createMayarInvoice(payload: CreatePaymentPayload) {
+-    try {
+-        const url = `${BASE_URL}/hl/v1/payment/create`;
+-
+-        const response = await fetch(url, {
+-            method: "POST",
+-            headers: {
+-                "Content-Type": "application/json",
+-                "Authorization": `Bearer ${MAYAR_API_KEY}`,
+-            },
+-            body: JSON.stringify({
+-                name: payload.name,
+-                email: payload.email,
+-                amount: payload.amount,
+-                description: payload.description,
+-                mobile: payload.mobile,
+-                ...(payload.redirectUrl && { redirectUrl: payload.redirectUrl })
+-            }),
+-        });
+-
+-        if (!response.ok) {
+-            const errortxt = await response.text();
+-            console.error("Mayar API Create Payment Failed:", errortxt);
+-            throw new Error(`Mayar API Error: ${errortxt}`);
+-        }
+-
+-        const data = await response.json();
+-        return data; // expecting { link: 'https://...', id: '...' } inside data
+-    } catch (error) {
+-        console.error("error calling mayar api", error);
+-        throw error;
+-    }
+-}
+-
+-// Mayar menggunakan x-callback-token yang dibandingkan langsung dengan secret
+-// (bukan HMAC — token dari Mayar adalah plain token, bukan digest)
+-export function verifyMayarWebhook(callbackToken: string, secret: string): boolean {
+-    if (!secret) {
+-        console.error("MAYAR_WEBHOOK_SECRET is not configured! Rejecting webhook.");
+-        return false;
+-    }
+-
+-    try {
+-        // Timing-safe comparison untuk mencegah timing attacks
+-        const tokenBuffer = Buffer.from(callbackToken);
+-        const secretBuffer = Buffer.from(secret);
+-
+-        if (tokenBuffer.length !== secretBuffer.length) return false;
+-
+-        return crypto.timingSafeEqual(tokenBuffer, secretBuffer);
+-    } catch (e) {
+-        return false;
+-    }
+-}
+diff --git a/src/lib/midtrans.ts b/src/lib/midtrans.ts
+new file mode 100644
+index 0000000..33552fe
+--- /dev/null
++++ b/src/lib/midtrans.ts
+@@ -0,0 +1,15 @@
++import midtransClient from 'midtrans-client';
++
++const IS_PRODUCTION = process.env.NODE_ENV === 'production' && process.env.MIDTRANS_IS_PRODUCTION === 'true';
++
++export const snap = new midtransClient.Snap({
++    isProduction: IS_PRODUCTION,
++    serverKey: process.env.MIDTRANS_SERVER_KEY || '',
++    clientKey: process.env.MIDTRANS_CLIENT_KEY || ''
++});
++
++export const coreApi = new midtransClient.CoreApi({
++    isProduction: IS_PRODUCTION,
++    serverKey: process.env.MIDTRANS_SERVER_KEY || '',
++    clientKey: process.env.MIDTRANS_CLIENT_KEY || ''
++});
+diff --git a/src/services/checkout.service.ts b/src/services/checkout.service.ts
+index b630095..435f78a 100644
+--- a/src/services/checkout.service.ts
++++ b/src/services/checkout.service.ts
+@@ -1,5 +1,5 @@
+ import prisma from "@/lib/prisma";
+-import { createMayarInvoice } from "@/lib/mayar";
++import { snap } from "@/lib/midtrans";
+ import { sendPaymentSuccessEmail } from "@/lib/email";
+ 
+ // --- Types ---
+@@ -114,10 +114,10 @@ export async function processCourseCheckout(input: CheckoutInput): Promise<Check
+         }
+     });
+     if (existingPending) {
+-        if (existingPending.mayarInvoiceUrl) {
++        if (existingPending.paymentUrl) {
+             return {
+                 isFree: false,
+-                paymentUrl: existingPending.mayarInvoiceUrl,
++                paymentUrl: existingPending.paymentUrl,
+                 transactionId: existingPending.id
+             };
+         }
+@@ -180,46 +180,56 @@ export async function processCourseCheckout(input: CheckoutInput): Promise<Check
+         };
+     }
+ 
+-    // 4. Hit Mayar API to create Invoice/Payment Link
+-    const payloadToMayar = {
+-        name: freshName,
+-        email: freshEmail,
+-        amount: finalPrice,
+-        description: `Pembelian Kursus: ${course.title}`,
+-        mobile: mobileNumber // Mandatory for Mayar Hosted Checkout
++    // 4. Hit Midtrans Snap API
++    const parameter = {
++        transaction_details: {
++            order_id: transaction.id,
++            gross_amount: finalPrice
++        },
++        customer_details: {
++            first_name: freshName,
++            email: freshEmail,
++            phone: mobileNumber
++        },
++        item_details: [{
++            id: course.id,
++            price: finalPrice,
++            quantity: 1,
++            name: course.title.substring(0, 50)
++        }]
+     };
+ 
+-    let mayarResp;
++    let midtransResp;
+     try {
+-        mayarResp = await createMayarInvoice(payloadToMayar);
++        midtransResp = await snap.createTransaction(parameter);
+     } catch (mErr: any) {
+-        console.error("MAYAR INVOICE ERROR:", mErr);
++        console.error("MIDTRANS INVOICE ERROR:", mErr);
+         // Cleanup: mark orphaned transaction as FAILED
+         await prisma.transaction.update({
+             where: { id: transaction.id },
+             data: { status: "FAILED" }
+         });
+-        throw new Error(`MAYAR_REJECTED`);
++        throw new Error(`MIDTRANS_REJECTED`);
+     }
+ 
+-    const paymentLink = mayarResp?.data?.link || mayarResp?.link;
+-    const invoiceId = mayarResp?.data?.id || mayarResp?.id;
++    const paymentLink = midtransResp.redirect_url;
++    const paymentToken = midtransResp.token;
+ 
+     if (!paymentLink) {
+-        console.error("MAYAR SUCCESS BUT NO LINK:", mayarResp);
++        console.error("MIDTRANS SUCCESS BUT NO LINK:", midtransResp);
+         await prisma.transaction.update({
+             where: { id: transaction.id },
+             data: { status: "FAILED" }
+         });
+-        throw new Error("MAYAR_NO_LINK");
++        throw new Error("MIDTRANS_NO_LINK");
+     }
+ 
+-    // 5. Update Transaction with Mayar Details + set expiry deadline
++    // 5. Update Transaction with Midtrans Details + set expiry deadline
+     await prisma.transaction.update({
+         where: { id: transaction.id },
+         data: {
+-            mayarInvoiceId: invoiceId?.toString(),
+-            mayarInvoiceUrl: paymentLink,
++            paymentToken: paymentToken,
++            paymentUrl: paymentLink,
+             expiredAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+         }
+     });
+diff --git a/src/services/student.service.ts b/src/services/student.service.ts
+index 95575d4..2f2496f 100644
+--- a/src/services/student.service.ts
++++ b/src/services/student.service.ts
+@@ -269,7 +269,7 @@ export async function getStudentTransactions(userId: string) {
+         amount: tx.amount,
+         status: tx.status,
+         createdAt: tx.createdAt,
+-        mayarInvoiceUrl: tx.mayarInvoiceUrl || null,
++        paymentUrl: tx.paymentUrl || null,
+     }));
+ 
+     const normalizedSub = subscriptionInvoices.map((inv: any) => ({
+@@ -281,7 +281,7 @@ export async function getStudentTransactions(userId: string) {
+         amount: inv.amount,
+         status: inv.status,
+         createdAt: inv.createdAt,
+-        mayarInvoiceUrl: inv.mayarInvoiceUrl || null,
++        paymentUrl: inv.paymentUrl || null,
+     }));
+ 
+     return [...normalizedCourse, ...normalizedSub]
+diff --git a/src/services/subscription.service.ts b/src/services/subscription.service.ts
+index fccc1ea..ae9a65f 100644
+--- a/src/services/subscription.service.ts
++++ b/src/services/subscription.service.ts
+@@ -1,5 +1,5 @@
+ import prisma from "@/lib/prisma";
+-import { createMayarInvoice } from "@/lib/mayar";
++import { snap } from "@/lib/midtrans";
+ 
+ export interface SubscriptionInput {
+     userId: string;
+@@ -88,39 +88,49 @@ export async function processSubscriptionCheckout(input: SubscriptionInput): Pro
+         return { subscription: sub, invoice: inv };
+     });
+ 
+-    // 5. Hit Mayar API
+-    const payloadToMayar = {
+-        name: userName,
+-        email: userEmail,
+-        amount: amount,
+-        description: `Langganan Luminus - ${plan.name} (${cycle})`,
+-        mobile: mobileNumber
++    // 5. Hit Midtrans API
++    const parameter = {
++        transaction_details: {
++            order_id: invoice.id,
++            gross_amount: amount
++        },
++        customer_details: {
++            first_name: userName,
++            email: userEmail,
++            phone: mobileNumber
++        },
++        item_details: [{
++            id: plan.id,
++            price: amount,
++            quantity: 1,
++            name: `Langganan Luminus - ${plan.name} (${cycle})`.substring(0, 50)
++        }]
+     };
+ 
+-    let mayarResp;
++    let midtransResp;
+     try {
+-        mayarResp = await createMayarInvoice(payloadToMayar);
++        midtransResp = await snap.createTransaction(parameter);
+     } catch (mErr: any) {
+         await prisma.userSubscription.update({ where: { id: subscription.id }, data: { status: "CANCELLED" } });
+         await prisma.subscriptionInvoice.update({ where: { id: invoice.id }, data: { status: "FAILED", failureReason: mErr.message } });
+-        throw new Error(`MAYAR_REJECTED`);
++        throw new Error(`MIDTRANS_REJECTED`);
+     }
+ 
+-    const paymentLink = mayarResp?.data?.link || mayarResp?.link;
+-    const mayarId = mayarResp?.data?.id || mayarResp?.id;
++    const paymentLink = midtransResp.redirect_url;
++    const paymentToken = midtransResp.token;
+ 
+     if (!paymentLink) {
+         await prisma.userSubscription.update({ where: { id: subscription.id }, data: { status: "CANCELLED" } });
+-        await prisma.subscriptionInvoice.update({ where: { id: invoice.id }, data: { status: "FAILED", failureReason: "Mayar response has no payment link" } });
+-        throw new Error("MAYAR_NO_LINK");
++        await prisma.subscriptionInvoice.update({ where: { id: invoice.id }, data: { status: "FAILED", failureReason: "Midtrans response has no payment link" } });
++        throw new Error("MIDTRANS_NO_LINK");
+     }
+ 
+-    // 6. Save Mayar details
++    // 6. Save Midtrans details
+     await prisma.subscriptionInvoice.update({
+         where: { id: invoice.id },
+         data: {
+-            mayarInvoiceId: mayarId?.toString(),
+-            mayarInvoiceUrl: paymentLink
++            paymentToken: paymentToken,
++            paymentUrl: paymentLink
+         }
+     });
+ 
+@@ -186,27 +196,37 @@ export async function processSubscriptionRenewal(): Promise<{ success: boolean;
+                 }
+             });
+ 
+-            const payloadToMayar = {
+-                name: sub.user.name || "Student",
+-                email: sub.user.email,
+-                amount: amount,
+-                description: `Perpanjangan Luminus - ${sub.plan.name} (${sub.billingCycle})`,
+-                mobile: sub.user.phoneNumber || "0000000000"
++            const parameter = {
++                transaction_details: {
++                    order_id: invoice.id,
++                    gross_amount: amount
++                },
++                customer_details: {
++                    first_name: sub.user.name || "Student",
++                    email: sub.user.email,
++                    phone: sub.user.phoneNumber || "0000000000"
++                },
++                item_details: [{
++                    id: sub.plan.id,
++                    price: amount,
++                    quantity: 1,
++                    name: `Perpanjangan Luminus - ${sub.plan.name} (${sub.billingCycle})`.substring(0, 50)
++                }]
+             };
+ 
+-            const mayarResp = await createMayarInvoice(payloadToMayar);
+-            const paymentLink = mayarResp?.data?.link || mayarResp?.link;
+-            const mayarId = mayarResp?.data?.id || mayarResp?.id;
++            const midtransResp = await snap.createTransaction(parameter);
++            const paymentLink = midtransResp.redirect_url;
++            const paymentToken = midtransResp.token;
+ 
+-            if (paymentLink && mayarId) {
++            if (paymentLink && paymentToken) {
+                 await prisma.subscriptionInvoice.update({
+                     where: { id: invoice.id },
+-                    data: { mayarInvoiceUrl: paymentLink, mayarInvoiceId: mayarId.toString() }
++                    data: { paymentUrl: paymentLink, paymentToken: paymentToken }
+                 });
+ 
+                 results.push({ subId: sub.id, success: true, invoiceId: invoice.id });
+             } else {
+-                throw new Error("Mayar didn't return a link");
++                throw new Error("Midtrans didn't return a link");
+             }
+ 
+         } catch (err: any) {
+diff --git a/types/midtrans-client.d.ts b/types/midtrans-client.d.ts
+new file mode 100644
+index 0000000..6f780a8
+--- /dev/null
++++ b/types/midtrans-client.d.ts
+@@ -0,0 +1 @@
++declare module 'midtrans-client';

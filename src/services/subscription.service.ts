@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { createMayarInvoice } from "@/lib/mayar";
+import { snap } from "@/lib/midtrans";
 
 export interface SubscriptionInput {
     userId: string;
@@ -88,39 +88,49 @@ export async function processSubscriptionCheckout(input: SubscriptionInput): Pro
         return { subscription: sub, invoice: inv };
     });
 
-    // 5. Hit Mayar API
-    const payloadToMayar = {
-        name: userName,
-        email: userEmail,
-        amount: amount,
-        description: `Langganan Luminus - ${plan.name} (${cycle})`,
-        mobile: mobileNumber
+    // 5. Hit Midtrans API
+    const parameter = {
+        transaction_details: {
+            order_id: invoice.id,
+            gross_amount: amount
+        },
+        customer_details: {
+            first_name: userName,
+            email: userEmail,
+            phone: mobileNumber
+        },
+        item_details: [{
+            id: plan.id,
+            price: amount,
+            quantity: 1,
+            name: `Langganan Luminus - ${plan.name} (${cycle})`.substring(0, 50)
+        }]
     };
 
-    let mayarResp;
+    let midtransResp;
     try {
-        mayarResp = await createMayarInvoice(payloadToMayar);
+        midtransResp = await snap.createTransaction(parameter);
     } catch (mErr: any) {
         await prisma.userSubscription.update({ where: { id: subscription.id }, data: { status: "CANCELLED" } });
         await prisma.subscriptionInvoice.update({ where: { id: invoice.id }, data: { status: "FAILED", failureReason: mErr.message } });
-        throw new Error(`MAYAR_REJECTED`);
+        throw new Error(`MIDTRANS_REJECTED`);
     }
 
-    const paymentLink = mayarResp?.data?.link || mayarResp?.link;
-    const mayarId = mayarResp?.data?.id || mayarResp?.id;
+    const paymentLink = midtransResp.redirect_url;
+    const paymentToken = midtransResp.token;
 
     if (!paymentLink) {
         await prisma.userSubscription.update({ where: { id: subscription.id }, data: { status: "CANCELLED" } });
-        await prisma.subscriptionInvoice.update({ where: { id: invoice.id }, data: { status: "FAILED", failureReason: "Mayar response has no payment link" } });
-        throw new Error("MAYAR_NO_LINK");
+        await prisma.subscriptionInvoice.update({ where: { id: invoice.id }, data: { status: "FAILED", failureReason: "Midtrans response has no payment link" } });
+        throw new Error("MIDTRANS_NO_LINK");
     }
 
-    // 6. Save Mayar details
+    // 6. Save Midtrans details
     await prisma.subscriptionInvoice.update({
         where: { id: invoice.id },
         data: {
-            mayarInvoiceId: mayarId?.toString(),
-            mayarInvoiceUrl: paymentLink
+            paymentToken: paymentToken,
+            paymentUrl: paymentLink
         }
     });
 
@@ -186,27 +196,37 @@ export async function processSubscriptionRenewal(): Promise<{ success: boolean; 
                 }
             });
 
-            const payloadToMayar = {
-                name: sub.user.name || "Student",
-                email: sub.user.email,
-                amount: amount,
-                description: `Perpanjangan Luminus - ${sub.plan.name} (${sub.billingCycle})`,
-                mobile: sub.user.phoneNumber || "0000000000"
+            const parameter = {
+                transaction_details: {
+                    order_id: invoice.id,
+                    gross_amount: amount
+                },
+                customer_details: {
+                    first_name: sub.user.name || "Student",
+                    email: sub.user.email,
+                    phone: sub.user.phoneNumber || "0000000000"
+                },
+                item_details: [{
+                    id: sub.plan.id,
+                    price: amount,
+                    quantity: 1,
+                    name: `Perpanjangan Luminus - ${sub.plan.name} (${sub.billingCycle})`.substring(0, 50)
+                }]
             };
 
-            const mayarResp = await createMayarInvoice(payloadToMayar);
-            const paymentLink = mayarResp?.data?.link || mayarResp?.link;
-            const mayarId = mayarResp?.data?.id || mayarResp?.id;
+            const midtransResp = await snap.createTransaction(parameter);
+            const paymentLink = midtransResp.redirect_url;
+            const paymentToken = midtransResp.token;
 
-            if (paymentLink && mayarId) {
+            if (paymentLink && paymentToken) {
                 await prisma.subscriptionInvoice.update({
                     where: { id: invoice.id },
-                    data: { mayarInvoiceUrl: paymentLink, mayarInvoiceId: mayarId.toString() }
+                    data: { paymentUrl: paymentLink, paymentToken: paymentToken }
                 });
 
                 results.push({ subId: sub.id, success: true, invoiceId: invoice.id });
             } else {
-                throw new Error("Mayar didn't return a link");
+                throw new Error("Midtrans didn't return a link");
             }
 
         } catch (err: any) {

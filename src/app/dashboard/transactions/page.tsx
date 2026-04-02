@@ -17,7 +17,7 @@ interface TransactionItem {
     createdAt: string;
     amount: number;
     status: string;
-    mayarInvoiceUrl: string | null;
+    paymentUrl: string | null;
 }
 
 export default function StudentTransactionsPage() {
@@ -256,8 +256,8 @@ export default function StudentTransactionsPage() {
                                                     <button onClick={() => window.print()} className="text-gray-400 hover:text-[#696EFF] transition-colors p-2" title="Print Invoice">
                                                         <Printer className="w-4 h-4" />
                                                     </button>
-                                                    {tx.mayarInvoiceUrl ? (
-                                                        <a href={tx.mayarInvoiceUrl} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#38BDF8] transition-colors p-2" title="Lihat Detail Transaksi">
+                                                    {tx.paymentUrl ? (
+                                                        <a href={tx.paymentUrl} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#38BDF8] transition-colors p-2" title="Lihat Detail Transaksi">
                                                             <MoreHorizontal className="w-5 h-5" />
                                                         </a>
                                                     ) : (

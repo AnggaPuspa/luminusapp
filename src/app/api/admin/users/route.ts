@@ -56,7 +56,7 @@ export async function GET(request: Request) {
                     },
                     select: {
                         id: true,
-                        mayarInvoiceId: true,
+                        paymentToken: true,
                         status: true,
                         createdAt: true,
                         amount: true

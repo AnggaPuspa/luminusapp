@@ -181,7 +181,7 @@ async function main() {
                         paymentChannel: randomPick(PAYMENT_CHANNELS),
                         createdAt: txDate,
                         paidAt: status === TransactionStatus.PAID ? addHours(txDate, 1) : null,
-                        mayarInvoiceId: `INV-${type === TransactionType.ONE_TIME ? 'OT' : 'SUB'}-${Date.now()}-${randomInt(1000, 9999)}`,
+                        paymentToken: `INV-${type === TransactionType.ONE_TIME ? 'OT' : 'SUB'}-${Date.now()}-${randomInt(1000, 9999)}`,
                     }
                 })
                 totalTransactions++
@@ -218,7 +218,7 @@ async function main() {
                                 billingPeriodStart: tx.paidAt!,
                                 billingPeriodEnd: addHours(tx.paidAt!, 720),
                                 paidAt: tx.paidAt,
-                                mayarInvoiceId: `SINV-${Date.now()}-${randomInt(1000, 9999)}`
+                                paymentToken: `SINV-${Date.now()}-${randomInt(1000, 9999)}`
                             }
                         })
                     }
